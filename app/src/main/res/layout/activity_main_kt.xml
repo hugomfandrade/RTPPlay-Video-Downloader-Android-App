@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable name="MainActivityKt" type="org.hugoandrade.rtpplaydownloader.MainActivityKt"/>
+    </data>
+    <RelativeLayout
+        android:id="@+id/activity_main_kt_root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivityKt">
+
+        <EditText
+            android:id="@+id/input_uri_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:ems="10"
+            android:text="https://www.rtp.pt/play/p4257/o-outro-lado"
+            android:hint="Url (eg. RTP Play, SIC)"/>
+
+        <Button
+            android:id="@+id/download_media_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/input_uri_edit_text"
+            android:ems="10"
+            android:text="Download"
+            android:onClick="download" />
+            <!--android:onClick="@{MainActivityKt::download}"/-->
+
+        <include
+            android:id="@+id/tv_no_network_connection"
+            layout="@layout/layout_no_network_connection" />
+
+    </RelativeLayout>
+
+</layout>

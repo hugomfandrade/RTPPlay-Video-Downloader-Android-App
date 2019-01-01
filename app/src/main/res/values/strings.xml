@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RTP Play Downloader</string>
+
+    <string name="no_network_connection" translatable="true">No Network Connection</string>
+</resources>
