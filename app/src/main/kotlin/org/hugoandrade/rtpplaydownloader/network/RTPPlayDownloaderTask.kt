@@ -14,7 +14,7 @@ import java.text.Normalizer
 
 class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
-    override fun download(urlString: String) {
+    override fun download(listener: DownloaderTaskListener, urlString: String) {
 
         val videoFile: String = getVideoFile(urlString) ?: return
         val videoFileName: String = getVideoFileName(urlString, videoFile)
@@ -36,9 +36,12 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             val buffer = ByteArray(1024)
             if (inputStream != null) {
                 var len1 = inputStream.read(buffer)
+                var progress = len1
                 while (len1 > 0) {
                     fos.write(buffer, 0, len1)
                     len1 = inputStream.read(buffer)
+                    progress += len1
+                    listener.onProgress(progress.toFloat() / size.toFloat())
                 }
             }
             Log.e(TAG, "finished downloading to " + f.absolutePath);

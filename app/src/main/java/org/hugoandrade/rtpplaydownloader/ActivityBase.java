@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.hugoandrade.rtpplaydownloader.common.ContextView;
+import org.hugoandrade.rtpplaydownloader.common.RetainedFragmentManager;
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils;
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils;
 
@@ -21,6 +22,17 @@ public abstract class ActivityBase extends AppCompatActivity
      */
     protected String TAG = getClass().getSimpleName();
 
+    /**
+     * Used to retain the objects between runtime
+     * configuration changes.
+     */
+    private final RetainedFragmentManager mRetainedFragmentManager
+            = new RetainedFragmentManager(this.getFragmentManager(),
+            TAG);
+
+    /**
+     * Network UI/UX
+     */
     private BroadcastReceiver mNetworkBroadcastReceiver;
 
     private View tvNoNetworkConnection;
@@ -29,6 +41,9 @@ public abstract class ActivityBase extends AppCompatActivity
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (mRetainedFragmentManager.firstTimeIn()) {
+            // mRetainedFragmentManager.put(opsType.getSimpleName(), mPresenterInstance);
+        }
         initializeNetworkFooter();
     }
 
@@ -51,6 +66,10 @@ public abstract class ActivityBase extends AppCompatActivity
         super.setContentView(view, params);
 
         initializeNetworkFooter();
+    }
+
+    public RetainedFragmentManager getRetainedFragmentManager() {
+        return mRetainedFragmentManager;
     }
 
     private void initializeNetworkFooter() {

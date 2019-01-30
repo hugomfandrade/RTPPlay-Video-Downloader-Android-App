@@ -10,7 +10,7 @@ abstract class DownloaderTaskBase {
 
     // abstract fun findDownloadableFile(urlString: String)
 
-    fun downloadAsync(urlString: String) : Boolean {
+    fun downloadAsync(listener: DownloaderTaskListener, urlString: String) : Boolean {
         if (isDownloading) {
             return false
         }
@@ -20,7 +20,7 @@ abstract class DownloaderTaskBase {
         object : Thread() {
             override fun run() {
 
-                download(urlString)
+                download(listener, urlString)
                 isDownloading = false
             }
         }.start()
@@ -28,5 +28,5 @@ abstract class DownloaderTaskBase {
         return true
     }
 
-    protected abstract fun download(urlString: String)
+    protected abstract fun download(listener: DownloaderTaskListener, urlString: String)
 }

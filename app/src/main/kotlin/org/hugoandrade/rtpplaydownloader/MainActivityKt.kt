@@ -18,14 +18,21 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
     private lateinit var binding: ActivityMainKtBinding
 
-    private var mDownloadManager: DownloadManager = DownloadManager();
+    private lateinit var mDownloadManager: DownloadManager;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        mDownloadManager.onCreate(this);
-
         initializeUI()
+
+        if (retainedFragmentManager.get<DownloadManager>(DownloadManager::class.java.simpleName) == null) {
+            mDownloadManager = DownloadManager()
+            mDownloadManager.onCreate(this)
+            retainedFragmentManager.put(mDownloadManager.javaClass.simpleName, mDownloadManager)
+        }
+        else{
+            mDownloadManager = retainedFragmentManager.get(DownloadManager::class.java.simpleName)
+        }
     }
 
     override fun onDestroy() {
@@ -34,6 +41,14 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
         if (!isChangingConfigurations()) {
             mDownloadManager.onDestroy();
         }
+    }
+
+    override fun onDownloading(float: Float) {
+
+
+        runOnUiThread(Runnable {
+            binding.progressIndicator.text = float.toString()
+        })
     }
 
     private fun initializeUI() {
@@ -52,15 +67,17 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
     }
 
     override fun onParsingEnded(url: String, isOk: Boolean, message : String) {
-        var i = ""
-        if (isOk) {
-            i = "Able to"
-        }
-        else {
-            i = "Unable to"
-        }
+        runOnUiThread(Runnable {
+            var i = ""
+            if (isOk) {
+                i = "Able to"
+            }
+            else {
+                i = "Unable to"
+            }
 
-        Log.e(TAG, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString());
-        binding.root.let { Snackbar.make(it, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString(), Snackbar.LENGTH_LONG).show() }
+            Log.e(TAG, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString());
+            binding.root.let { Snackbar.make(it, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString(), Snackbar.LENGTH_LONG).show() }
+        })
     }
 }

@@ -1,10 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import android.util.Log
 import java.lang.ref.WeakReference
 import java.net.URL
 
-class DownloadManager {
+class DownloadManager : DownloaderTaskListener {
 
     /**
      * Debugging tag used by the Android logger.
@@ -17,7 +16,7 @@ class DownloadManager {
 
     interface DownloadManagerViewOps {
         fun onParsingEnded(url: String, isOk: Boolean, message : String);
-        fun runOnUiThread(runnable: Runnable)
+        fun onDownloading(float: Float)
     }
 
     fun onCreate(viewOps: DownloadManagerViewOps) {
@@ -42,15 +41,17 @@ class DownloadManager {
                 val fileType: FileType? = mFileIdentifier.findHost(urlText);
 
                 if (fileType == null) {
-                    mViewOps.get()?.runOnUiThread(Runnable {
-                        mViewOps.get()?.onParsingEnded(urlText, false, "could not find filetype");
-                    })
+                    mViewOps.get()?.onParsingEnded(urlText, false, "could not find filetype");
                 }
                 else {
-                    fileType.mDownloaderTask.downloadAsync(urlText)
+                    fileType.mDownloaderTask.downloadAsync(this@DownloadManager, urlText)
                 }
             }
         }.start()
+    }
+
+    override fun onProgress(progress: Float) {
+        mViewOps.get()?.onDownloading(progress);
     }
 
     private fun isValidURL(urlText: String): Boolean {
