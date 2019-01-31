@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader
 
+import android.Manifest
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -7,11 +8,9 @@ import android.util.Log
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainKtBinding
 import org.hugoandrade.rtpplaydownloader.network.DownloadManager
+import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
+import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.net.URL
 
 
 class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
@@ -61,9 +60,30 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
         ViewUtils.hideSoftKeyboardAndClearFocus(binding.root)
 
-        mDownloadManager.start(binding.inputUriEditText.text.toString())
-        // Log.e(TAG, binding?.inputUriEditText?.text.toString());
-        // binding?.root?.let { Snackbar.make(it, binding?.inputUriEditText?.text.toString(), Snackbar.LENGTH_LONG).show() }
+        if (!PermissionUtils.hasGrantedPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            PermissionDialog.Builder.instance(this)
+                    .setOnPermissionDialog(object : PermissionDialog.OnPermissionListener {
+                        override fun onAllowed(wasAllowed: Boolean) {
+                            if (wasAllowed) {
+                                val activity = this@MainActivityKt
+                                PermissionUtils.requestPermission(
+                                        activity,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            } else {
+                                // onBackPressed()
+                            }
+                        }
+                    })
+                    .create()
+                    .show()
+        }
+        else {
+            doDownload(binding.inputUriEditText.text.toString())
+        }
+    }
+
+    private fun doDownload(url: String) {
+        mDownloadManager.start(url)
     }
 
     override fun onParsingEnded(url: String, isOk: Boolean, message : String) {
@@ -79,5 +99,28 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
             Log.e(TAG, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString());
             binding.root.let { Snackbar.make(it, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString(), Snackbar.LENGTH_LONG).show() }
         })
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>,
+                                            grantResults: IntArray) {
+        PermissionUtils.onRequestPermissionsResult(this,
+                requestCode,
+                permissions,
+                grantResults,
+                object : PermissionUtils.OnRequestPermissionsResultCallback {
+                    override fun onRequestPermissionsResult(permissionType: String, wasPermissionGranted: Boolean) {
+                        when (permissionType) {
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE -> if (wasPermissionGranted) {
+                                doDownload(binding.inputUriEditText.text.toString())
+                                // mBluetoothState = getInitialBluetoothState()
+
+                                // setupBluetoothUI()
+                            } else {
+                                // onBackPressed()
+                            }
+                        }
+                    }
+                })
     }
 }
