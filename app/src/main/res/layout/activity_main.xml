@@ -1,25 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<layout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable name="MainActivity" type="org.hugoandrade.rtpplaydownloader.MainActivity"/>
+    </data>
+    <RelativeLayout
+        android:id="@+id/activity_main_kt_root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        android:layout_centerInParent="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <EditText
+            android:id="@+id/input_uri_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:ems="10"
+            android:text="https://www.rtp.pt/play/p4257/o-outro-lado"
+            android:hint="Url (eg. RTP Play, SIC)"/>
 
+        <Button
+            android:id="@+id/download_media_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/input_uri_edit_text"
+            android:ems="10"
+            android:text="Download"
+            android:onClick="download" />
+            <!--android:onClick="@{MainActivity::download}"/-->
 
-    <include
-        android:id="@+id/tv_no_network_connection"
-        layout="@layout/layout_no_network_connection" />
+        <TextView
+            android:id="@+id/progressIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"/>
 
-</RelativeLayout>
+        <include
+            android:id="@+id/tv_no_network_connection"
+            layout="@layout/layout_no_network_connection" />
+
+    </RelativeLayout>
+
+</layout>

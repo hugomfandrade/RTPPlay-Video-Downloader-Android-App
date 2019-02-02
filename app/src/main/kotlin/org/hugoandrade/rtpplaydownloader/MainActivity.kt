@@ -6,16 +6,16 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.util.Log
 import android.view.View
-import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainKtBinding
+import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.DownloadManager
 import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
 import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 
-class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
+class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
-    private lateinit var binding: ActivityMainKtBinding
+    private lateinit var binding: ActivityMainBinding
 
     private lateinit var mDownloadManager: DownloadManager;
 
@@ -52,11 +52,11 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
     private fun initializeUI() {
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main_kt)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length);
     }
 
-    public fun download(view: View) {
+    fun download(view: View) {
 
         ViewUtils.hideSoftKeyboardAndClearFocus(binding.root)
 
@@ -65,7 +65,7 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
                     .setOnPermissionDialog(object : PermissionDialog.OnPermissionListener {
                         override fun onAllowed(wasAllowed: Boolean) {
                             if (wasAllowed) {
-                                val activity = this@MainActivityKt
+                                val activity = this@MainActivity
                                 PermissionUtils.requestPermission(
                                         activity,
                                         Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -87,7 +87,7 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
     }
 
     override fun onParsingEnded(url: String, isOk: Boolean, message : String) {
-        runOnUiThread(Runnable {
+        runOnUiThread {
             var i = ""
             if (isOk) {
                 i = "Able to"
@@ -98,7 +98,7 @@ class MainActivityKt : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
             Log.e(TAG, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString());
             binding.root.let { Snackbar.make(it, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString(), Snackbar.LENGTH_LONG).show() }
-        })
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,

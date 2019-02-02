@@ -13,23 +13,21 @@ import android.view.View
 import android.view.WindowManager
 import org.hugoandrade.rtpplaydownloader.R
 
-class PermissionDialog {
+class PermissionDialog(context: Context) {
 
+    @Suppress("unused")
     private val TAG = PermissionDialog::class.java.getSimpleName()
 
-    private var mContext: Context
+    private var mContext: Context = context
 
     private var mListener: OnPermissionListener? = null
 
     private var mAlertDialog: AlertDialog? = null
     private var mView: View? = null
 
-    private var mHandler: Handler
+    private var mHandler: Handler = Handler()
 
-    constructor(context: Context) {
-        mContext = context
-        mHandler = Handler()
-
+    init {
         buildView()
     }
 
@@ -45,14 +43,14 @@ class PermissionDialog {
     private fun buildView() {
         mView = View.inflate(mContext, R.layout.dialog_storage_permission, null)
         mView!!.findViewById<View>(R.id.tv_now_now).setOnClickListener {
-            if (mListener != null)
-                mListener!!.onAllowed(false)
+
+            mListener!!.onAllowed(false)
 
             dismissDialog()
         }
         mView!!.findViewById<View>(R.id.tv_continue).setOnClickListener {
-            if (mListener != null)
-                mListener!!.onAllowed(true)
+
+            mListener!!.onAllowed(true)
 
             dismissDialog()
         }
@@ -60,8 +58,8 @@ class PermissionDialog {
         mAlertDialog = AlertDialog.Builder(mContext)
                 .setOnKeyListener(DialogInterface.OnKeyListener { dialog, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                        if (mListener != null)
-                            mListener!!.onAllowed(false)
+
+                        mListener!!.onAllowed(false)
 
                         return@OnKeyListener true
                     }
@@ -71,8 +69,8 @@ class PermissionDialog {
     }
 
     private fun delayedShow() {
-        if (mAlertDialog!!.window != null)
-            mAlertDialog!!.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        mAlertDialog!!.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mAlertDialog!!.window!!.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
@@ -86,7 +84,6 @@ class PermissionDialog {
 
         mAlertDialog!!.setCanceledOnTouchOutside(false)
 
-        //alert.setContentView(view);
         mAlertDialog!!.show()
         mAlertDialog!!.setContentView(mView!!)
         val lp = WindowManager.LayoutParams()
