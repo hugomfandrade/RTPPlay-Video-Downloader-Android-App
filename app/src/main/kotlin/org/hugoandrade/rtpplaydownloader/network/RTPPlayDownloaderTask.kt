@@ -44,7 +44,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
                     listener.onProgress(progress.toFloat() / size.toFloat())
                 }
             }
-            Log.e(TAG, "finished downloading to " + f.absolutePath);
+            listener.downloadFinished(f)
 
             fos.close()
 
