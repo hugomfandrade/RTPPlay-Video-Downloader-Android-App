@@ -11,6 +11,12 @@ import org.hugoandrade.rtpplaydownloader.network.DownloadManager
 import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
 import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
+import android.content.ClipData
+import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Context.CLIPBOARD_SERVICE
+import java.net.URL
 
 
 class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
@@ -28,8 +34,7 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
             mDownloadManager = DownloadManager()
             mDownloadManager.onCreate(this)
             retainedFragmentManager.put(mDownloadManager.javaClass.simpleName, mDownloadManager)
-        }
-        else{
+        } else {
             mDownloadManager = retainedFragmentManager.get(DownloadManager::class.java.simpleName)
         }
     }
@@ -56,6 +61,32 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
         binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length);
     }
 
+    fun pasteFromClipboard(view: View) {
+
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        // If it does contain data, decide if you can handle the data.
+        if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClipDescription()!!.hasMimeType(MIMETYPE_TEXT_PLAIN)) {
+
+            // since the clipboard has data but it is not plain text
+
+            //since the clipboard contains plain text.
+            val item = clipboard.getPrimaryClip()!!.getItemAt(0)
+
+            // Gets the clipboard as text.
+            val pasteData = item.getText().toString()
+
+            if (isValidURL(pasteData)) {
+                binding.inputUriEditText.setText(pasteData);
+                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length);
+            } else {
+                binding.root.let { Snackbar.make(it, "Not a valid URL", Snackbar.LENGTH_LONG).show() }
+            }
+        } else {
+            binding.root.let { Snackbar.make(it, "Nothing to paste from clipboard", Snackbar.LENGTH_LONG).show() }
+        }
+    }
+
     fun download(view: View) {
 
         ViewUtils.hideSoftKeyboardAndClearFocus(binding.root)
@@ -76,8 +107,7 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
                     })
                     .create()
                     .show()
-        }
-        else {
+        } else {
             doDownload(binding.inputUriEditText.text.toString())
         }
     }
@@ -86,13 +116,12 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
         mDownloadManager.start(url)
     }
 
-    override fun onParsingEnded(url: String, isOk: Boolean, message : String) {
+    override fun onParsingEnded(url: String, isOk: Boolean, message: String) {
         runOnUiThread {
             var i = ""
             if (isOk) {
                 i = "Able to"
-            }
-            else {
+            } else {
                 i = "Unable to"
             }
 
@@ -122,5 +151,14 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
                         }
                     }
                 })
+    }
+
+    private fun isValidURL(urlText: String): Boolean {
+        try {
+            val url = URL(urlText);
+            return "http".equals(url.getProtocol()) || "https".equals(url.getProtocol());
+        } catch (e: Exception) {
+            return false;
+        }
     }
 }
