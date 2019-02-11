@@ -11,11 +11,18 @@ import org.hugoandrade.rtpplaydownloader.network.DownloadManager
 import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
 import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import org.hugoandrade.rtpplaydownloader.network.DownloadItemsAdapter
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 
 
 class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
     private lateinit var binding: ActivityMainBinding
+
+    private lateinit var downloadItemsRecyclerView: RecyclerView
+    private lateinit var mDownloadItemsAdapter: DownloadItemsAdapter
 
     private lateinit var mDownloadManager: DownloadManager;
 
@@ -54,6 +61,15 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length);
+
+        downloadItemsRecyclerView = binding.downloadItemsRecyclerView
+        downloadItemsRecyclerView.setLayoutManager(LinearLayoutManager(this))
+        mDownloadItemsAdapter = DownloadItemsAdapter(object : DownloadItemsAdapter.DownloadItemsAdapterListener {
+            override fun onOn() {
+
+            }
+        })
+        downloadItemsRecyclerView.setAdapter(mDownloadItemsAdapter)
     }
 
     fun download(view: View) {
@@ -83,7 +99,8 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
     }
 
     private fun doDownload(url: String) {
-        mDownloadManager.start(url)
+
+        mDownloadItemsAdapter.add(mDownloadManager.start(url));
     }
 
     override fun onParsingEnded(url: String, isOk: Boolean, message : String) {
