@@ -9,6 +9,12 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
+    enum class State {
+        Start,
+        Downloading,
+        End
+    }
+
     var TAG : String = javaClass.simpleName
 
     private val urlText: String = urlText
@@ -17,8 +23,10 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
     private val mFileIdentifier : FileIdentifier = FileIdentifier()
     private var downloaderTask: DownloaderTaskBase? = null
 
-    private val filename: String? = null
-    private val filepath: String? = null
+    var state: State = State.Start
+    var filename: String? = null
+    var filepath: String? = null
+    var progress : Float = 0f;
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet<DownloadableItemStateChangeListener>()
 
@@ -27,7 +35,8 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
         val isUrl = isValidURL(urlText);
 
         if (!isUrl) {
-            synchronized(listenerSet) { listenerSet.forEach(action = { it.onDownloadStateChange(this) }) }
+            this.state = State.End
+            fireDownloadStateChange()
             viewOps?.onParsingEnded(urlText, false, "is not a valid website");
             return this
         }
@@ -40,8 +49,13 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
                 val downloading : Boolean? = downloaderTask?.downloadAsync(this@DownloadableItem, urlText)
 
                 if (downloading == null || !downloading) {
-                    synchronized(listenerSet) { listenerSet.forEach(action = { it.onDownloadStateChange(this@DownloadableItem) }) }
+                    this@DownloadableItem.state = DownloadableItem.State.End
+                    fireDownloadStateChange()
                     viewOps?.onParsingEnded(urlText, false, "could not find filetype")
+                }
+                else {
+                    this@DownloadableItem.state = DownloadableItem.State.Downloading
+                    fireDownloadStateChange()
                 }
             }
         }.start()
@@ -49,13 +63,17 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
     }
 
     override fun onProgress(progress: Float) {
-        synchronized(listenerSet) { listenerSet.forEach(action = { it.onDownloadStateChange(this@DownloadableItem) }) }
+        this.progress = progress
+        fireDownloadStateChange()
         viewOps?.onDownloading(progress);
     }
 
     override fun downloadFinished(f: File) {
-        Log.e(TAG, "finished downloading to " + f.absolutePath);
-        synchronized(listenerSet) { listenerSet.forEach(action = { it.onDownloadStateChange(this@DownloadableItem) }) }
+        this.filepath = f.absolutePath
+        this.filename = f.name
+        this.state = State.End
+        Log.e(TAG, "finished downloading to " + f.absolutePath)
+        fireDownloadStateChange()
         viewOps?.onParsingEnded(f.absolutePath, true, "finished downloading");
     }
 
@@ -77,6 +95,12 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
     override fun removeDownloadStateChangeListener(downloadableItemStateChangeListener: DownloadableItemStateChangeListener) {
         synchronized(listenerSet) {
             listenerSet.remove(downloadableItemStateChangeListener)
+        }
+    }
+
+    private fun fireDownloadStateChange() {
+        synchronized(listenerSet) {
+            listenerSet.forEach(action = { it.onDownloadStateChange(this@DownloadableItem) })
         }
     }
 }

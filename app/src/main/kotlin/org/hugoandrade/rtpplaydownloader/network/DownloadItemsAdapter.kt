@@ -42,6 +42,13 @@ class DownloadItemsAdapter(private val listener: DownloadItemsAdapterListener) :
 
     override fun onBindViewHolder(holder: DownloadItemsAdapter.ViewHolder, position: Int) {
         // holder.binding.setPost(downloadableItemList[position])
+        val downloadableItem: DownloadableItem = downloadableItemList[position]
+        if (downloadableItem.state == DownloadableItem.State.Downloading) {
+            holder.binding.textView.text = downloadableItem.progress.toString()
+        }
+        else if (downloadableItem.state == DownloadableItem.State.End) {
+            holder.binding.textView.text = downloadableItem.filename
+        }
         holder.binding.root.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View) {
                 listener.onOn()
@@ -84,19 +91,25 @@ class DownloadItemsAdapter(private val listener: DownloadItemsAdapterListener) :
 
     private fun internalNotifyItemChanged(index: Int) {
         synchronized(recyclerViewLock) {
-            if (recyclerView == null) {
-                notifyItemChanged(index)
-            }
-            else {
-                val view : View? = recyclerView?.layoutManager?.findViewByPosition(index)
-
-                if (view == null) {
-                    notifyItemChanged(index);
+            recyclerView?.post(Runnable {
+                if (recyclerView == null) {
+                    notifyItemChanged(index)
                 }
                 else {
-                    // update here
+                    val view : View? = null// recyclerView?.layoutManager?.findViewByPosition(index)
+
+                    if (view == null) {
+
+                        while (recyclerView?.isComputingLayout() == true) { }
+                        notifyItemChanged(index)
+                    }
+                    else {
+                        // update here
+                        notifyItemChanged(index)
+                    }
                 }
-            }
+            })
+
         }
 
     }
