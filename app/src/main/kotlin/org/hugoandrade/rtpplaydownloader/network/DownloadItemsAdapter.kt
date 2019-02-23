@@ -43,17 +43,18 @@ class DownloadItemsAdapter(private val listener: DownloadItemsAdapterListener) :
     override fun onBindViewHolder(holder: DownloadItemsAdapter.ViewHolder, position: Int) {
         // holder.binding.setPost(downloadableItemList[position])
         val downloadableItem: DownloadableItem = downloadableItemList[position]
-        if (downloadableItem.state == DownloadableItem.State.Downloading) {
-            holder.binding.textView.text = downloadableItem.progress.toString()
+
+        holder.binding.downloadItemTitleTextView.text = downloadableItem.filename
+
+        if (downloadableItem.state == DownloadableItem.State.Start) {
+            holder.binding.downloadItemTitleProgressView.setProgress(0.0)
+        }
+        else if (downloadableItem.state == DownloadableItem.State.Downloading) {
+            holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
         }
         else if (downloadableItem.state == DownloadableItem.State.End) {
-            holder.binding.textView.text = downloadableItem.filename
+            holder.binding.downloadItemTitleProgressView.setProgress(1.0)
         }
-        holder.binding.root.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View) {
-                listener.onOn()
-            }
-        })
     }
 
     override fun getItemCount(): Int {
@@ -114,7 +115,16 @@ class DownloadItemsAdapter(private val listener: DownloadItemsAdapterListener) :
 
     }
 
-    inner class ViewHolder(val binding: DownloadItemBinding) : RecyclerView.ViewHolder(binding.getRoot())
+    inner class ViewHolder(val binding: DownloadItemBinding) : RecyclerView.ViewHolder(binding.getRoot()) {
+
+        init {
+            binding.root.setOnClickListener(object : View.OnClickListener {
+                override fun onClick(v: View) {
+                    listener.onOn()
+                }
+            })
+        }
+    }
 
     interface DownloadItemsAdapterListener {
         fun onOn()

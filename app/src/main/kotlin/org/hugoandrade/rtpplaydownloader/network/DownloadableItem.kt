@@ -68,6 +68,14 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
         viewOps?.onDownloading(progress);
     }
 
+    override fun downloadStarted(f: File) {
+        this.filepath = f.absolutePath
+        this.filename = f.name
+        this.state = State.Start
+        Log.e(TAG, "start downloading to " + f.absolutePath)
+        fireDownloadStateChange()
+    }
+
     override fun downloadFinished(f: File) {
         this.filepath = f.absolutePath
         this.filename = f.name

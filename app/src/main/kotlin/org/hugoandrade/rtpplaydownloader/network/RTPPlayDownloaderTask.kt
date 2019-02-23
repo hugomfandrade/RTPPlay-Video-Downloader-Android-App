@@ -31,6 +31,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
             val f = File(storagePath, videoFileName)
             Log.e(TAG, "downloading to " + f.absolutePath);
+            listener.downloadStarted(f)
 
             val fos = FileOutputStream(f)
             val buffer = ByteArray(1024)
