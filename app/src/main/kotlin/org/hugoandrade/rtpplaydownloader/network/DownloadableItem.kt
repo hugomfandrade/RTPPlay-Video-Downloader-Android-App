@@ -64,6 +64,7 @@ class DownloadableItem(urlText: String, viewOps: DownloadManager.DownloadManager
 
     override fun onProgress(progress: Float) {
         this.progress = progress
+        this.state = DownloadableItem.State.Downloading
         fireDownloadStateChange()
         viewOps?.onDownloading(progress);
     }
