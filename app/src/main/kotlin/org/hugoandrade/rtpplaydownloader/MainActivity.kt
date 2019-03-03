@@ -17,11 +17,18 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Context.CLIPBOARD_SERVICE
 import java.net.URL
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import org.hugoandrade.rtpplaydownloader.network.DownloadItemsAdapter
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 
 
 class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
     private lateinit var binding: ActivityMainBinding
+
+    private lateinit var downloadItemsRecyclerView: RecyclerView
+    private lateinit var mDownloadItemsAdapter: DownloadItemsAdapter
 
     private lateinit var mDownloadManager: DownloadManager;
 
@@ -34,7 +41,8 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
             mDownloadManager = DownloadManager()
             mDownloadManager.onCreate(this)
             retainedFragmentManager.put(mDownloadManager.javaClass.simpleName, mDownloadManager)
-        } else {
+        }
+        else{
             mDownloadManager = retainedFragmentManager.get(DownloadManager::class.java.simpleName)
         }
     }
@@ -59,6 +67,15 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length);
+
+        downloadItemsRecyclerView = binding.downloadItemsRecyclerView
+        downloadItemsRecyclerView.setLayoutManager(LinearLayoutManager(this))
+        mDownloadItemsAdapter = DownloadItemsAdapter(object : DownloadItemsAdapter.DownloadItemsAdapterListener {
+            override fun onOn() {
+
+            }
+        })
+        downloadItemsRecyclerView.setAdapter(mDownloadItemsAdapter)
     }
 
     fun pasteFromClipboard(view: View) {
@@ -107,13 +124,14 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
                     })
                     .create()
                     .show()
-        } else {
+        }
+        else {
             doDownload(binding.inputUriEditText.text.toString())
         }
     }
 
     private fun doDownload(url: String) {
-        mDownloadManager.start(url)
+        mDownloadItemsAdapter.add(mDownloadManager.start(url));
     }
 
     override fun onParsingEnded(url: String, isOk: Boolean, message: String) {
@@ -121,7 +139,8 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
             var i = ""
             if (isOk) {
                 i = "Able to"
-            } else {
+            }
+            else {
                 i = "Unable to"
             }
 

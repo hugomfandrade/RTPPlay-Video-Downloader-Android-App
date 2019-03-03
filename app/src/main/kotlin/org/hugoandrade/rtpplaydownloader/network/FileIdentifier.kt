@@ -6,10 +6,12 @@ final class FileIdentifier {
         //throw AssertionError("cannot be instantiated");
     }
 
-    fun findHost(urlString : String): FileType? {
+    fun findHost(urlString : String): DownloaderTaskBase? {
         for (fileType : FileType in FileType.values()) {
             if (fileType.mDownloaderTask.isValid(urlString)) {
-                return fileType;
+                when (fileType) {
+                    FileType.RTPPlay -> return RTPPlayDownloaderTask()
+                }
             }
         }
         return null;

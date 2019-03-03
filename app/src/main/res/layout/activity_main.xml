@@ -48,6 +48,13 @@
             android:onClick="download" />
             <!--android:onClick="@{MainActivity::download}"/-->
 
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/download_items_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/download_media_button" />
+
         <TextView
             android:id="@+id/progressIndicator"
             android:layout_width="wrap_content"

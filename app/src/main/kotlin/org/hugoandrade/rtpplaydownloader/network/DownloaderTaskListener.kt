@@ -1,6 +1,10 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import java.io.File
+
 interface DownloaderTaskListener {
 
-    abstract fun onProgress(progress: Float)
+    fun downloadStarted(f: File)
+    fun onProgress(progress: Float)
+    fun downloadFinished(f: File)
 }
