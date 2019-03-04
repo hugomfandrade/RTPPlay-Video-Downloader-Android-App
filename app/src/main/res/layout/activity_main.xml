@@ -55,12 +55,6 @@
             android:layout_height="match_parent"
             android:layout_below="@id/download_media_button" />
 
-        <TextView
-            android:id="@+id/progressIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"/>
-
         <include
             android:id="@+id/tv_no_network_connection"
             layout="@layout/layout_no_network_connection" />

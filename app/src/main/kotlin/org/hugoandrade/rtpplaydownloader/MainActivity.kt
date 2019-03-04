@@ -1,36 +1,31 @@
 package org.hugoandrade.rtpplaydownloader
 
 import android.Manifest
-import android.databinding.DataBindingUtil
-import android.os.Bundle
-import android.support.design.widget.Snackbar
-import android.util.Log
-import android.view.View
-import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
-import org.hugoandrade.rtpplaydownloader.network.DownloadManager
-import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
-import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
-import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
-import android.content.ClipData
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Context.CLIPBOARD_SERVICE
-import java.net.URL
+import android.databinding.DataBindingUtil
+import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import org.hugoandrade.rtpplaydownloader.network.DownloadItemsAdapter
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import android.util.Log
+import android.view.View
+import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
+import org.hugoandrade.rtpplaydownloader.network.*
+import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
+import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
+import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
+import java.net.URL
 
-
-class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
+class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     private lateinit var binding: ActivityMainBinding
 
-    private lateinit var downloadItemsRecyclerView: RecyclerView
+    private lateinit var mDownloadItemsRecyclerView: RecyclerView
     private lateinit var mDownloadItemsAdapter: DownloadItemsAdapter
 
-    private lateinit var mDownloadManager: DownloadManager;
+    private lateinit var mDownloadManager: DownloadManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,32 +45,24 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
     override fun onDestroy() {
         super.onDestroy()
 
-        if (!isChangingConfigurations()) {
-            mDownloadManager.onDestroy();
+        if (!isChangingConfigurations) {
+            mDownloadManager.onDestroy()
         }
-    }
-
-    override fun onDownloading(float: Float) {
-
-
-        runOnUiThread(Runnable {
-            binding.progressIndicator.text = float.toString()
-        })
     }
 
     private fun initializeUI() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length);
+        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
 
-        downloadItemsRecyclerView = binding.downloadItemsRecyclerView
-        downloadItemsRecyclerView.setLayoutManager(LinearLayoutManager(this))
+        mDownloadItemsRecyclerView = binding.downloadItemsRecyclerView
+        mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
         mDownloadItemsAdapter = DownloadItemsAdapter(object : DownloadItemsAdapter.DownloadItemsAdapterListener {
             override fun onOn() {
 
             }
         })
-        downloadItemsRecyclerView.setAdapter(mDownloadItemsAdapter)
+        mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
     }
 
     fun pasteFromClipboard(view: View) {
@@ -83,19 +70,19 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
         // If it does contain data, decide if you can handle the data.
-        if (clipboard.hasPrimaryClip() && clipboard.getPrimaryClipDescription()!!.hasMimeType(MIMETYPE_TEXT_PLAIN)) {
+        if (clipboard.hasPrimaryClip() && clipboard.primaryClipDescription!!.hasMimeType(MIMETYPE_TEXT_PLAIN)) {
 
             // since the clipboard has data but it is not plain text
 
             //since the clipboard contains plain text.
-            val item = clipboard.getPrimaryClip()!!.getItemAt(0)
+            val item = clipboard.primaryClip!!.getItemAt(0)
 
             // Gets the clipboard as text.
-            val pasteData = item.getText().toString()
+            val pasteData = item.text.toString()
 
             if (isValidURL(pasteData)) {
-                binding.inputUriEditText.setText(pasteData);
-                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length);
+                binding.inputUriEditText.setText(pasteData)
+                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
             } else {
                 binding.root.let { Snackbar.make(it, "Not a valid URL", Snackbar.LENGTH_LONG).show() }
             }
@@ -131,21 +118,35 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
     }
 
     private fun doDownload(url: String) {
-        mDownloadItemsAdapter.add(mDownloadManager.start(url));
+        mDownloadManager.start(url)
     }
 
-    override fun onParsingEnded(url: String, isOk: Boolean, message: String) {
+    override fun onParsingError(url: String, message: String) {
         runOnUiThread {
-            var i = ""
-            if (isOk) {
-                i = "Able to"
-            }
-            else {
-                i = "Unable to"
+            val errorMessage = "Unable to parse $message"
+
+            Log.e(TAG, errorMessage)
+            binding.root.let { Snackbar.make(it, errorMessage, Snackbar.LENGTH_LONG).show() }
+        }
+    }
+
+    override fun onParsingSuccessful(item: DownloadableItem) {
+        item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
+            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+                // listen for end of download and show message
+                if (downloadableItem.state == DownloadableItem.State.End) {
+                    runOnUiThread {
+                        val message = "Finished downloading " + downloadableItem.filename
+                        Log.e(TAG, message)
+                        binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+                    }
+                    downloadableItem.removeDownloadStateChangeListener(this)
+                }
             }
 
-            Log.e(TAG, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString());
-            binding.root.let { Snackbar.make(it, i + " parse (" + message + ") " + binding.inputUriEditText.text.toString(), Snackbar.LENGTH_LONG).show() }
+        })
+        runOnUiThread {
+            mDownloadItemsAdapter.add(item)
         }
     }
 
@@ -161,9 +162,6 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
                         when (permissionType) {
                             Manifest.permission.WRITE_EXTERNAL_STORAGE -> if (wasPermissionGranted) {
                                 doDownload(binding.inputUriEditText.text.toString())
-                                // mBluetoothState = getInitialBluetoothState()
-
-                                // setupBluetoothUI()
                             } else {
                                 // onBackPressed()
                             }
@@ -173,11 +171,11 @@ class MainActivity : ActivityBase(), DownloadManager.DownloadManagerViewOps {
     }
 
     private fun isValidURL(urlText: String): Boolean {
-        try {
-            val url = URL(urlText);
-            return "http".equals(url.getProtocol()) || "https".equals(url.getProtocol());
+        return try {
+            val url = URL(urlText)
+            "http" == url.protocol || "https" == url.protocol
         } catch (e: Exception) {
-            return false;
+            false
         }
     }
 }
