@@ -16,7 +16,8 @@
             android:id="@+id/input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <EditText
                 android:id="@+id/input_uri_edit_text"
@@ -28,13 +29,13 @@
                 android:text="https://www.rtp.pt/play/p4257/o-outro-lado"
                 android:hint="Url (eg. RTP Play, SIC)"/>
 
-            <Button
-                android:id="@+id/past_from_clipboard_button"
-                android:layout_width="80dp"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:text="Paste"
-                android:onClick="pasteFromClipboard" />
+            <ImageView
+                android:id="@+id/paste_from_clipboard_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:padding="10dp"
+                android:src="@drawable/ic_content_paste"
+                android:onClick="pasteFromClipboard"/>
 
         </LinearLayout>
 
