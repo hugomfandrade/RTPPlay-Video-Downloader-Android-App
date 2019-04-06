@@ -7,8 +7,10 @@ import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.SimpleItemAnimator
 import android.util.Log
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
@@ -55,7 +57,11 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
 
+        val simpleItemAnimator : SimpleItemAnimator = DefaultItemAnimator()
+        simpleItemAnimator.supportsChangeAnimations = false
+
         mDownloadItemsRecyclerView = binding.downloadItemsRecyclerView
+        mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
         mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
         mDownloadItemsAdapter = DownloadItemsAdapter(object : DownloadItemsAdapter.DownloadItemsAdapterListener {
             override fun onOn() {

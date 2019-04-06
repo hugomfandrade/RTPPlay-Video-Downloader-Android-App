@@ -12,7 +12,7 @@ class DownloadManager  {
     private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
     fun onCreate(viewOps: DownloadManagerViewOps) {
-        mViewOps = WeakReference(viewOps);
+        mViewOps = WeakReference(viewOps)
     }
 
     fun onDestroy() {

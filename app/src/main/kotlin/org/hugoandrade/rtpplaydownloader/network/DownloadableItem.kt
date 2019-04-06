@@ -90,21 +90,63 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
         }
     }
 
+    @Volatile
+    private var isFiring = false
+
+    private val tmpAddListenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
+    private val tmpRemoveListenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
+
     override fun addDownloadStateChangeListener(downloadableItemStateChangeListener: DownloadableItemStateChangeListener) {
-        synchronized(listenerSet) {
-            listenerSet.add(downloadableItemStateChangeListener)
+        if (isFiring) {
+            synchronized(tmpAddListenerSet) {
+                tmpAddListenerSet.add(downloadableItemStateChangeListener)
+            }
+        }
+        else {
+            synchronized(listenerSet) {
+                listenerSet.add(downloadableItemStateChangeListener)
+            }
         }
     }
 
     override fun removeDownloadStateChangeListener(downloadableItemStateChangeListener: DownloadableItemStateChangeListener) {
-        synchronized(listenerSet) {
-            listenerSet.remove(downloadableItemStateChangeListener)
+        if (isFiring) {
+            synchronized(tmpRemoveListenerSet) {
+                tmpRemoveListenerSet.remove(downloadableItemStateChangeListener)
+            }
+        }
+        else {
+            synchronized(listenerSet) {
+                listenerSet.remove(downloadableItemStateChangeListener)
+            }
         }
     }
 
     private fun fireDownloadStateChange() {
+        isFiring = true
         synchronized(listenerSet) {
             listenerSet.forEach(action = { it.onDownloadStateChange(this@DownloadableItem) })
+        }
+        isFiring = false
+        addTmpListeners()
+        removeTmpListeners()
+    }
+
+    private fun addTmpListeners() {
+        synchronized(tmpAddListenerSet) {
+            synchronized(listenerSet) {
+                tmpAddListenerSet.forEach(action = { listenerSet.add(it) })
+                tmpAddListenerSet.clear()
+            }
+        }
+    }
+
+    private fun removeTmpListeners() {
+        synchronized(tmpRemoveListenerSet) {
+            synchronized(listenerSet) {
+                tmpRemoveListenerSet.forEach(action = { listenerSet.remove(it) })
+                tmpRemoveListenerSet.clear()
+            }
         }
     }
 }
