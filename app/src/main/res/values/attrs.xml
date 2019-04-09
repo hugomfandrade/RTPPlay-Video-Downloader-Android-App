@@ -6,4 +6,10 @@
         <attr name="cursorProgress" format="float" />
     </declare-styleable>
 
+    <declare-styleable name="RoundedLinearLayout">
+        <attr name="stroke_width" format="dimension" />
+        <attr name="stroke_color" format="color" />
+        <attr name="background_color" format="color" />
+    </declare-styleable>
+
 </resources>

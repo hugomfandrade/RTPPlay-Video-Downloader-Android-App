@@ -5,12 +5,15 @@ import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
 import android.content.Context
 import android.databinding.DataBindingUtil
+import android.databinding.adapters.TextViewBindingAdapter
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SimpleItemAnimator
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
@@ -56,6 +59,15 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+        binding.inputUriEditText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) { }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                toggleClearTextButton()
+            }
+        })
+
+        toggleClearTextButton()
 
         val simpleItemAnimator : SimpleItemAnimator = DefaultItemAnimator()
         simpleItemAnimator.supportsChangeAnimations = false
@@ -71,6 +83,17 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
     }
 
+    private fun toggleClearTextButton() {
+        if (binding.inputUriEditText.text.isEmpty())
+            binding.clearTextButton.visibility = View.INVISIBLE
+        else {
+            binding.clearTextButton.visibility = View.VISIBLE
+        }
+    }
+
+    /**
+     * from activity_main.xml
+     */
     fun pasteFromClipboard(view: View) {
 
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -95,6 +118,14 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         } else {
             binding.root.let { Snackbar.make(it, "Nothing to paste from clipboard", Snackbar.LENGTH_LONG).show() }
         }
+    }
+
+    /**
+     * from activity_main.xml
+     */
+    fun clearUriEditText(view: View) {
+
+        binding.inputUriEditText.setText("")
     }
 
     fun download(view: View) {
