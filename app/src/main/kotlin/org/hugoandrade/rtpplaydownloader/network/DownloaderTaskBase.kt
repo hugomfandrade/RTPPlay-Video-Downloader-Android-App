@@ -29,4 +29,8 @@ abstract class DownloaderTaskBase {
     }
 
     protected abstract fun download(listener: DownloaderTaskListener, urlString: String)
+
+    abstract fun cancel()
+    abstract fun resume()
+    abstract fun pause()
 }

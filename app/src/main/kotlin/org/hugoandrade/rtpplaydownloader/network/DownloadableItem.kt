@@ -59,6 +59,33 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
         return this
     }
 
+    fun cancel() {
+        downloaderTask?.cancel()
+        state = State.End
+        fireDownloadStateChange()
+        viewOps?.onParsingError(urlText, "download was cancel")
+    }
+
+    fun resume() {
+        downloaderTask?.resume()
+        fireDownloadStateChange()
+    }
+
+    fun pause() {
+        downloaderTask?.pause()
+        fireDownloadStateChange()
+    }
+
+    fun refresh() {
+        cancel()
+        start()
+    }
+
+    fun isDownloading(): Boolean {
+        val state = checkNotNull(downloaderTask)
+        return state.isDownloading
+    }
+
     override fun onProgress(progress: Float) {
         this.progress = progress
         this.state = DownloadableItem.State.Downloading

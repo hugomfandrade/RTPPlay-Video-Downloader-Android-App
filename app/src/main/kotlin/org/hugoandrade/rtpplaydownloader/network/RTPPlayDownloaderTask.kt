@@ -14,6 +14,20 @@ import java.text.Normalizer
 
 class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
+    private var doCanceling: Boolean = false
+
+    override fun cancel() {
+        doCanceling = true
+    }
+
+    override fun resume() {
+        isDownloading = true
+    }
+
+    override fun pause() {
+        isDownloading = false
+    }
+
     override fun download(listener: DownloaderTaskListener, urlString: String) {
 
         val videoFile: String = getVideoFile(urlString) ?: return
@@ -36,12 +50,27 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             val fos = FileOutputStream(f)
             val buffer = ByteArray(1024)
             if (inputStream != null) {
-                var len1 = inputStream.read(buffer)
-                var progress = len1
-                while (len1 > 0) {
-                    fos.write(buffer, 0, len1)
-                    len1 = inputStream.read(buffer)
-                    progress += len1
+                var len = inputStream.read(buffer)
+                var progress = len
+                while (len > 0) {
+
+                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                        // do cancelling
+                        return
+                    }
+
+                    while (!isDownloading){
+                        // pause
+
+                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                            // do cancelling while paused
+                            return
+                        }
+                    }
+
+                    fos.write(buffer, 0, len)
+                    len = inputStream.read(buffer)
+                    progress += len
                     listener.onProgress(progress.toFloat() / size.toFloat())
                 }
             }
@@ -55,15 +84,26 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             ioe.printStackTrace()
         } finally {
             try {
-                if (inputStream != null) {
-                    inputStream.close()
-                }
+                inputStream?.close()
             } catch (ioe: IOException) {
                 // just going to ignore this one
             }
         }
+    }
 
+    private fun tryToCancelIfNeeded(fos: FileOutputStream, inputStream: InputStream, f: File): Boolean {
 
+        if (doCanceling) {
+            fos.close()
+            try {
+                inputStream.close()
+            } catch (ioe: IOException) {
+                // just going to ignore this one
+            }
+            f.delete()
+            return true
+        }
+        return false
     }
 
     override fun isValid(urlString: String) : Boolean {

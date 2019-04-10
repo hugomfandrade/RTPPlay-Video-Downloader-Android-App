@@ -9,9 +9,10 @@ import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import java.util.*
 
-class DownloadItemsAdapter(private val listener: DownloadItemsAdapterListener) :
+class DownloadItemsAdapter() :
 
-        RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(), DownloadableItemStateChangeListener {
+        RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
+        DownloadableItemStateChangeListener {
 
     private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
@@ -55,6 +56,14 @@ class DownloadItemsAdapter(private val listener: DownloadItemsAdapterListener) :
         else if (downloadableItem.state == DownloadableItem.State.End) {
             holder.binding.downloadItemTitleProgressView.setProgress(1.0)
         }
+
+        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItem.State.Downloading
+        val isDownloading : Boolean = downloadableItem.isDownloading()
+
+        holder.binding.cancelDownloadImageView.visibility = if (isDownloading) View.VISIBLE else View.GONE
+        holder.binding.pauseDownloadImageView.visibility = if (isDownloading && isInDownloadingState) View.VISIBLE else View.GONE
+        holder.binding.resumeDownloadImageView.visibility = if (isDownloading && !isInDownloadingState) View.VISIBLE else View.GONE
+        holder.binding.refreshDownloadImageView.visibility = if (!isDownloading) View.VISIBLE else View.GONE
     }
 
     override fun getItemCount(): Int {
@@ -115,18 +124,32 @@ class DownloadItemsAdapter(private val listener: DownloadItemsAdapterListener) :
 
     }
 
-    inner class ViewHolder(val binding: DownloadItemBinding) : RecyclerView.ViewHolder(binding.getRoot()) {
+    inner class ViewHolder(val binding: DownloadItemBinding) :
+            RecyclerView.ViewHolder(binding.getRoot()),
+            View.OnClickListener {
 
         init {
-            binding.root.setOnClickListener(object : View.OnClickListener {
-                override fun onClick(v: View) {
-                    listener.onOn()
-                }
-            })
+            binding.cancelDownloadImageView.setOnClickListener(this)
+            binding.pauseDownloadImageView.setOnClickListener(this)
+            binding.resumeDownloadImageView.setOnClickListener(this)
+            binding.refreshDownloadImageView.setOnClickListener(this)
         }
-    }
 
-    interface DownloadItemsAdapterListener {
-        fun onOn()
+        override fun onClick(v: View?) {
+            synchronized(downloadableItemList) {
+                if (v == binding.cancelDownloadImageView) {
+                    downloadableItemList.get(adapterPosition).cancel()
+                }
+                else if (v == binding.pauseDownloadImageView) {
+                    downloadableItemList.get(adapterPosition).pause()
+                }
+                else if (v == binding.refreshDownloadImageView) {
+                    downloadableItemList.get(adapterPosition).refresh()
+                }
+                else if (v == binding.resumeDownloadImageView) {
+                    downloadableItemList.get(adapterPosition).resume()
+                }
+            }
+        }
     }
 }

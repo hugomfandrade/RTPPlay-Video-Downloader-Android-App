@@ -75,20 +75,15 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadItemsRecyclerView = binding.downloadItemsRecyclerView
         mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
         mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
-        mDownloadItemsAdapter = DownloadItemsAdapter(object : DownloadItemsAdapter.DownloadItemsAdapterListener {
-            override fun onOn() {
-
-            }
-        })
+        mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
     }
 
     private fun toggleClearTextButton() {
-        if (binding.inputUriEditText.text.isEmpty())
-            binding.clearTextButton.visibility = View.INVISIBLE
-        else {
-            binding.clearTextButton.visibility = View.VISIBLE
-        }
+
+        binding.clearTextButton.visibility =
+                if (binding.inputUriEditText.text.isEmpty()) View.INVISIBLE
+                else View.VISIBLE
     }
 
     /**
@@ -124,6 +119,11 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
      * from activity_main.xml
      */
     fun clearUriEditText(view: View) {
+
+        doClearUriEditText()
+    }
+
+    private fun doClearUriEditText() {
 
         binding.inputUriEditText.setText("")
     }
