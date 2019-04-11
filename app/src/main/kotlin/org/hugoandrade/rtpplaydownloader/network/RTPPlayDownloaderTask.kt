@@ -9,6 +9,7 @@ import org.jsoup.nodes.DataNode
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
+import java.net.SocketTimeoutException
 import java.text.Normalizer
 
 
@@ -37,7 +38,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
         val videoFile: String = getVideoFile(urlString) ?: return
         val videoFileName: String = getVideoFileName(urlString, videoFile)
 
-        var u: URL? = null
+        val u: URL?
         var inputStream: InputStream? = null
 
         try {
@@ -48,7 +49,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
             val f = File(storagePath, videoFileName)
-            Log.e(TAG, "downloading to " + f.absolutePath);
+            Log.e(TAG, "downloading to " + f.absolutePath)
             listener.downloadStarted(f)
 
             val fos = FileOutputStream(f)
@@ -119,7 +120,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
         if (isFileType) {
 
-            val videoFile: String? = getVideoFile(urlString);
+            val videoFile: String? = getVideoFile(urlString)
 
             return videoFile != null
         }
@@ -128,7 +129,14 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
     }
 
     private fun getVideoFile(urlString: String): String? {
-        val doc : Document? = Jsoup.connect(urlString).timeout(10000).get();
+        val doc: Document?
+
+        try {
+            doc = Jsoup.connect(urlString).timeout(10000).get()
+        }
+        catch (ignored : SocketTimeoutException) {
+            return null
+        }
 
         val scriptElements = doc?.getElementsByTag("script")
 
@@ -143,18 +151,18 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
                         try {
 
-                            val rtpPlayerSubString: String = scriptText.substring(indexOfEx(scriptText, "RTPPlayer({"), scriptText.lastIndexOf("})"));
+                            val rtpPlayerSubString: String = scriptText.substring(indexOfEx(scriptText, "RTPPlayer({"), scriptText.lastIndexOf("})"))
 
                             if (rtpPlayerSubString.indexOf(".mp4") >= 0) {  // is video file
 
                                 if (rtpPlayerSubString.indexOf("fileKey: \"") >= 0) {
 
-                                    var link = rtpPlayerSubString.substring(
+                                    val link : String = rtpPlayerSubString.substring(
                                             indexOfEx(rtpPlayerSubString, "fileKey: \""),
-                                            indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","));
+                                            indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","))
 
 
-                                    return "http://cdn-ondemand.rtp.pt" + link;
+                                    return "http://cdn-ondemand.rtp.pt" + link
                                 }
 
                             } else if (rtpPlayerSubString.indexOf(".mp3") >= 0) { // is audio file
@@ -163,7 +171,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
                                     return rtpPlayerSubString.substring(
                                             indexOfEx(rtpPlayerSubString, "file: \""),
-                                            indexOfEx(rtpPlayerSubString, "file: \"") +rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","));
+                                            indexOfEx(rtpPlayerSubString, "file: \"") +rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","))
 
                                 }
                             }
@@ -175,17 +183,24 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             }
         }
 
-        return null;
+        return null
     }
 
     private fun getVideoFileName(urlString: String, videoFile: String): String {
-        val doc : Document? = Jsoup.connect(urlString).timeout(10000).get();
+        val doc: Document?
+
+        try {
+            doc = Jsoup.connect(urlString).timeout(10000).get()
+        }
+        catch (ignored : SocketTimeoutException) {
+            return videoFile
+        }
 
         val titleElements = doc?.getElementsByTag("title")
 
         if (titleElements != null && titleElements.size > 0) {
 
-            var title = titleElements.elementAt(0).text();
+            var title = titleElements.elementAt(0).text()
 
             title = title.replace('-',' ')
                     .replace(':',' ')
@@ -194,29 +209,28 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
                     .replace(' ', '.')
                     .replace(' ', '.')
                     .replace(".RTP.Play.RTP", "")
-            title = Normalizer.normalize(title, Normalizer.Form.NFKD );
-            title = title.replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "");
+            title = Normalizer.normalize(title, Normalizer.Form.NFKD )
+            title = title.replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
 
             if (videoFile.indexOf(".mp4") >= 0) {  // is video file
 
-                return title + ".mp4";
+                return "$title.mp4"
 
             } else if (videoFile.indexOf(".mp3") >= 0) { // is audio file
-
-                return title + ".mp3";
+                return "$title.mp3"
             }
 
-            return title;
+            return title
         }
 
-        return videoFile;
+        return videoFile
     }
 
     fun indexOfEx(string : String, subString: String) : Int {
         if (string.contains(subString)) {
             return string.indexOf(subString) + subString.length
         }
-        return 0;
+        return 0
     }
 
 }
