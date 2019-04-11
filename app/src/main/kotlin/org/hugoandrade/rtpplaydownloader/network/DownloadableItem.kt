@@ -108,6 +108,13 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
         fireDownloadStateChange()
     }
 
+    override fun downloadFailed() {
+        this.state = State.End
+        fireDownloadStateChange()
+        Log.e(TAG, "failed to download " + filepath)
+        viewOps?.onParsingError(urlText, "failed to download " + filepath)
+    }
+
     private fun isValidURL(urlText: String): Boolean {
         return try {
             val url = URL(urlText)

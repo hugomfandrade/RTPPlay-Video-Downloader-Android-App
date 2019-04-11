@@ -14,6 +14,8 @@ import java.text.Normalizer
 
 class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
+    private lateinit var mDownloaderTaskListener: DownloaderTaskListener
+
     private var doCanceling: Boolean = false
 
     override fun cancel() {
@@ -29,6 +31,8 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
     }
 
     override fun download(listener: DownloaderTaskListener, urlString: String) {
+
+        mDownloaderTaskListener = listener
 
         val videoFile: String = getVideoFile(urlString) ?: return
         val videoFileName: String = getVideoFileName(urlString, videoFile)
@@ -80,8 +84,10 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
         } catch (mue: MalformedURLException) {
             mue.printStackTrace()
+            listener.downloadFailed()
         } catch (ioe: IOException) {
             ioe.printStackTrace()
+            listener.downloadFailed()
         } finally {
             try {
                 inputStream?.close()
@@ -101,6 +107,8 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
                 // just going to ignore this one
             }
             f.delete()
+
+            mDownloaderTaskListener.downloadFailed()
             return true
         }
         return false

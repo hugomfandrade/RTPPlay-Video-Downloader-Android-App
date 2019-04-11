@@ -60,10 +60,10 @@ class DownloadItemsAdapter() :
         val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItem.State.Downloading
         val isDownloading : Boolean = downloadableItem.isDownloading()
 
-        holder.binding.cancelDownloadImageView.visibility = if (isDownloading) View.VISIBLE else View.GONE
-        holder.binding.pauseDownloadImageView.visibility = if (isDownloading && isInDownloadingState) View.VISIBLE else View.GONE
-        holder.binding.resumeDownloadImageView.visibility = if (isDownloading && !isInDownloadingState) View.VISIBLE else View.GONE
-        holder.binding.refreshDownloadImageView.visibility = if (!isDownloading) View.VISIBLE else View.GONE
+        holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
+        holder.binding.pauseDownloadImageView.visibility = if (isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
+        holder.binding.resumeDownloadImageView.visibility = if (isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
+        holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
     }
 
     override fun getItemCount(): Int {
@@ -72,9 +72,11 @@ class DownloadItemsAdapter() :
 
     fun add(downloadableItem: DownloadableItem) {
         synchronized(downloadableItemList) {
-            downloadableItem.addDownloadStateChangeListener(this);
-            downloadableItemList.add(downloadableItem)
-            notifyItemInserted(getItemCount() - 1)
+            if (!downloadableItemList.contains(downloadableItem)) {
+                downloadableItem.addDownloadStateChangeListener(this);
+                downloadableItemList.add(downloadableItem)
+                notifyItemInserted(getItemCount() - 1)
+            }
         }
     }
 

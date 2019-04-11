@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
@@ -27,7 +28,7 @@
             android:layout_marginStart="6dp"
             android:layout_marginLeft="6dp"
             android:lines="1"
-            android:text="Hello"
+            tools:text="Hello"
             app:layout_constraintLeft_toRightOf="@id/download_item_media_image_view"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -40,10 +41,9 @@
             android:layout_marginLeft="6dp"
             app:cursorColor="@color/colorPrimary"
             android:background="@color/colorAccent"
-            app:layout_constraintLeft_toRightOf="@id/download_item_media_image_view"
             app:layout_constraintStart_toEndOf="@+id/download_item_media_image_view"
             app:layout_constraintTop_toBottomOf="@id/download_item_title_text_view"
-            app:layout_constraintEnd_toStartOf="@+id/pause_download_image_view" />
+            app:layout_constraintEnd_toStartOf="@+id/resume_download_image_view" />
 
         <ImageView
             android:id="@+id/resume_download_image_view"
@@ -55,8 +55,7 @@
             android:onClick="resumeDownload"
             app:layout_constraintTop_toTopOf="@+id/download_item_title_progressView"
             app:layout_constraintBottom_toBottomOf="@+id/download_item_title_progressView"
-            app:layout_constraintLeft_toRightOf="@+id/download_item_title_progressView"
-            app:layout_constraintEnd_toStartOf="@+id/cancel_download_image_view"
+            app:layout_constraintEnd_toStartOf="@+id/pause_download_image_view"
             />
 
         <ImageView
@@ -69,7 +68,6 @@
             android:onClick="pauseDownload"
             app:layout_constraintTop_toTopOf="@+id/download_item_title_progressView"
             app:layout_constraintBottom_toBottomOf="@+id/download_item_title_progressView"
-            app:layout_constraintLeft_toRightOf="@+id/download_item_title_progressView"
             app:layout_constraintEnd_toStartOf="@+id/cancel_download_image_view"
             />
 
@@ -83,7 +81,6 @@
             android:onClick="cancelDownload"
             app:layout_constraintTop_toTopOf="@+id/download_item_title_progressView"
             app:layout_constraintBottom_toBottomOf="@+id/download_item_title_progressView"
-            app:layout_constraintLeft_toRightOf="@+id/download_item_title_progressView"
             app:layout_constraintEnd_toStartOf="@+id/refresh_download_image_view"
             />
 
@@ -97,7 +94,6 @@
             android:onClick="retryDownload"
             app:layout_constraintTop_toTopOf="@+id/download_item_title_progressView"
             app:layout_constraintBottom_toBottomOf="@+id/download_item_title_progressView"
-            app:layout_constraintLeft_toRightOf="@+id/download_item_title_progressView"
             app:layout_constraintEnd_toEndOf="parent"
             />
 
