@@ -17,7 +17,7 @@ abstract class DownloaderTaskBase {
 
         isDownloading = true
 
-        object : Thread() {
+        object : Thread("Thread_download_" + urlString) {
             override fun run() {
 
                 download(listener, urlString)

@@ -49,12 +49,15 @@ class DownloadItemsAdapter() :
 
         if (downloadableItem.state == DownloadableItem.State.Start) {
             holder.binding.downloadItemTitleProgressView.setProgress(0.0)
+            holder.binding.downloadProgressTextView.text = ""
         }
         else if (downloadableItem.state == DownloadableItem.State.Downloading) {
             holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
+            holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
         }
         else if (downloadableItem.state == DownloadableItem.State.End) {
             holder.binding.downloadItemTitleProgressView.setProgress(1.0)
+            holder.binding.downloadProgressTextView.text = "100%"
         }
 
         val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItem.State.Downloading
@@ -74,8 +77,9 @@ class DownloadItemsAdapter() :
         synchronized(downloadableItemList) {
             if (!downloadableItemList.contains(downloadableItem)) {
                 downloadableItem.addDownloadStateChangeListener(this);
-                downloadableItemList.add(downloadableItem)
-                notifyItemInserted(getItemCount() - 1)
+                downloadableItemList.add(0, downloadableItem)
+                notifyItemInserted(0)
+                notifyItemRangeChanged(0, itemCount)
             }
         }
     }
@@ -138,19 +142,21 @@ class DownloadItemsAdapter() :
         }
 
         override fun onClick(v: View?) {
+            val item : DownloadableItem;
             synchronized(downloadableItemList) {
-                if (v == binding.cancelDownloadImageView) {
-                    downloadableItemList.get(adapterPosition).cancel()
-                }
-                else if (v == binding.pauseDownloadImageView) {
-                    downloadableItemList.get(adapterPosition).pause()
-                }
-                else if (v == binding.refreshDownloadImageView) {
-                    downloadableItemList.get(adapterPosition).refresh()
-                }
-                else if (v == binding.resumeDownloadImageView) {
-                    downloadableItemList.get(adapterPosition).resume()
-                }
+                item = downloadableItemList.get(adapterPosition)
+            }
+            if (v == binding.cancelDownloadImageView) {
+                item.cancel()
+            }
+            else if (v == binding.pauseDownloadImageView) {
+                item.pause()
+            }
+            else if (v == binding.refreshDownloadImageView) {
+                item.refresh()
+            }
+            else if (v == binding.resumeDownloadImageView) {
+                item.resume()
             }
         }
     }

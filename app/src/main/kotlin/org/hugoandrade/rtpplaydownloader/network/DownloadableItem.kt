@@ -77,7 +77,9 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
     }
 
     fun refresh() {
-        cancel()
+        if (checkNotNull(downloaderTask).isDownloading) {
+            cancel()
+        }
         start()
     }
 
@@ -109,7 +111,7 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
     }
 
     override fun downloadFailed() {
-        this.state = State.End
+        this.state = State.Start
         fireDownloadStateChange()
         Log.e(TAG, "failed to download " + filepath)
         viewOps?.onParsingError(urlText, "failed to download " + filepath)
