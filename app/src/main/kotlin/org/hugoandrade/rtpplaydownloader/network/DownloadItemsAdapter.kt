@@ -35,32 +35,32 @@ class DownloadItemsAdapter() :
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DownloadItemsAdapter.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater: LayoutInflater = LayoutInflater.from(parent.context)
         val binding : DownloadItemBinding = DataBindingUtil.inflate(layoutInflater, R.layout.download_item, parent, false)
         return ViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: DownloadItemsAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         // holder.binding.setPost(downloadableItemList[position])
         val downloadableItem: DownloadableItem = downloadableItemList[position]
 
         holder.binding.downloadItemTitleTextView.text = downloadableItem.filename
 
-        if (downloadableItem.state == DownloadableItem.State.Start) {
+        if (downloadableItem.state == DownloadableItemState.Start) {
             holder.binding.downloadItemTitleProgressView.setProgress(0.0)
             holder.binding.downloadProgressTextView.text = ""
         }
-        else if (downloadableItem.state == DownloadableItem.State.Downloading) {
+        else if (downloadableItem.state == DownloadableItemState.Downloading) {
             holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
             holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
         }
-        else if (downloadableItem.state == DownloadableItem.State.End) {
+        else if (downloadableItem.state == DownloadableItemState.End) {
             holder.binding.downloadItemTitleProgressView.setProgress(1.0)
             holder.binding.downloadProgressTextView.text = "100%"
         }
 
-        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItem.State.Downloading
+        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItemState.Downloading
         val isDownloading : Boolean = downloadableItem.isDownloading()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
@@ -85,7 +85,7 @@ class DownloadItemsAdapter() :
     }
 
     fun remove(downloadableItem: DownloadableItem) {
-        downloadableItem.removeDownloadStateChangeListener(this);
+        downloadableItem.removeDownloadStateChangeListener(this)
         synchronized(downloadableItemList) {
             if (downloadableItemList.contains(downloadableItem)) {
                 val index: Int = downloadableItemList.indexOf(downloadableItem)
@@ -107,31 +107,27 @@ class DownloadItemsAdapter() :
 
     private fun internalNotifyItemChanged(index: Int) {
         synchronized(recyclerViewLock) {
-            recyclerView?.post(Runnable {
+            recyclerView?.post {
                 if (recyclerView == null) {
                     notifyItemChanged(index)
-                }
-                else {
+                } else {
                     val view : View? = null// recyclerView?.layoutManager?.findViewByPosition(index)
 
                     if (view == null) {
 
                         while (recyclerView?.isComputingLayout() == true) { }
                         notifyItemChanged(index)
-                    }
-                    else {
+                    } else {
                         // update here
                         notifyItemChanged(index)
                     }
                 }
-            })
-
+            }
         }
-
     }
 
     inner class ViewHolder(val binding: DownloadItemBinding) :
-            RecyclerView.ViewHolder(binding.getRoot()),
+            RecyclerView.ViewHolder(binding.root),
             View.OnClickListener {
 
         init {
@@ -144,7 +140,7 @@ class DownloadItemsAdapter() :
         override fun onClick(v: View?) {
             val item : DownloadableItem;
             synchronized(downloadableItemList) {
-                item = downloadableItemList.get(adapterPosition)
+                item = downloadableItemList[adapterPosition]
             }
             if (v == binding.cancelDownloadImageView) {
                 item.cancel()

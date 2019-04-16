@@ -31,6 +31,22 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
         isDownloading = false
     }
 
+    override fun parseMediaFile(urlString: String): Boolean {
+
+        val videoFile: String = getVideoFile(urlString) ?: return false
+
+        val videoFileName: String = getVideoFileName(urlString, videoFile)
+
+        try {
+            val u: URL = URL(videoFile)
+        }
+        catch (mue: MalformedURLException) {
+            mue.printStackTrace()
+            return false
+        }
+        return true
+    }
+
     override fun download(listener: DownloaderTaskListener, urlString: String) {
 
         mDownloaderTaskListener = listener

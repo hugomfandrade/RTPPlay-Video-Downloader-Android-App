@@ -5,7 +5,6 @@ import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
 import android.content.Context
 import android.databinding.DataBindingUtil
-import android.databinding.adapters.TextViewBindingAdapter
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.DefaultItemAnimator
@@ -18,6 +17,8 @@ import android.util.Log
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
+import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
 import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
@@ -155,7 +156,17 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     }
 
     private fun doDownload(url: String) {
-        mDownloadManager.start(url)
+        val future : ParseFuture = mDownloadManager.parseUrl(url)
+        future.addCallback(object : FutureCallback<DownloaderTaskBase> {
+
+            override fun onSuccess(result: DownloaderTaskBase?) {
+
+            }
+
+            override fun onFailed(errorMessage: String) {
+
+            }
+        })
     }
 
     override fun onParsingError(url: String, message: String) {
@@ -171,7 +182,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
                 // listen for end of download and show message
-                if (downloadableItem.state == DownloadableItem.State.End) {
+                if (downloadableItem.state == DownloadableItemState.End) {
                     runOnUiThread {
                         val message = "Finished downloading " + downloadableItem.filename
                         Log.e(TAG, message)

@@ -1,25 +1,18 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.util.Log
+import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
 import java.io.File
-import java.net.URL
 
 class DownloadableItem(private val urlText: String, private val viewOps: DownloadManagerViewOps?) :
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
-    enum class State {
-        Start,
-        Downloading,
-        End
-    }
-
     val TAG : String = javaClass.simpleName
 
-    private val mFileIdentifier : FileIdentifier = FileIdentifier()
     private var downloaderTask: DownloaderTaskBase? = null
 
-    var state: State = State.Start
+    var state: DownloadableItemState = DownloadableItemState.Start
     var filename: String? = null
     var filepath: String? = null
     var progress : Float = 0f
@@ -28,10 +21,10 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
 
     fun start(): DownloadableItem {
 
-        val isUrl = isValidURL(urlText)
+        val isUrl : Boolean = NetworkUtils.isValidURL(urlText)
 
         if (!isUrl) {
-            this.state = State.End
+            this.state = DownloadableItemState.End
             fireDownloadStateChange()
             viewOps?.onParsingError(urlText, "is not a valid website")
             return this
@@ -40,18 +33,18 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
         object : Thread() {
             override fun run() {
 
-                downloaderTask = mFileIdentifier.findHost(urlText)
+                downloaderTask = FileIdentifier.findHost(urlText)
 
                 val downloading : Boolean? = downloaderTask?.downloadAsync(this@DownloadableItem, urlText)
 
                 if (downloading == null || !downloading) {
-                    this@DownloadableItem.state = DownloadableItem.State.End
+                    this@DownloadableItem.state = DownloadableItemState.End
                     fireDownloadStateChange()
                     viewOps?.onParsingError(urlText, "could not find filetype")
                 }
                 else {
                     viewOps?.onParsingSuccessful(this@DownloadableItem)
-                    this@DownloadableItem.state = DownloadableItem.State.Downloading
+                    this@DownloadableItem.state = DownloadableItemState.Downloading
                     fireDownloadStateChange()
                 }
             }
@@ -61,7 +54,7 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
 
     fun cancel() {
         downloaderTask?.cancel()
-        state = State.End
+        state = DownloadableItemState.End
         fireDownloadStateChange()
         viewOps?.onParsingError(urlText, "download was cancel")
     }
@@ -90,14 +83,14 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
 
     override fun onProgress(progress: Float) {
         this.progress = progress
-        this.state = DownloadableItem.State.Downloading
+        this.state = DownloadableItemState.Downloading
         fireDownloadStateChange()
     }
 
     override fun downloadStarted(f: File) {
         this.filepath = f.absolutePath
         this.filename = f.name
-        this.state = State.Start
+        this.state = DownloadableItemState.Start
         Log.e(TAG, "start downloading to " + f.absolutePath)
         fireDownloadStateChange()
     }
@@ -105,25 +98,16 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
     override fun downloadFinished(f: File) {
         this.filepath = f.absolutePath
         this.filename = f.name
-        this.state = State.End
+        this.state = DownloadableItemState.End
         Log.e(TAG, "finished downloading to " + f.absolutePath)
         fireDownloadStateChange()
     }
 
     override fun downloadFailed() {
-        this.state = State.Start
+        this.state = DownloadableItemState.Start
         fireDownloadStateChange()
         Log.e(TAG, "failed to download " + filepath)
         viewOps?.onParsingError(urlText, "failed to download " + filepath)
-    }
-
-    private fun isValidURL(urlText: String): Boolean {
-        return try {
-            val url = URL(urlText)
-            "http" == url.protocol || "https" == url.protocol
-        } catch (e : Exception) {
-            false
-        }
     }
 
     @Volatile

@@ -28,6 +28,8 @@ abstract class DownloaderTaskBase {
         return true
     }
 
+    abstract fun parseMediaFile(urlString: String): Boolean
+
     protected abstract fun download(listener: DownloaderTaskListener, urlString: String)
 
     abstract fun cancel()
