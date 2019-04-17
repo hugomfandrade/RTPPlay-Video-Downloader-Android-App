@@ -33,9 +33,8 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
     override fun parseMediaFile(urlString: String): Boolean {
 
-        val videoFile: String = getVideoFile(urlString) ?: return false
-
-        val videoFileName: String = getVideoFileName(urlString, videoFile)
+        videoFile = getVideoFile(urlString) ?: return false
+        videoFileName = getVideoFileName(urlString, videoFile)
 
         try {
             val u: URL = URL(videoFile)
@@ -53,6 +52,70 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
         val videoFile: String = getVideoFile(urlString) ?: return
         val videoFileName: String = getVideoFileName(urlString, videoFile)
+
+        val u: URL?
+        var inputStream: InputStream? = null
+
+        try {
+            u = URL(videoFile)
+            inputStream = u.openStream()
+            val huc = u.openConnection() as HttpURLConnection //to know the size of video
+            val size = huc.getContentLength()
+
+            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+            val f = File(storagePath, videoFileName)
+            Log.e(TAG, "downloading to " + f.absolutePath)
+            listener.downloadStarted(f)
+
+            val fos = FileOutputStream(f)
+            val buffer = ByteArray(1024)
+            if (inputStream != null) {
+                var len = inputStream.read(buffer)
+                var progress = len
+                while (len > 0) {
+
+                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                        // do cancelling
+                        return
+                    }
+
+                    while (!isDownloading){
+                        // pause
+
+                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                            // do cancelling while paused
+                            return
+                        }
+                    }
+
+                    fos.write(buffer, 0, len)
+                    len = inputStream.read(buffer)
+                    progress += len
+                    listener.onProgress(progress.toFloat() / size.toFloat())
+                }
+            }
+            listener.downloadFinished(f)
+
+            fos.close()
+
+        } catch (mue: MalformedURLException) {
+            mue.printStackTrace()
+            listener.downloadFailed()
+        } catch (ioe: IOException) {
+            ioe.printStackTrace()
+            listener.downloadFailed()
+        } finally {
+            try {
+                inputStream?.close()
+            } catch (ioe: IOException) {
+                // just going to ignore this one
+            }
+        }
+    }
+
+    override fun downloadVideoFile(listener: DownloaderTaskListener, videoFile: String?, videoFileName: String?) {
+
+        mDownloaderTaskListener = listener
 
         val u: URL?
         var inputStream: InputStream? = null
@@ -202,19 +265,19 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
         return null
     }
 
-    private fun getVideoFileName(urlString: String, videoFile: String): String {
+    private fun getVideoFileName(urlString: String, videoFile: String?): String {
         val doc: Document?
 
         try {
             doc = Jsoup.connect(urlString).timeout(10000).get()
         }
         catch (ignored : SocketTimeoutException) {
-            return videoFile
+            return videoFile?:urlString
         }
 
         val titleElements = doc?.getElementsByTag("title")
 
-        if (titleElements != null && titleElements.size > 0) {
+        if (videoFile != null && titleElements != null && titleElements.size > 0) {
 
             var title = titleElements.elementAt(0).text()
 
@@ -239,7 +302,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             return title
         }
 
-        return videoFile
+        return videoFile?:urlString
     }
 
     fun indexOfEx(string : String, subString: String) : Int {

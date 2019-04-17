@@ -8,6 +8,10 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
+    constructor(task: DownloaderTaskBase, viewOps: DownloadManagerViewOps?) : this("", viewOps) {
+        downloaderTask = task
+    }
+
     val TAG : String = javaClass.simpleName
 
     private var downloaderTask: DownloaderTaskBase? = null
@@ -18,6 +22,31 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
     var progress : Float = 0f
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
+
+    fun startDownload(): DownloadableItem {
+
+        object : Thread() {
+            override fun run() {
+
+                val downloading : Boolean? = downloaderTask?.downloadVideoFileAsync(
+                        this@DownloadableItem,
+                        downloaderTask?.videoFile,
+                        downloaderTask?.videoFileName)
+
+                if (downloading == null || !downloading) {
+                    this@DownloadableItem.state = DownloadableItemState.End
+                    fireDownloadStateChange()
+                    viewOps?.onParsingError(urlText, "could not find filetype")
+                }
+                else {
+                    viewOps?.onParsingSuccessful(this@DownloadableItem)
+                    this@DownloadableItem.state = DownloadableItemState.Downloading
+                    fireDownloadStateChange()
+                }
+            }
+        }.start()
+        return this
+    }
 
     fun start(): DownloadableItem {
 

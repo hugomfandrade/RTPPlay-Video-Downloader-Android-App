@@ -61,4 +61,8 @@ class DownloadManager  {
 
         return DownloadableItem(urlText, mViewOps.get()).start()
     }
+
+    fun download(task: DownloaderTaskBase) : DownloadableItem  {
+        return DownloadableItem(task, mViewOps.get()).startDownload()
+    }
 }

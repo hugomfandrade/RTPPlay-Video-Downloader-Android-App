@@ -18,6 +18,7 @@ import android.view.View
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
 import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
@@ -105,7 +106,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             // Gets the clipboard as text.
             val pasteData = item.text.toString()
 
-            if (isValidURL(pasteData)) {
+            if (NetworkUtils.isValidURL(pasteData)) {
                 binding.inputUriEditText.setText(pasteData)
                 binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
             } else {
@@ -155,18 +156,57 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
     }
 
+    private var parsingDialog : ParsingDialog? = null
+
     private fun doDownload(url: String) {
+
+        val isParsing : Boolean = parsingDialog?.isShowing() ?: false
+
+        if (isParsing) {
+            return
+        }
+        else {
+            parsingDialog?.dismissDialog()
+        }
+
         val future : ParseFuture = mDownloadManager.parseUrl(url)
         future.addCallback(object : FutureCallback<DownloaderTaskBase> {
 
             override fun onSuccess(result: DownloaderTaskBase?) {
 
+                runOnUiThread {
+                    parsingDialog?.showParsingResult(result)
+                }
             }
 
             override fun onFailed(errorMessage: String) {
+                runOnUiThread {
+                    val message = "Unable to parse $errorMessage"
 
+                    binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+
+                    parsingDialog?.dismissDialog()
+                    parsingDialog = null
+                }
             }
         })
+
+        parsingDialog = ParsingDialog.Builder.instance(this)
+                .setOnParsingDialog(object : ParsingDialog.OnParsingListener {
+                    override fun onCancelled() {
+                        future.failed("parsing was cancelled")
+                    }
+                    override fun onDownload(task : DownloaderTaskBase?) {
+                        if (task != null) {
+                            mDownloadManager.download(task)
+                        }
+
+                        parsingDialog?.dismissDialog()
+                        parsingDialog = null
+                    }
+                })
+                .create()
+        parsingDialog?.show()
     }
 
     override fun onParsingError(url: String, message: String) {
@@ -216,14 +256,5 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         }
                     }
                 })
-    }
-
-    private fun isValidURL(urlText: String): Boolean {
-        return try {
-            val url = URL(urlText)
-            "http" == url.protocol || "https" == url.protocol
-        } catch (e: Exception) {
-            false
-        }
     }
 }

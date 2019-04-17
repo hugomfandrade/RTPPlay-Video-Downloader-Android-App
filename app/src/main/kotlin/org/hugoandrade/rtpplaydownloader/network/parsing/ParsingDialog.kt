@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.utils
+package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import android.app.AlertDialog
 import android.content.Context
@@ -11,16 +11,18 @@ import android.os.Handler
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.network.DownloaderTaskBase
 
-class PermissionDialog(context: Context) {
+class ParsingDialog(context: Context) {
 
     @Suppress("unused")
-    private val TAG = PermissionDialog::class.java.getSimpleName()
+    private val TAG = ParsingDialog::class.java.simpleName
 
     private var mContext: Context = context
 
-    private var mListener: OnPermissionListener? = null
+    private var mListener: OnParsingListener? = null
 
     private var mAlertDialog: AlertDialog? = null
     private var mView: View? = null
@@ -31,7 +33,7 @@ class PermissionDialog(context: Context) {
         buildView()
     }
 
-    internal fun setOnPermissionDialogListener(listener: OnPermissionListener?) {
+    internal fun setOnParsingDialogListener(listener: OnParsingListener?) {
         mListener = listener
     }
 
@@ -41,31 +43,42 @@ class PermissionDialog(context: Context) {
     }
 
     private fun buildView() {
-        mView = View.inflate(mContext, R.layout.dialog_storage_permission, null)
-        mView!!.findViewById<View>(R.id.tv_not_now).setOnClickListener {
+        mView = View.inflate(mContext, R.layout.dialog_parsing, null)
+        mView!!.findViewById<View>(R.id.tv_cancel).setOnClickListener {
 
-            mListener!!.onAllowed(false)
-
-            dismissDialog()
-        }
-        mView!!.findViewById<View>(R.id.tv_continue).setOnClickListener {
-
-            mListener!!.onAllowed(true)
+            mListener!!.onCancelled()
 
             dismissDialog()
         }
+        mView!!.findViewById<View>(R.id.tv_download).visibility = View.GONE
+        mView!!.findViewById<View>(R.id.parsing_item_layout).visibility = View.GONE
 
         mAlertDialog = AlertDialog.Builder(mContext)
                 .setOnKeyListener(DialogInterface.OnKeyListener { dialog, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
 
-                        mListener!!.onAllowed(false)
+                        mListener!!.onCancelled()
 
                         return@OnKeyListener true
                     }
                     false
                 })
                 .create()
+    }
+
+    fun showParsingResult(task: DownloaderTaskBase?) {
+        mView!!.findViewById<View>(R.id.parsing_progress_bar).visibility = View.GONE
+        mView!!.findViewById<View>(R.id.tv_cancel).visibility = View.GONE
+
+        mView!!.findViewById<View>(R.id.parsing_item_layout).visibility = View.VISIBLE
+        (mView!!.findViewById<View>(R.id.parsing_item_title_text_view) as TextView).text = task?.videoFileName
+        mView!!.findViewById<View>(R.id.tv_download).visibility = View.VISIBLE
+        mView!!.findViewById<View>(R.id.tv_download).setOnClickListener {
+
+            mListener!!.onDownload(task)
+
+            dismissDialog()
+        }
     }
 
     private fun delayedShow() {
@@ -96,13 +109,18 @@ class PermissionDialog(context: Context) {
         window.attributes = lp
     }
 
-    private fun dismissDialog() {
+    fun dismissDialog() {
         mAlertDialog!!.dismiss()
     }
 
+    fun isShowing(): Boolean {
+        return mAlertDialog?.isShowing ?: false
+    }
 
-    interface OnPermissionListener {
-        fun onAllowed(wasAllowed: Boolean)
+
+    interface OnParsingListener {
+        fun onCancelled()
+        fun onDownload(task : DownloaderTaskBase?)
     }
 
     class Builder private constructor(context: Context) {
@@ -113,13 +131,13 @@ class PermissionDialog(context: Context) {
             P = CalendarDialogParams(context)
         }
 
-        fun setOnPermissionDialog(listener: OnPermissionListener): Builder {
-            P.mOnPermissionListener = listener
+        fun setOnParsingDialog(listener: OnParsingListener): Builder {
+            P.mOnParsingListener = listener
             return this
         }
 
-        fun create(): PermissionDialog {
-            val permissionDialog = PermissionDialog(P.mContext)
+        fun create(): ParsingDialog {
+            val permissionDialog = ParsingDialog(P.mContext)
 
             P.apply(permissionDialog)
 
@@ -136,10 +154,10 @@ class PermissionDialog(context: Context) {
 
     private class CalendarDialogParams internal constructor(internal var mContext: Context) {
 
-        internal var mOnPermissionListener: OnPermissionListener? = null
+        internal var mOnParsingListener: OnParsingListener? = null
 
-        internal fun apply(permissionDialog: PermissionDialog) {
-            permissionDialog.setOnPermissionDialogListener(mOnPermissionListener)
+        internal fun apply(permissionDialog: ParsingDialog) {
+            permissionDialog.setOnParsingDialogListener(mOnParsingListener)
         }
     }
 }
