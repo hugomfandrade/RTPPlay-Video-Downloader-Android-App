@@ -32,7 +32,7 @@
             app:layout_constraintLeft_toRightOf="@id/download_item_media_image_view"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <org.hugoandrade.rtpplaydownloader.common.ProgressView
+        <org.hugoandrade.rtpplaydownloader.widget.ProgressView
             android:id="@+id/download_item_title_progressView"
             android:layout_width="0dp"
             android:layout_height="30dp"

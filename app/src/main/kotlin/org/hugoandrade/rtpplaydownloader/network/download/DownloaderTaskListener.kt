@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network
+package org.hugoandrade.rtpplaydownloader.network.download
 
 import java.io.File
 

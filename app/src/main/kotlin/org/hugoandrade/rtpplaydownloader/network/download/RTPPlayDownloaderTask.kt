@@ -1,7 +1,8 @@
-package org.hugoandrade.rtpplaydownloader.network
+package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Environment
 import android.util.Log
+import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.URL
@@ -195,6 +196,11 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
     }
 
     override fun isValid(urlString: String) : Boolean {
+
+        if (!NetworkUtils.isValidURL(urlString)) {
+            return false
+        }
+
         val isFileType: Boolean = urlString.contains("www.rtp.pt/play")
 
         if (isFileType) {

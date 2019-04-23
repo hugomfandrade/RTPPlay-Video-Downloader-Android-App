@@ -15,15 +15,13 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
+import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
-import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
-import org.hugoandrade.rtpplaydownloader.utils.PermissionDialog
-import org.hugoandrade.rtpplaydownloader.utils.PermissionUtils
-import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
-import java.net.URL
+import org.hugoandrade.rtpplaydownloader.utils.*
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 

@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network
+package org.hugoandrade.rtpplaydownloader.network.download
 
 abstract class DownloaderTaskBase {
 
@@ -11,6 +11,9 @@ abstract class DownloaderTaskBase {
     abstract fun isValid(urlString: String) : Boolean
 
     // abstract fun findDownloadableFile(urlString: String)
+
+
+    abstract fun parseMediaFile(urlString: String): Boolean
 
     fun downloadAsync(listener: DownloaderTaskListener, urlString: String) : Boolean {
         if (isDownloading) {
@@ -47,8 +50,6 @@ abstract class DownloaderTaskBase {
 
         return true
     }
-
-    abstract fun parseMediaFile(urlString: String): Boolean
 
     protected abstract fun download(listener: DownloaderTaskListener, urlString: String)
     protected abstract fun downloadVideoFile(listener: DownloaderTaskListener, videoFile: String?, videoFileName: String?)

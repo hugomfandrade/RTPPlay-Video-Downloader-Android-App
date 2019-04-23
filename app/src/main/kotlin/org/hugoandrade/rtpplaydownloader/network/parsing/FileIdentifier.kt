@@ -1,7 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import org.hugoandrade.rtpplaydownloader.network.DownloaderTaskBase
-import org.hugoandrade.rtpplaydownloader.network.RTPPlayDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayDownloaderTask
 
 class FileIdentifier() {
 

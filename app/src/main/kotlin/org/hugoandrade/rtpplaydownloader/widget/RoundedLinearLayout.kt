@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.common
+package org.hugoandrade.rtpplaydownloader.widget
 
 import android.content.Context
 import android.content.res.ColorStateList

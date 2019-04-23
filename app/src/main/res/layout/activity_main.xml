@@ -12,7 +12,7 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <org.hugoandrade.rtpplaydownloader.common.RoundedLinearLayout
+        <org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout
             android:id="@+id/input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -55,7 +55,7 @@
                 android:src="@drawable/ic_content_paste"
                 android:onClick="pasteFromClipboard"/>
 
-        </org.hugoandrade.rtpplaydownloader.common.RoundedLinearLayout>
+        </org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout>
 
         <Button
             android:id="@+id/download_media_button"

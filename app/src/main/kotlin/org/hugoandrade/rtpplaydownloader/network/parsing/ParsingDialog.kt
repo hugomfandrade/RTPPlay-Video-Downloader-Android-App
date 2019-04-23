@@ -13,7 +13,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 
 class ParsingDialog(context: Context) {
 

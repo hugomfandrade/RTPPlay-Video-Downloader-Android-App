@@ -1,7 +1,10 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.util.Log
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
 import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
+import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.io.File
 
 class DownloadableItem(private val urlText: String, private val viewOps: DownloadManagerViewOps?) :

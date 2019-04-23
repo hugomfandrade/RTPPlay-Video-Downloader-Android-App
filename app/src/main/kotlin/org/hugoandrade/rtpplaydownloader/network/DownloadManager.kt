@@ -1,7 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
+import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
 
 class DownloadManager  {
