@@ -4,13 +4,10 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
-import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
 import android.os.Handler
 import android.view.KeyEvent
 import android.view.View
-import android.view.WindowManager
 import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
@@ -20,14 +17,14 @@ class ParsingDialog(context: Context) {
     @Suppress("unused")
     private val TAG = ParsingDialog::class.java.simpleName
 
-    private var mContext: Context = context
-
-    private var mListener: OnParsingListener? = null
-
     private var mAlertDialog: AlertDialog? = null
     private var mView: View? = null
+    private var mContext: Context = context
+    private var mListener: OnParsingListener? = null
 
     private var mHandler: Handler = Handler()
+
+    private var isDismissedBecauseOfTouchOutside : Boolean? = true
 
     init {
         buildView()
@@ -44,20 +41,23 @@ class ParsingDialog(context: Context) {
 
     private fun buildView() {
         mView = View.inflate(mContext, R.layout.dialog_parsing, null)
-        mView!!.findViewById<View>(R.id.tv_cancel).setOnClickListener {
+        mView?.findViewById<View>(R.id.tv_cancel)?.setOnClickListener {
 
-            mListener!!.onCancelled()
+            mListener?.onCancelled()
 
             dismissDialog()
         }
-        mView!!.findViewById<View>(R.id.tv_download).visibility = View.GONE
-        mView!!.findViewById<View>(R.id.parsing_item_layout).visibility = View.GONE
+
+        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.parsing_item_layout)?.visibility = View.GONE
 
         mAlertDialog = AlertDialog.Builder(mContext)
-                .setOnKeyListener(DialogInterface.OnKeyListener { dialog, keyCode, event ->
+                .setOnKeyListener(DialogInterface.OnKeyListener { _, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
 
-                        mListener!!.onCancelled()
+                        mListener?.onCancelled()
+
+                        dismissDialog()
 
                         return@OnKeyListener true
                     }
@@ -67,15 +67,15 @@ class ParsingDialog(context: Context) {
     }
 
     fun showParsingResult(task: DownloaderTaskBase?) {
-        mView!!.findViewById<View>(R.id.parsing_progress_bar).visibility = View.GONE
-        mView!!.findViewById<View>(R.id.tv_cancel).visibility = View.GONE
+        mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
 
-        mView!!.findViewById<View>(R.id.parsing_item_layout).visibility = View.VISIBLE
-        (mView!!.findViewById<View>(R.id.parsing_item_title_text_view) as TextView).text = task?.videoFileName
-        mView!!.findViewById<View>(R.id.tv_download).visibility = View.VISIBLE
-        mView!!.findViewById<View>(R.id.tv_download).setOnClickListener {
+        mView?.findViewById<View>(R.id.parsing_item_layout)?.visibility = View.VISIBLE
+        (mView?.findViewById<View>(R.id.parsing_item_title_text_view) as TextView).text = task?.videoFileName
+        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
+        mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
 
-            mListener!!.onDownload(task)
+            mListener?.onDownload(task)
 
             dismissDialog()
         }
@@ -83,34 +83,25 @@ class ParsingDialog(context: Context) {
 
     private fun delayedShow() {
 
-        mAlertDialog!!.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mAlertDialog!!.window!!.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            mAlertDialog!!.window!!.statusBarColor = Color.TRANSPARENT
+        if (checkNotNull(isDismissedBecauseOfTouchOutside == false)) {
+            return
         }
 
-        val wm = mContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val display = wm.defaultDisplay
-        val size = Point()
-        display.getSize(size)
+        mAlertDialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        mAlertDialog?.setCanceledOnTouchOutside(true)
+        mAlertDialog?.show()
+        mAlertDialog?.setContentView(checkNotNull(mView))
+        mAlertDialog?.setOnDismissListener {
+            if (checkNotNull(isDismissedBecauseOfTouchOutside)) {
 
-        mAlertDialog!!.setCanceledOnTouchOutside(false)
-
-        mAlertDialog!!.show()
-        mAlertDialog!!.setContentView(mView!!)
-        val lp = WindowManager.LayoutParams()
-        val window = mAlertDialog!!.window
-
-        lp.copyFrom(window!!.attributes)
-        //This makes the dialog take up the full width
-        lp.width = WindowManager.LayoutParams.MATCH_PARENT
-        lp.height = WindowManager.LayoutParams.MATCH_PARENT
-        window.attributes = lp
+                mListener?.onCancelled()
+            }
+        }
     }
 
     fun dismissDialog() {
-        mAlertDialog!!.dismiss()
+        isDismissedBecauseOfTouchOutside = false
+        mAlertDialog?.dismiss()
     }
 
     fun isShowing(): Boolean {

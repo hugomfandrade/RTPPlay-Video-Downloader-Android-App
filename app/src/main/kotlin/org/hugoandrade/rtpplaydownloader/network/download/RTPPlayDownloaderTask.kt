@@ -40,10 +40,11 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
         try {
             val u: URL = URL(videoFile)
         }
-        catch (mue: MalformedURLException) {
+        catch (mue: Exception) {
             mue.printStackTrace()
             return false
         }
+
         return true
     }
 
@@ -214,98 +215,106 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
     }
 
     private fun getVideoFile(urlString: String): String? {
-        val doc: Document?
-
         try {
-            doc = Jsoup.connect(urlString).timeout(10000).get()
-        }
-        catch (ignored : SocketTimeoutException) {
-            return null
-        }
+            val doc: Document?
 
-        val scriptElements = doc?.getElementsByTag("script")
+            try {
+                doc = Jsoup.connect(urlString).timeout(10000).get()
+            } catch (ignored: SocketTimeoutException) {
+                return null
+            }
 
-        if (scriptElements != null) {
+            val scriptElements = doc?.getElementsByTag("script")
 
-            for (scriptElement in scriptElements.iterator()) {
+            if (scriptElements != null) {
 
-                for (dataNode : DataNode in scriptElement.dataNodes()) {
-                    if (dataNode.wholeData.contains("RTPPlayer")) {
+                for (scriptElement in scriptElements.iterator()) {
 
-                        val scriptText : String = dataNode.wholeData
+                    for (dataNode: DataNode in scriptElement.dataNodes()) {
+                        if (dataNode.wholeData.contains("RTPPlayer")) {
 
-                        try {
+                            val scriptText: String = dataNode.wholeData
 
-                            val rtpPlayerSubString: String = scriptText.substring(indexOfEx(scriptText, "RTPPlayer({"), scriptText.lastIndexOf("})"))
+                            try {
 
-                            if (rtpPlayerSubString.indexOf(".mp4") >= 0) {  // is video file
+                                val rtpPlayerSubString: String = scriptText.substring(indexOfEx(scriptText, "RTPPlayer({"), scriptText.lastIndexOf("})"))
 
-                                if (rtpPlayerSubString.indexOf("fileKey: \"") >= 0) {
+                                if (rtpPlayerSubString.indexOf(".mp4") >= 0) {  // is video file
 
-                                    val link : String = rtpPlayerSubString.substring(
-                                            indexOfEx(rtpPlayerSubString, "fileKey: \""),
-                                            indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","))
+                                    if (rtpPlayerSubString.indexOf("fileKey: \"") >= 0) {
+
+                                        val link: String = rtpPlayerSubString.substring(
+                                                indexOfEx(rtpPlayerSubString, "fileKey: \""),
+                                                indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","))
 
 
-                                    return "http://cdn-ondemand.rtp.pt" + link
+                                        return "http://cdn-ondemand.rtp.pt" + link
+                                    }
+
+                                } else if (rtpPlayerSubString.indexOf(".mp3") >= 0) { // is audio file
+
+                                    if (rtpPlayerSubString.indexOf("file: \"") >= 0) {
+
+                                        return rtpPlayerSubString.substring(
+                                                indexOfEx(rtpPlayerSubString, "file: \""),
+                                                indexOfEx(rtpPlayerSubString, "file: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","))
+
+                                    }
                                 }
+                            } catch (parsingException: java.lang.Exception) {
 
-                            } else if (rtpPlayerSubString.indexOf(".mp3") >= 0) { // is audio file
-
-                                if (rtpPlayerSubString.indexOf("file: \"") >= 0) {
-
-                                    return rtpPlayerSubString.substring(
-                                            indexOfEx(rtpPlayerSubString, "file: \""),
-                                            indexOfEx(rtpPlayerSubString, "file: \"") +rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","))
-
-                                }
                             }
-                        } catch (parsingException : java.lang.Exception) {
-
                         }
                     }
                 }
             }
+        }
+        catch (e : java.lang.Exception) {
+            e.printStackTrace()
         }
 
         return null
     }
 
     private fun getVideoFileName(urlString: String, videoFile: String?): String {
-        val doc: Document?
-
         try {
-            doc = Jsoup.connect(urlString).timeout(10000).get()
-        }
-        catch (ignored : SocketTimeoutException) {
-            return videoFile?:urlString
-        }
+            val doc: Document?
 
-        val titleElements = doc?.getElementsByTag("title")
-
-        if (videoFile != null && titleElements != null && titleElements.size > 0) {
-
-            var title = titleElements.elementAt(0).text()
-
-            title = title.replace('-',' ')
-                    .replace(':',' ')
-                    .replace("\\s{2,}".toRegex(), " ")
-                    .trim()
-                    .replace(' ', '.')
-                    .replace(' ', '.')
-                    .replace(".RTP.Play.RTP", "")
-            title = Normalizer.normalize(title, Normalizer.Form.NFKD )
-            title = title.replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
-
-            if (videoFile.indexOf(".mp4") >= 0) {  // is video file
-
-                return "$title.mp4"
-
-            } else if (videoFile.indexOf(".mp3") >= 0) { // is audio file
-                return "$title.mp3"
+            try {
+                doc = Jsoup.connect(urlString).timeout(10000).get()
+            } catch (ignored: SocketTimeoutException) {
+                return videoFile ?: urlString
             }
 
-            return title
+            val titleElements = doc?.getElementsByTag("title")
+
+            if (videoFile != null && titleElements != null && titleElements.size > 0) {
+
+                var title = titleElements.elementAt(0).text()
+
+                title = title.replace('-', ' ')
+                        .replace(':', ' ')
+                        .replace("\\s{2,}".toRegex(), " ")
+                        .trim()
+                        .replace(' ', '.')
+                        .replace(' ', '.')
+                        .replace(".RTP.Play.RTP", "")
+                title = Normalizer.normalize(title, Normalizer.Form.NFKD)
+                title = title.replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
+
+                if (videoFile.indexOf(".mp4") >= 0) {  // is video file
+
+                    return "$title.mp4"
+
+                } else if (videoFile.indexOf(".mp3") >= 0) { // is audio file
+                    return "$title.mp3"
+                }
+
+                return title
+            }
+        }
+        catch (e : java.lang.Exception) {
+            e.printStackTrace()
         }
 
         return videoFile?:urlString

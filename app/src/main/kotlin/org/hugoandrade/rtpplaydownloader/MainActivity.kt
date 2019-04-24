@@ -178,6 +178,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             }
 
             override fun onFailed(errorMessage: String) {
+
                 runOnUiThread {
                     val message = "Unable to parse $errorMessage"
 

@@ -1,6 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-interface DownloadManagerViewOps {
+import org.hugoandrade.rtpplaydownloader.common.ContextView
+
+interface DownloadManagerViewOps : ContextView {
     fun onParsingError(url: String, message : String)
     fun onParsingSuccessful(item: DownloadableItem)
 }

@@ -26,9 +26,14 @@ class DownloadManager  {
 
         val future = ParseFuture(urlString)
 
-        object : Thread() {
+        object : Thread("Parsing Thread") {
 
             override fun run() {
+
+                if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                    future.failed("no network")
+                    return
+                }
 
                 val isUrl : Boolean = NetworkUtils.isValidURL(urlString)
 
