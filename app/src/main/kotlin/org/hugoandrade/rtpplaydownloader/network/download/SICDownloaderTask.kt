@@ -5,14 +5,14 @@ import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.URL
-import org.jsoup.nodes.DataNode
+import org.jsoup.nodes.Element
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.SocketTimeoutException
 import java.text.Normalizer
 
-class RTPPlayDownloaderTask : DownloaderTaskBase() {
+class SICDownloaderTask : DownloaderTaskBase() {
 
     private lateinit var mDownloaderTaskListener: DownloaderTaskListener
 
@@ -132,7 +132,13 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             return false
         }
 
-        val isFileType: Boolean = urlString.contains("www.rtp.pt/play")
+        val isFileType: Boolean =
+                urlString.contains("sicradical.sapo.pt") ||
+                urlString.contains("sicradical.pt") ||
+                urlString.contains("sicnoticias.sapo.pt") ||
+                urlString.contains("sicnoticias.pt") ||
+                urlString.contains("sic.sapo.pt") ||
+                urlString.contains("sic.pt")
 
         if (isFileType) {
 
@@ -154,47 +160,25 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
                 return null
             }
 
-            val scriptElements = doc?.getElementsByTag("script")
+            val videoElements = doc?.getElementsByTag("video")
 
-            if (scriptElements != null) {
+            if (videoElements != null) {
+                for (videoElement in videoElements.iterator()) {
 
-                for (scriptElement in scriptElements.iterator()) {
+                    for (sourceElement: Element in videoElement.getElementsByTag("source")) {
 
-                    for (dataNode: DataNode in scriptElement.dataNodes()) {
-                        if (dataNode.wholeData.contains("RTPPlayer")) {
+                        val src : String = sourceElement.attr("src")
+                        val type: String = sourceElement.attr("type")
 
-                            val scriptText: String = dataNode.wholeData
+                        if (src.isEmpty() || type.isEmpty()) continue
 
-                            try {
-
-                                val rtpPlayerSubString: String = scriptText.substring(indexOfEx(scriptText, "RTPPlayer({"), scriptText.lastIndexOf("})"))
-
-                                if (rtpPlayerSubString.indexOf(".mp4") >= 0) {  // is video file
-
-                                    if (rtpPlayerSubString.indexOf("fileKey: \"") >= 0) {
-
-                                        val link: String = rtpPlayerSubString.substring(
-                                                indexOfEx(rtpPlayerSubString, "fileKey: \""),
-                                                indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","))
-
-
-                                        return "http://cdn-ondemand.rtp.pt$link"
-                                    }
-
-                                } else if (rtpPlayerSubString.indexOf(".mp3") >= 0) { // is audio file
-
-                                    if (rtpPlayerSubString.indexOf("file: \"") >= 0) {
-
-                                        return rtpPlayerSubString.substring(
-                                                indexOfEx(rtpPlayerSubString, "file: \""),
-                                                indexOfEx(rtpPlayerSubString, "file: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","))
-
-                                    }
-                                }
-                            } catch (parsingException: java.lang.Exception) {
-
-                            }
+                        val location : String = when {
+                            urlString.contains("http://") -> "http:"
+                            urlString.contains("https://") -> "https:"
+                            else -> ""
                         }
+
+                        return location + src
                     }
                 }
             }
@@ -207,6 +191,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
     }
 
     private fun getVideoFileName(urlString: String, videoFile: String?): String {
+
         try {
             val doc: Document?
 
@@ -214,6 +199,23 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
                 doc = Jsoup.connect(urlString).timeout(10000).get()
             } catch (ignored: SocketTimeoutException) {
                 return videoFile ?: urlString
+            }
+
+            val videoElements = doc?.getElementsByTag("video")
+            var type: String? = null
+
+            if (videoElements != null) {
+                for (videoElement in videoElements.iterator()) {
+
+                    for (sourceElement: Element in videoElement.getElementsByTag("source")) {
+
+                        val src : String = sourceElement.attr("src")
+                        type = sourceElement.attr("type")
+
+                        if (src.isEmpty() || type.isEmpty()) continue
+                        break
+                    }
+                }
             }
 
             val titleElements = doc?.getElementsByTag("title")
@@ -228,16 +230,15 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
                         .trim()
                         .replace(' ', '.')
                         .replace(' ', '.')
-                        .replace(".RTP.Play.RTP", "")
                 title = Normalizer.normalize(title, Normalizer.Form.NFKD)
-                title = title.replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
+                title = title
+                        .replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
+                        .replace("SIC.Noticias.|.", "")
+                        .replace("SIC.Radical.|.", "")
+                        .replace("SIC.|.", "")
 
-                if (videoFile.indexOf(".mp4") >= 0) {  // is video file
-
+                if (checkNotNull(type?.contains("video/mp4"))) {  // is video file
                     return "$title.mp4"
-
-                } else if (videoFile.indexOf(".mp3") >= 0) { // is audio file
-                    return "$title.mp3"
                 }
 
                 return title
@@ -249,12 +250,4 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
         return videoFile?:urlString
     }
-
-    private fun indexOfEx(string : String, subString: String) : Int {
-        if (string.contains(subString)) {
-            return string.indexOf(subString) + subString.length
-        }
-        return 0
-    }
-
 }

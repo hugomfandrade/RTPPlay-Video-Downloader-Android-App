@@ -3,21 +3,15 @@ package org.hugoandrade.rtpplaydownloader.network
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
-import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
-import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.io.File
 
-class DownloadableItem(private val urlText: String, private val viewOps: DownloadManagerViewOps?) :
+class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
+                       private val viewOps: DownloadManagerViewOps?) :
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
-    constructor(task: DownloaderTaskBase, viewOps: DownloadManagerViewOps?) : this("", viewOps) {
-        downloaderTask = task
-    }
-
-    val TAG : String = javaClass.simpleName
-
-    private var downloaderTask: DownloaderTaskBase? = null
+    @Suppress("PrivatePropertyName")
+    private val TAG : String = javaClass.simpleName
 
     var state: DownloadableItemState = DownloadableItemState.Start
     var filename: String? = null
@@ -31,48 +25,12 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
         object : Thread() {
             override fun run() {
 
-                val downloading : Boolean? = downloaderTask?.downloadVideoFileAsync(
-                        this@DownloadableItem,
-                        downloaderTask?.videoFile,
-                        downloaderTask?.videoFileName)
+                val downloading : Boolean = downloaderTask.downloadMediaFileAsync(this@DownloadableItem)
 
-                if (downloading == null || !downloading) {
+                if (!downloading) {
                     this@DownloadableItem.state = DownloadableItemState.End
                     fireDownloadStateChange()
-                    viewOps?.onParsingError(urlText, "could not find filetype")
-                }
-                else {
-                    viewOps?.onParsingSuccessful(this@DownloadableItem)
-                    this@DownloadableItem.state = DownloadableItemState.Downloading
-                    fireDownloadStateChange()
-                }
-            }
-        }.start()
-        return this
-    }
-
-    fun start(): DownloadableItem {
-
-        val isUrl : Boolean = NetworkUtils.isValidURL(urlText)
-
-        if (!isUrl) {
-            this.state = DownloadableItemState.End
-            fireDownloadStateChange()
-            viewOps?.onParsingError(urlText, "is not a valid website")
-            return this
-        }
-
-        object : Thread() {
-            override fun run() {
-
-                downloaderTask = FileIdentifier.findHost(urlText)
-
-                val downloading : Boolean? = downloaderTask?.downloadAsync(this@DownloadableItem, urlText)
-
-                if (downloading == null || !downloading) {
-                    this@DownloadableItem.state = DownloadableItemState.End
-                    fireDownloadStateChange()
-                    viewOps?.onParsingError(urlText, "could not find filetype")
+                    viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "could not find filetype")
                 }
                 else {
                     viewOps?.onParsingSuccessful(this@DownloadableItem)
@@ -85,32 +43,32 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
     }
 
     fun cancel() {
-        downloaderTask?.cancel()
+        downloaderTask.cancel()
         state = DownloadableItemState.End
         fireDownloadStateChange()
-        viewOps?.onParsingError(urlText, "download was cancel")
+        viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "download was cancel")
     }
 
     fun resume() {
-        downloaderTask?.resume()
+        downloaderTask.resume()
         fireDownloadStateChange()
     }
 
     fun pause() {
-        downloaderTask?.pause()
+        downloaderTask.pause()
         fireDownloadStateChange()
     }
 
     fun refresh() {
-        if (checkNotNull(downloaderTask).isDownloading) {
+        if (downloaderTask.isDownloading) {
             cancel()
         }
-        start()
+        startDownload()
+
     }
 
     fun isDownloading(): Boolean {
-        val state = checkNotNull(downloaderTask)
-        return state.isDownloading
+        return downloaderTask.isDownloading
     }
 
     override fun onProgress(progress: Float) {
@@ -139,7 +97,7 @@ class DownloadableItem(private val urlText: String, private val viewOps: Downloa
         this.state = DownloadableItemState.Start
         fireDownloadStateChange()
         Log.e(TAG, "failed to download " + filepath)
-        viewOps?.onParsingError(urlText, "failed to download " + filepath)
+        viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "failed to download " + filepath)
     }
 
     @Volatile

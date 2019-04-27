@@ -11,7 +11,8 @@ class DownloadManager  {
     /**
      * Debugging tag used by the Android logger.
      */
-    protected var TAG = javaClass.simpleName
+    @Suppress("PrivatePropertyName", "unused")
+    private val TAG = javaClass.simpleName
 
     private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
@@ -62,11 +63,6 @@ class DownloadManager  {
         }.start()
 
         return future
-    }
-
-    fun start(urlText: String) : DownloadableItem {
-
-        return DownloadableItem(urlText, mViewOps.get()).start()
     }
 
     fun download(task: DownloaderTaskBase) : DownloadableItem  {

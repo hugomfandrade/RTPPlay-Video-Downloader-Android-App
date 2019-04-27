@@ -2,7 +2,9 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.SICDownloaderTask
 
 enum class FileType(var downloaderTask: DownloaderTaskBase) {
-    RTPPlay(RTPPlayDownloaderTask())
+    RTPPlay(RTPPlayDownloaderTask()),
+    SIC(SICDownloaderTask())
 }
