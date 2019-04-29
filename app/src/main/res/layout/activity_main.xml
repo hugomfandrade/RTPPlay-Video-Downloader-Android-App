@@ -35,10 +35,11 @@
                 android:layout_marginRight="8dp"
                 android:inputType="textUri"
                 android:ems="10"
-                android:text="https://sicnoticias.pt/programas/verdade-ou-consequencia/2019-03-31-Verdade-ou-Consequencia-com-Adolfo-Mesquita-Nunes"
+                android:text="http://videos.sapo.pt/30CEmMITz50Tizli6EYv"
                 android:hint="Url (eg. RTP Play, SIC)"
                 android:background="@android:color/transparent"/>
 
+            <!-- android:text="https://sicnoticias.pt/programas/verdade-ou-consequencia/2019-03-31-Verdade-ou-Consequencia-com-Adolfo-Mesquita-Nunes" -->
             <!-- android:text="https://www.rtp.pt/play/p4257/o-outro-lado" -->
 
             <ImageView

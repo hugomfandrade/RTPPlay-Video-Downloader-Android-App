@@ -2,6 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.SAPODownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.SICDownloaderTask
 
 class FileIdentifier() {
@@ -18,6 +19,7 @@ class FileIdentifier() {
                     when (fileType) {
                         FileType.RTPPlay -> return RTPPlayDownloaderTask()
                         FileType.SIC -> return SICDownloaderTask()
+                        FileType.SAPO -> return SAPODownloaderTask()
                     }
                 }
             }
