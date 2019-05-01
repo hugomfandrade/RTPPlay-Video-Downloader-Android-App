@@ -22,6 +22,7 @@ import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.*
+import android.content.Intent
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -31,6 +32,17 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     private lateinit var mDownloadItemsAdapter: DownloadItemsAdapter
 
     private lateinit var mDownloadManager: DownloadManager
+
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        if (intent != null && checkNotNull(intent.action?.equals(Intent.ACTION_SEND))) {
+            val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)
+            binding.inputUriEditText.setText(url)
+            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
