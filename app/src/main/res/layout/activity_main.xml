@@ -41,6 +41,7 @@
             <!-- android:text="https://sicnoticias.pt/programas/verdade-ou-consequencia/2019-03-31-Verdade-ou-Consequencia-com-Adolfo-Mesquita-Nunes" -->
             <!-- android:text="https://www.rtp.pt/play/p4257/o-outro-lado" -->
             <!-- android:text="http://videos.sapo.pt/30CEmMITz50Tizli6EYv" -->
+            <!-- android:text="https://sic.pt/Programas/e-se-fosse-consigo/2019-05-03-E-se-fosse-consigo- - -brevemente-na-SIC" -->
 
             <ImageView
                 android:id="@+id/clear_text_button"

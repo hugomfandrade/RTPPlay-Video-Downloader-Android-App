@@ -59,6 +59,10 @@ class DownloadItemsAdapter() :
             holder.binding.downloadItemTitleProgressView.setProgress(1.0)
             holder.binding.downloadProgressTextView.text = "100%"
         }
+        else if (downloadableItem.state == DownloadableItemState.Failed) {
+            holder.binding.downloadItemTitleProgressView.setProgress(0.0)
+            holder.binding.downloadProgressTextView.text = "did not download"
+        }
 
         val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItemState.Downloading
         val isDownloading : Boolean = downloadableItem.isDownloading()
@@ -135,6 +139,7 @@ class DownloadItemsAdapter() :
             binding.pauseDownloadImageView.setOnClickListener(this)
             binding.resumeDownloadImageView.setOnClickListener(this)
             binding.refreshDownloadImageView.setOnClickListener(this)
+            binding.root.setOnClickListener(this)
         }
 
         override fun onClick(v: View?) {
@@ -153,6 +158,9 @@ class DownloadItemsAdapter() :
             }
             else if (v == binding.resumeDownloadImageView) {
                 item.resume()
+            }
+            else if (v == binding.root) {
+                item.play()
             }
         }
     }

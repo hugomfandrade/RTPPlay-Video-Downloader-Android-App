@@ -4,6 +4,10 @@ import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
 import java.io.File
+import java.util.*
+import kotlin.collections.HashSet
+import android.content.Intent
+import android.net.Uri
 
 class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
                        private val viewOps: DownloadManagerViewOps?) :
@@ -13,9 +17,9 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
 
-    var state: DownloadableItemState = DownloadableItemState.Start
     var filename: String? = null
     var filepath: String? = null
+    var state: DownloadableItemState = DownloadableItemState.Start
     var progress : Float = 0f
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
@@ -28,13 +32,20 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
                 val downloading : Boolean = downloaderTask.downloadMediaFileAsync(this@DownloadableItem)
 
                 if (!downloading) {
-                    this@DownloadableItem.state = DownloadableItemState.End
+                    this@DownloadableItem.state = DownloadableItemState.Failed
+
+                    stopRefreshTimer()
+
                     fireDownloadStateChange()
                     viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "could not find filetype")
                 }
                 else {
                     viewOps?.onParsingSuccessful(this@DownloadableItem)
+                    this@DownloadableItem.progress = 0.0f
                     this@DownloadableItem.state = DownloadableItemState.Downloading
+
+                    startRefreshTimer()
+
                     fireDownloadStateChange()
                 }
             }
@@ -44,7 +55,7 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
 
     fun cancel() {
         downloaderTask.cancel()
-        state = DownloadableItemState.End
+        state = DownloadableItemState.Failed
         fireDownloadStateChange()
         viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "download was cancel")
     }
@@ -67,6 +78,16 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
 
     }
 
+    fun play() {
+        if (!downloaderTask.isDownloading
+                && state == DownloadableItemState.End
+                && filepath != null) {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+            intent.setDataAndType(Uri.parse(filepath), "video/mp4")
+            viewOps?.getApplicationContext()?.startActivity(intent)
+        }
+    }
+
     fun isDownloading(): Boolean {
         return downloaderTask.isDownloading
     }
@@ -74,7 +95,7 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
     override fun onProgress(progress: Float) {
         this.progress = progress
         this.state = DownloadableItemState.Downloading
-        fireDownloadStateChange()
+        // fireDownloadStateChange()
     }
 
     override fun downloadStarted(f: File) {
@@ -83,23 +104,64 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
         this.state = DownloadableItemState.Start
         Log.e(TAG, "start downloading to " + f.absolutePath)
         fireDownloadStateChange()
+
+        startRefreshTimer()
     }
 
     override fun downloadFinished(f: File) {
         this.filepath = f.absolutePath
         this.filename = f.name
         this.state = DownloadableItemState.End
+
+        stopRefreshTimer()
+
         Log.e(TAG, "finished downloading to " + f.absolutePath)
         fireDownloadStateChange()
     }
 
     override fun downloadFailed() {
-        this.state = DownloadableItemState.Start
+        this.state = DownloadableItemState.Failed
+
+        stopRefreshTimer()
+
         fireDownloadStateChange()
-        Log.e(TAG, "failed to download " + filepath)
-        viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "failed to download " + filepath)
+        val message = "failed to download $filepath"
+        Log.e(TAG, message)
+                viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), message)
     }
 
+    /**
+     * Refresh Timer Support
+     */
+
+    companion object {
+        const val REFRESH_WINDOW : Long = 1000
+    }
+    private val refreshTimerLock = Object()
+    private var refreshTimer : Timer? = null
+
+    private fun startRefreshTimer() {
+        synchronized(refreshTimerLock) {
+            refreshTimer?.cancel()
+            refreshTimer = Timer()
+            refreshTimer?.scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    this@DownloadableItem.fireDownloadStateChange()
+                }
+            }, REFRESH_WINDOW, REFRESH_WINDOW)
+        }
+    }
+
+    private fun stopRefreshTimer() {
+        synchronized(refreshTimerLock) {
+            refreshTimer?.cancel()
+            refreshTimer = null
+        }
+    }
+
+    /**
+     * Downloadable Item Stage Change Support
+     */
     @Volatile
     private var isFiring = false
 
