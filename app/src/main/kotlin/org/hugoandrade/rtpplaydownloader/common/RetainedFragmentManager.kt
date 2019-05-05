@@ -112,8 +112,8 @@ class RetainedFragmentManager
     /**
      * Get the object with @a key.
      */
-    operator fun <T> get(key: String): T {
-        return mRetainedFragment!!.get<Any>(key) as T
+    operator fun <T> get(key: String): T? {
+        return mRetainedFragment?.get<T>(key)
     }
 
     /**

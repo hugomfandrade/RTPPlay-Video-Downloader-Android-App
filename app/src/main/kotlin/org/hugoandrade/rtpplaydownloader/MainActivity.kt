@@ -37,11 +37,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        if (intent != null && checkNotNull(intent.action?.equals(Intent.ACTION_SEND))) {
-            val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)
-            binding.inputUriEditText.setText(url)
-            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-        }
+        extractActionSendIntentAndUpdateUI(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,14 +45,18 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         initializeUI()
 
-        if (retainedFragmentManager.get<DownloadManager>(DownloadManager::class.java.simpleName) == null) {
+        val oldDownloadManager : DownloadManager? = retainedFragmentManager[DownloadManager::class.java.simpleName]
+
+        if (oldDownloadManager == null) {
             mDownloadManager = DownloadManager()
             mDownloadManager.onCreate(this)
-            retainedFragmentManager.put(mDownloadManager.javaClass.simpleName, mDownloadManager)
+            retainedFragmentManager.put(DownloadManager::class.java.simpleName, mDownloadManager)
         }
         else{
-            mDownloadManager = retainedFragmentManager.get(DownloadManager::class.java.simpleName)
+            mDownloadManager = oldDownloadManager
         }
+
+        extractActionSendIntentAndUpdateUI(intent)
     }
 
     override fun onDestroy() {
@@ -89,6 +89,15 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
+    }
+
+    private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {
+
+        if (intent != null && checkNotNull(intent.action?.equals(Intent.ACTION_SEND))) {
+            val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)
+            binding.inputUriEditText.setText(url)
+            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+        }
     }
 
     private fun toggleClearTextButton() {
