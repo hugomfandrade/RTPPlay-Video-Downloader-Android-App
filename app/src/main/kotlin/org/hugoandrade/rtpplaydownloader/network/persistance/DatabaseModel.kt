@@ -1,6 +1,5 @@
 package org.hugoandrade.rtpplaydownloader.network.persistance
 
-import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -13,19 +12,19 @@ abstract class DatabaseModel {
     private var database: SQLiteDatabase? = null
     private var dbHelper: DatabaseHelper? = null
 
-    protected fun onInitialize(context: Context) {
+    fun onInitialize(context: Context) {
         dbHelper = DatabaseHelper(context)
     }
 
-    protected fun open() {
+    fun open() {
         database = dbHelper?.writableDatabase
     }
 
-    protected fun close() {
+    fun close() {
         dbHelper?.close()
     }
 
-    protected fun retrieveAllDownloadableEntries() {
+    fun retrieveAllDownloadableEntries() {
         val task = object : AsyncTask<Void, Void, List<DownloadableEntry>>() {
 
             override fun doInBackground(vararg params: Void): List<DownloadableEntry> {
@@ -47,7 +46,6 @@ abstract class DatabaseModel {
             }
 
             override fun onPostExecute(downloadableEntries: List<DownloadableEntry>) {
-                super.onPostExecute(downloadableEntries)
 
                 onGetAllDownloadableEntries(downloadableEntries)
             }
@@ -55,8 +53,8 @@ abstract class DatabaseModel {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    protected fun insertPasswordEntry(downloadableEntry: DownloadableEntry) {
-        val task = object : AsyncTask<Void, Void, DownloadableEntry>() {
+    fun insertDownloadableEntry(downloadableEntry: DownloadableEntry) {
+        val task = object : AsyncTask<Void, Void, DownloadableEntry?>() {
 
             override fun doInBackground(vararg params: Void): DownloadableEntry? {
                 val c = database?.query(DownloadableEntry.Entry.TABLE_NAME, null, null, null, null, null, null)
@@ -66,7 +64,7 @@ abstract class DatabaseModel {
                     c.close()
 
                     // Create a new map of values, where column names are the keys
-                    val values : ContentValues = DownloadableEntryParser.format(downloadableEntry)
+                    val values = DownloadableEntryParser.format(downloadableEntry)
                     values.remove(DownloadableEntry.Entry.Cols._ID)
 
                     // Insert the new row, returning the primary key value of the new row
@@ -91,16 +89,17 @@ abstract class DatabaseModel {
                 return null
             }
 
-            override fun onPostExecute(downloadableEntry: DownloadableEntry) {
-                super.onPostExecute(downloadableEntry)
+            override fun onPostExecute(downloadableEntry: DownloadableEntry?) {
 
-                onInsertDownloadableEntry(downloadableEntry)
+                if (downloadableEntry != null) {
+                    onInsertDownloadableEntry(downloadableEntry)
+                }
             }
         }
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    protected fun deleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+    fun deleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
         val task = object : AsyncTask<Void, Void, List<DownloadableEntry>>() {
 
             override fun doInBackground(vararg params: Void): List<DownloadableEntry> {
@@ -128,7 +127,7 @@ abstract class DatabaseModel {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    protected fun deleteAllDownloadableEntries() {
+    fun deleteAllDownloadableEntries() {
 
         val task = object : AsyncTask<Void, Void, Boolean>() {
 
@@ -147,8 +146,8 @@ abstract class DatabaseModel {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    protected fun updateDownloadableEntry(downloadableEntry: DownloadableEntry) {
-        val task = object : AsyncTask<Void, Void, DownloadableEntry>() {
+    fun updateDownloadableEntry(downloadableEntry: DownloadableEntry) {
+        val task = object : AsyncTask<Void, Void, DownloadableEntry?>() {
 
             override fun doInBackground(vararg params: Void): DownloadableEntry? {
                 // Create a new map of values, where column names are the keys
@@ -159,22 +158,55 @@ abstract class DatabaseModel {
                         DownloadableEntry.Entry.Cols._ID + " = ?",
                         arrayOf(downloadableEntry.id))
 
-                return if (nRowsAffected == 0)
-                    null
-                else
+                return if (nRowsAffected != 0) {
                     downloadableEntry
+                } else {
+                    // TODO
+                    // update by urlString
+                    val cursor = database?.query(DownloadableEntry.Entry.TABLE_NAME,
+                            null,
+                            DownloadableEntry.Entry.Cols.URL + " = ?",
+                            arrayOf(downloadableEntry.urlString),
+                            null, null, null)
+
+                    if (cursor != null) {
+                        cursor.moveToFirst()
+                        if (!cursor.isAfterLast) {
+                            val d = DownloadableEntryParser.parse(cursor)
+                            cursor.close()
+
+                            d.filename = downloadableEntry.filename
+                            d.filepath = downloadableEntry.filepath
+                            d.urlString = downloadableEntry.urlString
+                            d.state = downloadableEntry.state
+                            d.isArchived = downloadableEntry.isArchived
+
+                            val rowsAffected = database?.update(
+                                    DownloadableEntry.Entry.TABLE_NAME,
+                                    DownloadableEntryParser.format(d),
+                                    DownloadableEntry.Entry.Cols._ID + " = ?",
+                                    arrayOf(d.id))
+
+                            android.util.Log.e(TAG, "update::" + d.state.toString() + "::" + rowsAffected)
+
+                            return if (rowsAffected == 0) null else downloadableEntry
+                        }
+                    }
+                    null
+                }
             }
 
-            override fun onPostExecute(downloadableEntry: DownloadableEntry) {
-                super.onPostExecute(downloadableEntry)
+            override fun onPostExecute(downloadableEntry: DownloadableEntry?) {
 
-                onUpdateDownloadableEntry(downloadableEntry)
+                if (downloadableEntry != null) {
+                    onUpdateDownloadableEntry(downloadableEntry)
+                }
             }
         }
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    protected fun deleteDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    fun deleteDownloadableEntry(downloadableEntry: DownloadableEntry) {
         val task = object : AsyncTask<Void, Void, DownloadableEntry>() {
 
             override fun doInBackground(vararg params: Void): DownloadableEntry? {
@@ -198,27 +230,27 @@ abstract class DatabaseModel {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    protected fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+    open fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
         //No-op
     }
 
-    protected fun onInsertDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    open fun onInsertDownloadableEntry(downloadableEntry: DownloadableEntry) {
         //No-op
     }
 
-    protected fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+    open fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
         //No-op
     }
 
-    protected fun onDeleteDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    open fun onDeleteDownloadableEntry(downloadableEntry: DownloadableEntry) {
         //No-op
     }
 
-    protected fun onUpdateDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    open fun onUpdateDownloadableEntry(downloadableEntry: DownloadableEntry) {
         //No-op
     }
 
-    protected fun onResetDatabase(wasSuccessfullyDeleted: Boolean) {
+    open fun onResetDatabase(wasSuccessfullyDeleted: Boolean) {
         //No-op
     }
 
@@ -245,11 +277,11 @@ abstract class DatabaseModel {
 
             private val CREATE_DB_TABLE_PASSWORD_ENTRY = " CREATE TABLE " + DownloadableEntry.Entry.TABLE_NAME + " (" +
                     " " + DownloadableEntry.Entry.Cols._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    " " + DownloadableEntry.Entry.Cols.URL + " TEXT NOT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.FILENAME + " TEXT NOT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.FILEPATH + " TEXT NOT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.STAGE + " TEXT NOT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.PROGRESS + " INTEGER NOT NULL " +
+                    " " + DownloadableEntry.Entry.Cols.URL + " TEXT NULL, " +
+                    " " + DownloadableEntry.Entry.Cols.FILENAME + " TEXT NULL, " +
+                    " " + DownloadableEntry.Entry.Cols.FILEPATH + " TEXT NULL, " +
+                    " " + DownloadableEntry.Entry.Cols.STAGE + " TEXT NULL, " +
+                    " " + DownloadableEntry.Entry.Cols.IS_ARCHIVED + " INTEGER NULL " +
                     " );"
 
             private val TAG = DatabaseHelper::class.java.simpleName

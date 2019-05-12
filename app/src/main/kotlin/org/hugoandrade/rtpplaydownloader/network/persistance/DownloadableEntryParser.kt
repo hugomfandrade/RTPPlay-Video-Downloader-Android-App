@@ -2,6 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.persistance
 
 import android.content.ContentValues
 import android.database.Cursor
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemState
 import org.hugoandrade.rtpplaydownloader.network.persistance.DownloadableEntry.*
 
@@ -18,17 +19,6 @@ private constructor() {
 
     companion object {
 
-        fun format(downloadableEntry: DownloadableEntry): ContentValues {
-            val values = ContentValues()
-            values.put(Entry.Cols._ID, downloadableEntry.id)
-            values.put(Entry.Cols.URL, downloadableEntry.urlString)
-            values.put(Entry.Cols.FILEPATH, downloadableEntry.filepath)
-            values.put(Entry.Cols.FILENAME, downloadableEntry.filename)
-            values.put(Entry.Cols.STAGE, downloadableEntry.state?.ordinal)
-            values.put(Entry.Cols.PROGRESS, downloadableEntry.progress)
-            return values
-        }
-
         fun parse(cursor: Cursor): DownloadableEntry {
             return DownloadableEntry(
                     cursor.getString(cursor.getColumnIndex(Entry.Cols._ID)),
@@ -36,7 +26,50 @@ private constructor() {
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.FILEPATH)),
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.FILENAME)),
                     DownloadableItemState.values()[cursor.getInt(cursor.getColumnIndex(Entry.Cols.STAGE))],
-                    cursor.getFloat(cursor.getColumnIndex(Entry.Cols.PROGRESS)))
+                    cursor.getInt(cursor.getColumnIndex(Entry.Cols.IS_ARCHIVED)) == 1)
+        }
+
+        fun parse(downloadableItem: DownloadableItem): DownloadableEntry {
+            return DownloadableEntry(
+                    // TODO
+                    null,
+                    downloadableItem.url,
+                    downloadableItem.filename,
+                    downloadableItem.filename,
+                    downloadableItem.state,
+                    false)
+        }
+
+        fun formatCollection(downloadableEntries: List<DownloadableEntry>): List<DownloadableItem> {
+
+            val downloadableItems = ArrayList<DownloadableItem>()
+
+            downloadableEntries.forEach {
+                downloadableEntry -> downloadableItems.add(formatSingleton(downloadableEntry))
+            }
+            return downloadableItems
+        }
+
+        fun formatSingleton(downloadableEntry: DownloadableEntry): DownloadableItem {
+
+            return DownloadableItem(
+                    // TODO
+                    // downloadableEntry.id,
+                    downloadableEntry.urlString,
+                    downloadableEntry.filename,
+                    downloadableEntry.filename,
+                    downloadableEntry.state)
+        }
+
+        fun format(downloadableEntry: DownloadableEntry): ContentValues {
+            val values = ContentValues()
+            values.put(Entry.Cols._ID, downloadableEntry.id)
+            values.put(Entry.Cols.URL, downloadableEntry.urlString)
+            values.put(Entry.Cols.FILEPATH, downloadableEntry.filepath)
+            values.put(Entry.Cols.FILENAME, downloadableEntry.filename)
+            values.put(Entry.Cols.STAGE, downloadableEntry.state?.ordinal)
+            values.put(Entry.Cols.IS_ARCHIVED, downloadableEntry.isArchived)
+            return values
         }
     }
 }

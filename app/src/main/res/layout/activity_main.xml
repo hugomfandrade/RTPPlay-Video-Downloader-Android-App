@@ -36,7 +36,8 @@
                 android:inputType="textUri"
                 android:ems="10"
                 android:hint="Url (eg. RTP Play, SIC, Sapo)"
-                android:background="@android:color/transparent" />
+                android:background="@android:color/transparent"
+                android:text="https://sic.pt/Programas/e-se-fosse-consigo/2019-05-03-E-se-fosse-consigo---brevemente-na-SIC" />
 
             <!-- android:text="https://sicnoticias.pt/programas/verdade-ou-consequencia/2019-03-31-Verdade-ou-Consequencia-com-Adolfo-Mesquita-Nunes" -->
             <!-- android:text="https://www.rtp.pt/play/p4257/o-outro-lado" -->

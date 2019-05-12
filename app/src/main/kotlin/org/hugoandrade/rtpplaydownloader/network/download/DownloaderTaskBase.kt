@@ -4,6 +4,7 @@ abstract class DownloaderTaskBase {
 
     var TAG : String = javaClass.simpleName
 
+    var url: String? = null
     var videoFile: String? = null
     var videoFileName: String? = null
     var isDownloading : Boolean = false

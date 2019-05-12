@@ -77,10 +77,22 @@ class DownloadItemsAdapter() :
         return downloadableItemList.size
     }
 
+    fun clear() {
+        synchronized(downloadableItemList) {
+            downloadableItemList.forEach(action = {remove(it)})
+        }
+    }
+
+    fun addAll(downloadableItems: List<DownloadableItem>) {
+        synchronized(downloadableItemList) {
+            downloadableItems.forEach(action = {add(it)})
+        }
+    }
+
     fun add(downloadableItem: DownloadableItem) {
         synchronized(downloadableItemList) {
             if (!downloadableItemList.contains(downloadableItem)) {
-                downloadableItem.addDownloadStateChangeListener(this);
+                downloadableItem.addDownloadStateChangeListener(this)
                 downloadableItemList.add(0, downloadableItem)
                 notifyItemInserted(0)
                 notifyItemRangeChanged(0, itemCount)
@@ -143,7 +155,7 @@ class DownloadItemsAdapter() :
         }
 
         override fun onClick(v: View?) {
-            val item : DownloadableItem;
+            val item : DownloadableItem
             synchronized(downloadableItemList) {
                 item = downloadableItemList[adapterPosition]
             }

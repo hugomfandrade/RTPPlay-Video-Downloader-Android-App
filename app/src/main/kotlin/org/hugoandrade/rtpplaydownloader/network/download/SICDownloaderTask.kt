@@ -32,6 +32,7 @@ class SICDownloaderTask : DownloaderTaskBase() {
 
     override fun parseMediaFile(urlString: String): Boolean {
 
+        url = urlString
         videoFile = getVideoFile(urlString) ?: return false
         videoFileName = getVideoFileName(urlString, videoFile)
 

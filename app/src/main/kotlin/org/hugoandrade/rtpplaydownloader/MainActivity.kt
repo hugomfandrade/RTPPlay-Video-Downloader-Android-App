@@ -23,6 +23,8 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.*
 import android.content.Intent
+import android.view.Menu
+import android.view.MenuItem
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -57,6 +59,23 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
 
         extractActionSendIntentAndUpdateUI(intent)
+
+        populateDownloadItemsRecyclerView()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.getItemId()) {
+            R.id.action_empty_db -> {
+                mDownloadManager.emptyDB()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onDestroy() {
@@ -89,6 +108,18 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
+    }
+
+    private fun populateDownloadItemsRecyclerView() {
+        mDownloadManager.retrieveItemsFromDB()
+    }
+
+    override fun populateDownloadableItemsRecyclerView(downloadableItems: List<DownloadableItem>) {
+
+        mDownloadItemsAdapter.clear()
+        mDownloadItemsAdapter.addAll(downloadableItems)
+        mDownloadItemsAdapter.notifyDataSetChanged()
+
     }
 
     private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {

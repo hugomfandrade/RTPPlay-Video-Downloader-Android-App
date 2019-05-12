@@ -8,15 +8,30 @@ import java.util.*
 import kotlin.collections.HashSet
 import android.content.Intent
 import android.net.Uri
+import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
 
 class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
                        private val viewOps: DownloadManagerViewOps?) :
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
+    constructor(url: String?,
+                filename: String?,
+                filepath: String?,
+                state: DownloadableItemState?)
+            // TODO
+            : this(EmptyDownloaderTask(), null) {
+        this.url = url
+        this.filename = filename
+        this.filepath = filepath
+        this.state = if (state == null) DownloadableItemState.Start else state
+        this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
+    }
+
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
 
+    var url: String? = null
     var filename: String? = null
     var filepath: String? = null
     var state: DownloadableItemState = DownloadableItemState.Start
@@ -28,6 +43,8 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
 
         object : Thread() {
             override fun run() {
+
+                url = downloaderTask.url
 
                 val downloading : Boolean = downloaderTask.downloadMediaFileAsync(this@DownloadableItem)
 
