@@ -5,6 +5,7 @@ import android.databinding.DataBindingUtil
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import java.util.*
@@ -45,7 +46,8 @@ class DownloadItemsAdapter() :
         // holder.binding.setPost(downloadableItemList[position])
         val downloadableItem: DownloadableItem = downloadableItemList[position]
 
-        holder.binding.downloadItemTitleTextView.text = downloadableItem.filename
+        (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
+        holder.binding.downloadItemTitleTextView.isSelected = true;
 
         if (downloadableItem.state == DownloadableItemState.Start) {
             holder.binding.downloadItemTitleProgressView.setProgress(0.0)

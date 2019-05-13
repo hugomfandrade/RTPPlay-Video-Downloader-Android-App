@@ -71,7 +71,8 @@ class ParsingDialog(context: Context) {
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
 
         mView?.findViewById<View>(R.id.parsing_item_layout)?.visibility = View.VISIBLE
-        (mView?.findViewById<View>(R.id.parsing_item_title_text_view) as TextView).text = task?.videoFileName
+        mView?.findViewById<TextView>(R.id.parsing_item_title_text_view)?.text = task?.videoFileName
+        mView?.findViewById<TextView>(R.id.parsing_item_title_text_view)?.isSelected = true
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
         mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
 

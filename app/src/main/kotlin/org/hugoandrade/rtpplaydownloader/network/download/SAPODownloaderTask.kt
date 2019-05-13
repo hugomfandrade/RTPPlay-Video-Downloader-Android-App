@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Environment
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Connection
 import org.jsoup.Jsoup
@@ -13,7 +14,6 @@ import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.SocketTimeoutException
 import java.net.URL
-import java.text.Normalizer
 
 class SAPODownloaderTask : DownloaderTaskBase() {
 
@@ -214,19 +214,8 @@ class SAPODownloaderTask : DownloaderTaskBase() {
 
             if (videoFile != null && titleElements != null && titleElements.size > 0) {
 
-                var title = titleElements.elementAt(0).text()
-
-                title = title.replace('-', ' ')
-                        .replace(':', ' ')
-                        .replace("\\s{2,}".toRegex(), " ")
-                        .trim()
-                        .replace(' ', '.')
-                        .replace(' ', '.')
-                title = Normalizer.normalize(title, Normalizer.Form.NFKD)
-                title = title
-                        .replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
+                val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
                         .replace(".SAPO.Videos", "")
-                        .replace(".|.", ".")
 
                 return "$title.mp4"
             }

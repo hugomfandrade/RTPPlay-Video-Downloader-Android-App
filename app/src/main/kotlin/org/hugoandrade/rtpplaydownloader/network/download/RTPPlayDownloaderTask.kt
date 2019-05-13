@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Environment
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -10,7 +11,6 @@ import java.io.*
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.SocketTimeoutException
-import java.text.Normalizer
 
 class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
@@ -220,17 +220,8 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
             if (videoFile != null && titleElements != null && titleElements.size > 0) {
 
-                var title = titleElements.elementAt(0).text()
-
-                title = title.replace('-', ' ')
-                        .replace(':', ' ')
-                        .replace("\\s{2,}".toRegex(), " ")
-                        .trim()
-                        .replace(' ', '.')
-                        .replace(' ', '.')
+                val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
                         .replace(".RTP.Play.RTP", "")
-                title = Normalizer.normalize(title, Normalizer.Form.NFKD)
-                title = title.replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
 
                 if (videoFile.indexOf(".mp4") >= 0) {  // is video file
 
@@ -256,5 +247,4 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
         }
         return 0
     }
-
 }

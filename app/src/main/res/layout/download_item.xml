@@ -20,16 +20,23 @@
             app:layout_constraintLeft_toLeftOf="parent"
             />
 
-        <TextView
+        <EditText
             android:id="@+id/download_item_title_text_view"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_marginStart="6dp"
             android:layout_marginLeft="6dp"
-            android:lines="1"
             tools:text="Hello"
-            app:layout_constraintLeft_toRightOf="@id/download_item_media_image_view"
+            android:singleLine="true"
+            android:clickable="false"
+            android:cursorVisible="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:background="@android:color/transparent"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/download_item_media_image_view"
             app:layout_constraintTop_toTopOf="parent" />
 
         <org.hugoandrade.rtpplaydownloader.widget.ProgressView
