@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import android.content.Context
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture

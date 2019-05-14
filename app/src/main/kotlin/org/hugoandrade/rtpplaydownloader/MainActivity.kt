@@ -218,7 +218,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     }
                     override fun onDownload(task : DownloaderTaskBase?) {
                         if (task != null) {
-                            mDownloadManager.download(task)
+                            startDownload(task)
                         }
 
                         parsingDialog?.dismissDialog()
@@ -229,7 +229,28 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         parsingDialog?.show()
     }
 
-    override fun onParsingError(url: String, message: String) {
+    private fun startDownload(task: DownloaderTaskBase) {
+        val item : DownloadableItem = mDownloadManager.download(task)
+        item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
+            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+                // listen for end of download and show message
+                if (downloadableItem.state == DownloadableItemState.End) {
+                    runOnUiThread {
+                        val message = "Finished downloading " + downloadableItem.filename
+                        Log.e(TAG, message)
+                        binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+                    }
+                    downloadableItem.removeDownloadStateChangeListener(this)
+                }
+            }
+
+        })
+        runOnUiThread {
+            mDownloadItemsAdapter.add(item)
+        }
+    }
+
+    /*override fun onParsingError(url: String, message: String) {
         runOnUiThread {
             val errorMessage = "Unable to parse $message"
 
@@ -256,7 +277,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         runOnUiThread {
             mDownloadItemsAdapter.add(item)
         }
-    }
+    }*/
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>,

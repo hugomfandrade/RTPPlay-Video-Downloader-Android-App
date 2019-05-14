@@ -10,7 +10,7 @@ import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import java.util.*
 
-class DownloadItemsAdapter() :
+class DownloadItemsAdapter :
 
         RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
         DownloadableItemStateChangeListener {
@@ -18,7 +18,7 @@ class DownloadItemsAdapter() :
     private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
 
-    private val downloadableItemList: ArrayList<DownloadableItem> = ArrayList<DownloadableItem>()
+    private val downloadableItemList: ArrayList<DownloadableItem> = ArrayList()
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -88,7 +88,7 @@ class DownloadItemsAdapter() :
     fun add(downloadableItem: DownloadableItem) {
         synchronized(downloadableItemList) {
             if (!downloadableItemList.contains(downloadableItem)) {
-                downloadableItem.addDownloadStateChangeListener(this);
+                downloadableItem.addDownloadStateChangeListener(this)
                 downloadableItemList.add(0, downloadableItem)
                 notifyItemInserted(0)
                 notifyItemRangeChanged(0, itemCount)
@@ -159,24 +159,16 @@ class DownloadItemsAdapter() :
         }
 
         override fun onClick(v: View?) {
-            val item : DownloadableItem;
+            val item : DownloadableItem
             synchronized(downloadableItemList) {
                 item = downloadableItemList[adapterPosition]
             }
-            if (v == binding.cancelDownloadImageView) {
-                item.cancel()
-            }
-            else if (v == binding.pauseDownloadImageView) {
-                item.pause()
-            }
-            else if (v == binding.refreshDownloadImageView) {
-                item.refresh()
-            }
-            else if (v == binding.resumeDownloadImageView) {
-                item.resume()
-            }
-            else if (v == binding.root) {
-                item.play()
+            when (v) {
+                binding.cancelDownloadImageView -> item.cancel()
+                binding.pauseDownloadImageView -> item.pause()
+                binding.refreshDownloadImageView -> item.refresh()
+                binding.resumeDownloadImageView -> item.resume()
+                binding.root -> item.play()
             }
         }
     }

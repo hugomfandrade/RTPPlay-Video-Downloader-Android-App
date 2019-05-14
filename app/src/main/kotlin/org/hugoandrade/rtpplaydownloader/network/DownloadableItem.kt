@@ -8,9 +8,11 @@ import java.util.*
 import kotlin.collections.HashSet
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 
 class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
-                       private val viewOps: DownloadManagerViewOps?) :
+                       private val viewOps : DownloadManagerViewOps?) :
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
@@ -37,10 +39,10 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
                     stopRefreshTimer()
 
                     fireDownloadStateChange()
-                    viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "could not find filetype")
+
+                    downloadFailed("could not find filetype")
                 }
                 else {
-                    viewOps?.onParsingSuccessful(this@DownloadableItem)
                     this@DownloadableItem.progress = 0.0f
                     this@DownloadableItem.state = DownloadableItemState.Downloading
 
@@ -57,7 +59,6 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
         downloaderTask.cancel()
         state = DownloadableItemState.Failed
         fireDownloadStateChange()
-        viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), "download was cancel")
     }
 
     fun resume() {
@@ -79,12 +80,14 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
     }
 
     fun play() {
-        if (!downloaderTask.isDownloading
-                && state == DownloadableItemState.End
-                && filepath != null) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
-            intent.setDataAndType(Uri.parse(filepath), "video/mp4")
-            viewOps?.getApplicationContext()?.startActivity(intent)
+        if (!downloaderTask.isDownloading && state == DownloadableItemState.End) {
+            if (MediaUtils.doesMediaFileExist(this)) {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+                intent.setDataAndType(Uri.parse(filepath), "video/mp4")
+                viewOps?.getApplicationContext()?.startActivity(intent)
+            } else {
+                Toast.makeText(viewOps?.getActivityContext(), "File not found", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -119,15 +122,14 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
         fireDownloadStateChange()
     }
 
-    override fun downloadFailed() {
+    override fun downloadFailed(message: String?) {
         this.state = DownloadableItemState.Failed
 
         stopRefreshTimer()
 
         fireDownloadStateChange()
-        val message = "failed to download $filepath"
+        val message = "failed to download $filepath because of $message"
         Log.e(TAG, message)
-                viewOps?.onParsingError(checkNotNull(downloaderTask.videoFile), message)
     }
 
     /**

@@ -96,10 +96,10 @@ class SICDownloaderTask : DownloaderTaskBase() {
 
         } catch (mue: MalformedURLException) {
             mue.printStackTrace()
-            mDownloaderTaskListener.downloadFailed()
+            mDownloaderTaskListener.downloadFailed(null)
         } catch (ioe: IOException) {
             ioe.printStackTrace()
-            mDownloaderTaskListener.downloadFailed()
+            mDownloaderTaskListener.downloadFailed(null)
         } finally {
             try {
                 inputStream?.close()
@@ -120,7 +120,7 @@ class SICDownloaderTask : DownloaderTaskBase() {
             }
             f.delete()
 
-            mDownloaderTaskListener.downloadFailed()
+            mDownloaderTaskListener.downloadFailed(null)
             return true
         }
         return false

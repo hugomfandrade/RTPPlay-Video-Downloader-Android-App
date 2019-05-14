@@ -98,11 +98,13 @@ class SAPODownloaderTask : DownloaderTaskBase() {
             fos.close()
 
         } catch (mue: MalformedURLException) {
+            android.util.Log.d(TAG, mue.message)
             mue.printStackTrace()
-            mDownloaderTaskListener.downloadFailed()
+            mDownloaderTaskListener.downloadFailed(null)
         } catch (ioe: IOException) {
+            android.util.Log.d(TAG, ioe.message)
             ioe.printStackTrace()
-            mDownloaderTaskListener.downloadFailed()
+            mDownloaderTaskListener.downloadFailed(null)
         } finally {
             try {
                 inputStream?.close()
@@ -123,7 +125,8 @@ class SAPODownloaderTask : DownloaderTaskBase() {
             }
             f.delete()
 
-            mDownloaderTaskListener.downloadFailed()
+            mDownloaderTaskListener.downloadFailed(null)
+            doCanceling = false
             return true
         }
         return false
