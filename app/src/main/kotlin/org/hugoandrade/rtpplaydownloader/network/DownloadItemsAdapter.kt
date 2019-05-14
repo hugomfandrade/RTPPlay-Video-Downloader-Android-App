@@ -1,7 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import android.support.v7.widget.RecyclerView
 import android.databinding.DataBindingUtil
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,24 +46,30 @@ class DownloadItemsAdapter() :
         // holder.binding.setPost(downloadableItemList[position])
         val downloadableItem: DownloadableItem = downloadableItemList[position]
 
-        (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
-        holder.binding.downloadItemTitleTextView.isSelected = true;
+        if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
+            (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
+        }
+        if (!holder.binding.downloadItemTitleTextView.isSelected) {
+            holder.binding.downloadItemTitleTextView.isSelected = true
+        }
 
-        if (downloadableItem.state == DownloadableItemState.Start) {
-            holder.binding.downloadItemTitleProgressView.setProgress(0.0)
-            holder.binding.downloadProgressTextView.text = ""
-        }
-        else if (downloadableItem.state == DownloadableItemState.Downloading) {
-            holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
-            holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
-        }
-        else if (downloadableItem.state == DownloadableItemState.End) {
-            holder.binding.downloadItemTitleProgressView.setProgress(1.0)
-            holder.binding.downloadProgressTextView.text = "100%"
-        }
-        else if (downloadableItem.state == DownloadableItemState.Failed) {
-            holder.binding.downloadItemTitleProgressView.setProgress(0.0)
-            holder.binding.downloadProgressTextView.text = "did not download"
+        when {
+            downloadableItem.state == DownloadableItemState.Start -> {
+                holder.binding.downloadItemTitleProgressView.setProgress(0.0)
+                holder.binding.downloadProgressTextView.text = ""
+            }
+            downloadableItem.state == DownloadableItemState.Downloading -> {
+                holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
+                holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
+            }
+            downloadableItem.state == DownloadableItemState.End -> {
+                holder.binding.downloadItemTitleProgressView.setProgress(1.0)
+                holder.binding.downloadProgressTextView.text = "100%"
+            }
+            downloadableItem.state == DownloadableItemState.Failed -> {
+                holder.binding.downloadItemTitleProgressView.setProgress(0.0)
+                holder.binding.downloadProgressTextView.text = "did not download"
+            }
         }
 
         val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItemState.Downloading
@@ -117,12 +123,20 @@ class DownloadItemsAdapter() :
                 if (recyclerView == null) {
                     notifyItemChanged(index)
                 } else {
-                    val view : View? = null// recyclerView?.layoutManager?.findViewByPosition(index)
+                    val v : View? = recyclerView?.getChildAt(index)
 
-                    if (view == null) {
+                    if (v != null) {
 
-                        while (recyclerView?.isComputingLayout() == true) { }
-                        notifyItemChanged(index)
+                        val viewHolder : RecyclerView.ViewHolder? = recyclerView?.getChildViewHolder(v)
+
+                        if (viewHolder is ViewHolder) {
+                            val holder : ViewHolder = viewHolder
+                            while (recyclerView?.isComputingLayout == true) { }
+                            onBindViewHolder(holder, index)
+                        } else {
+                            // update here
+                            notifyItemChanged(index)
+                        }
                     } else {
                         // update here
                         notifyItemChanged(index)
