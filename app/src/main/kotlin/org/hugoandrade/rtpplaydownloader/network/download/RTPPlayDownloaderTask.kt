@@ -33,7 +33,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
     override fun parseMediaFile(urlString: String): Boolean {
 
         videoFile = getVideoFile(urlString) ?: return false
-        videoFileName = getVideoFileName(urlString, videoFile)
+        videoFileName = MediaUtils.getUniqueFilename(getVideoFileName(urlString, videoFile))
 
         try {
             URL(videoFile)
@@ -61,6 +61,10 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
             val f = File(storagePath, videoFileName)
+            if (MediaUtils.doesMediaFileExist(f)) {
+                mDownloaderTaskListener.downloadFailed("file with same name already exists")
+                return
+            }
             mDownloaderTaskListener.downloadStarted(f)
 
             val fos = FileOutputStream(f)

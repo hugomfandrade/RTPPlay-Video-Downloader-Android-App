@@ -72,7 +72,7 @@ class DownloadItemsAdapter :
             }
         }
 
-        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItemState.Downloading
+        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItemState.Downloading || downloadableItem.state == DownloadableItemState.Start
         val isDownloading : Boolean = downloadableItem.isDownloading()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE

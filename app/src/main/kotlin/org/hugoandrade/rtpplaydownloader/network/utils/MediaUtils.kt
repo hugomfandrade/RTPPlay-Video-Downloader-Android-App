@@ -1,16 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.utils
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.net.ConnectivityManager
-import android.os.Build
 import android.os.Environment
-import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import java.io.File
-import java.net.URL
 import java.text.Normalizer
 
 class MediaUtils
@@ -63,5 +55,21 @@ private constructor() {
             return filename
         }
 
+        fun getUniqueFilename(filename : String) : String  {
+            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+            return getUniqueFilename(File(storagePath, filename))
+        }
+
+        fun getUniqueFilename(file : File) : String  {
+            return if (!doesMediaFileExist(file)) file.name else internalGetUniqueFilename(file, 1)
+        }
+
+        private fun internalGetUniqueFilename(originalFile : File, index : Int) : String  {
+            val extension = originalFile.name.substring(originalFile.name.lastIndexOf("."))
+            val filename = originalFile.name.substring(0, originalFile.name.lastIndexOf("."))
+            val fullFilename = "$filename($index)$extension"
+            val file = File(originalFile.parentFile, fullFilename)
+            return if (!doesMediaFileExist(file)) file.name else internalGetUniqueFilename(file, index + 1)
+        }
     }
 }
