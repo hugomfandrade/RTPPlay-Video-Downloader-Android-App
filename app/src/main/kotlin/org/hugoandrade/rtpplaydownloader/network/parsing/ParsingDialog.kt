@@ -6,20 +6,22 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Handler
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.KeyEvent
 import android.view.View
-import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 
-class ParsingDialog(context: Context) {
+class ParsingDialog(val mContext: Context) {
 
     @Suppress("unused")
     private val TAG = ParsingDialog::class.java.simpleName
 
     private var mAlertDialog: AlertDialog? = null
     private var mView: View? = null
-    private var mContext: Context = context
+    private val mParsingItemsAdapter = ParsingItemsAdapter()
+
     private var mListener: OnParsingListener? = null
 
     private var mHandler: Handler = Handler()
@@ -49,7 +51,9 @@ class ParsingDialog(context: Context) {
         }
 
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.parsing_item_layout)?.visibility = View.GONE
+        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.visibility = View.GONE
+        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.layoutManager = LinearLayoutManager(mContext)
+        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.adapter = mParsingItemsAdapter
 
         mAlertDialog = AlertDialog.Builder(mContext)
                 .setOnKeyListener(DialogInterface.OnKeyListener { _, keyCode, event ->
@@ -69,10 +73,13 @@ class ParsingDialog(context: Context) {
     fun showParsingResult(task: DownloaderTaskBase?) {
         mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
-        mView?.findViewById<View>(R.id.parsing_item_layout)?.visibility = View.VISIBLE
-        mView?.findViewById<TextView>(R.id.parsing_item_title_text_view)?.text = task?.videoFileName
-        mView?.findViewById<TextView>(R.id.parsing_item_title_text_view)?.isSelected = true
+        if (task != null) {
+            mParsingItemsAdapter.add(task)
+        }
+
+        // mView?.findViewById<TextView>(R.id.parsing_item_title_text_view)?.isSelected = true
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
         mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
 
