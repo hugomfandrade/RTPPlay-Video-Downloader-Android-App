@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
+import android.os.Build
 import android.os.Environment
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
@@ -60,7 +61,11 @@ class SAPODownloaderTask : DownloaderTaskBase() {
             u = URL(videoFile)
             inputStream = u.openStream()
             val huc = u.openConnection() as HttpURLConnection //to know the size of video
-            val size = huc.contentLength
+            val size = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                huc.contentLengthLong
+            } else {
+                huc.contentLength.toLong()
+            }
 
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
             val f = File(storagePath, videoFileName)
@@ -74,7 +79,7 @@ class SAPODownloaderTask : DownloaderTaskBase() {
             val buffer = ByteArray(1024)
             if (inputStream != null) {
                 var len = inputStream.read(buffer)
-                var progress = len
+                var progress = len.toLong()
                 while (len > 0) {
 
                     if (tryToCancelIfNeeded(fos, inputStream, f)) {
@@ -95,6 +100,7 @@ class SAPODownloaderTask : DownloaderTaskBase() {
                     len = inputStream.read(buffer)
                     progress += len
                     mDownloaderTaskListener.onProgress(progress.toFloat() / size.toFloat())
+                    mDownloaderTaskListener.onProgress(progress, size)
                 }
             }
             mDownloaderTaskListener.downloadFinished(f)

@@ -41,13 +41,13 @@ private constructor() {
             var filename = title
                     .replace('-', ' ')
                     .replace(':', ' ')
-                    .replace("\\s{2,}".toRegex(), " ")
                     .trim()
                     .replace('\\', '.')
                     .replace('|', '.')
                     .replace('/', '.')
                     .replace(".|.", ".")
                     .replace(' ', '.')
+                    .replace("\\s{2,}".toRegex(), " ")
             filename = Normalizer.normalize(filename, Normalizer.Form.NFKD)
             filename = filename
                     .replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
@@ -70,6 +70,14 @@ private constructor() {
             val fullFilename = "$filename($index)$extension"
             val file = File(originalFile.parentFile, fullFilename)
             return if (!doesMediaFileExist(file)) file.name else internalGetUniqueFilename(file, index + 1)
+        }
+
+        fun humanReadableByteCount(bytes: Long, si: Boolean): String {
+            val unit = if (si) 1000 else 1024
+            if (bytes < unit) return "$bytes B"
+            val exp = (Math.log(bytes.toDouble()) / Math.log(unit.toDouble())).toInt()
+            val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1] + if (si) "" else "i"
+            return String.format("%.1f %sB", bytes / Math.pow(unit.toDouble(), exp.toDouble()), pre)
         }
     }
 }

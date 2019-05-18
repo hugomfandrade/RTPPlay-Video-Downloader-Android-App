@@ -2,12 +2,14 @@ package org.hugoandrade.rtpplaydownloader.network
 
 import android.databinding.DataBindingUtil
 import android.support.v7.widget.RecyclerView
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.*
 
 class DownloadItemsAdapter :
@@ -56,18 +58,26 @@ class DownloadItemsAdapter :
         when {
             downloadableItem.state == DownloadableItemState.Start -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,18f)
                 holder.binding.downloadProgressTextView.text = ""
             }
             downloadableItem.state == DownloadableItemState.Downloading -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
+                holder.binding.downloadProgressTextView.text =
+                        MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
+                        MediaUtils.humanReadableByteCount(downloadableItem.fileSize, true)
             }
             downloadableItem.state == DownloadableItemState.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = "100%"
+                holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.fileSize, true)
             }
             downloadableItem.state == DownloadableItemState.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,18f)
                 holder.binding.downloadProgressTextView.text = "did not download"
             }
         }

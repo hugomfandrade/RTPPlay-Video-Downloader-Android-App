@@ -21,6 +21,8 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
 
     var filename: String? = null
     var filepath: String? = null
+    var progressSize : Long = 0
+    var fileSize : Long = 0
     var state: DownloadableItemState = DownloadableItemState.Start
     var progress : Float = 0f
 
@@ -44,6 +46,7 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
                 }
                 else {
                     this@DownloadableItem.progress = 0.0f
+                    this@DownloadableItem.progressSize = 0
                     this@DownloadableItem.state = DownloadableItemState.Downloading
 
                     startRefreshTimer()
@@ -99,6 +102,12 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
         this.progress = progress
         this.state = DownloadableItemState.Downloading
         // fireDownloadStateChange()
+    }
+
+    override fun onProgress(progress: Long, size : Long) {
+        this.progressSize = progress
+        this.fileSize = size
+        this.state = DownloadableItemState.Downloading
     }
 
     override fun downloadStarted(f: File) {
