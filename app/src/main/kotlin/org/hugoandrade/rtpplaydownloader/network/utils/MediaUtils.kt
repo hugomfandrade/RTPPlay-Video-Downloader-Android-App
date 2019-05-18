@@ -42,15 +42,16 @@ private constructor() {
                     .replace('-', ' ')
                     .replace(':', ' ')
                     .trim()
+                    .replace("\\s{2,}".toRegex(), " ")
                     .replace('\\', '.')
                     .replace('|', '.')
                     .replace('/', '.')
                     .replace(".|.", ".")
                     .replace(' ', '.')
-                    .replace("\\s{2,}".toRegex(), " ")
             filename = Normalizer.normalize(filename, Normalizer.Form.NFKD)
             filename = filename
                     .replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
+                    .replace("\\.{2,}".toRegex(), "")
 
             return filename
         }

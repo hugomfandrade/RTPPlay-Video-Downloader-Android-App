@@ -58,12 +58,12 @@ class DownloadItemsAdapter :
         when {
             downloadableItem.state == DownloadableItemState.Start -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
-                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,18f)
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = ""
             }
             downloadableItem.state == DownloadableItemState.Downloading -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
-                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
                 holder.binding.downloadProgressTextView.text =
                         MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
@@ -71,13 +71,13 @@ class DownloadItemsAdapter :
             }
             downloadableItem.state == DownloadableItemState.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)
-                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text = "100%"
                 holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.fileSize, true)
             }
             downloadableItem.state == DownloadableItemState.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
-                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,18f)
+                holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = "did not download"
             }
         }
