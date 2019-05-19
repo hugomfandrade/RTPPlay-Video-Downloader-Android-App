@@ -1,9 +1,11 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import android.content.Context
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
+import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
 
@@ -53,13 +55,13 @@ class DownloadManager  {
 
                 val parsing : Boolean = downloaderTask.parseMediaFile(urlString)
 
-                if (parsing) {
-                    future.success(downloaderTask)
+                if (!parsing) {
+                    future.failed("could not find filetype")
                     return
                 }
-                else {
-                    future.failed("could not find filetype")
-                }
+
+                val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
+                future.success(ParsingData(downloaderTask, paginationTask))
             }
         }.start()
 

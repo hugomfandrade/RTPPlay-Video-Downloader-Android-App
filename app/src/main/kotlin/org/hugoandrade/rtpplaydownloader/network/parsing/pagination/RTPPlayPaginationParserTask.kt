@@ -1,15 +1,13 @@
-package org.hugoandrade.rtpplaydownloader.network.download
+package org.hugoandrade.rtpplaydownloader.network.parsing.pagination
 
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
 
-class RTPPlayPaginationParserTask {
+class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
 
-    var TAG : String = javaClass.simpleName
-
-    public fun isValid(urlString: String) : Boolean {
+    override fun isValid(urlString: String) : Boolean {
         android.util.Log.e(TAG, "isValid")
 
         if (!NetworkUtils.isValidURL(urlString)) {

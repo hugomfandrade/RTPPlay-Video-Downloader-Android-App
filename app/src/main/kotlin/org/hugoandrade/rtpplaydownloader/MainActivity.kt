@@ -23,6 +23,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.*
 import android.content.Intent
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -189,12 +190,12 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
 
         val future : ParseFuture = mDownloadManager.parseUrl(url)
-        future.addCallback(object : FutureCallback<DownloaderTaskBase> {
+        future.addCallback(object : FutureCallback<ParsingData> {
 
-            override fun onSuccess(result: DownloaderTaskBase?) {
+            override fun onSuccess(result: ParsingData) {
 
                 runOnUiThread {
-                    parsingDialog?.showParsingResult(result)
+                    parsingDialog?.showParsingResult(result.task)
                 }
             }
 
@@ -224,6 +225,15 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         parsingDialog?.dismissDialog()
                         parsingDialog = null
                     }
+                    /* TODO 
+                    override fun onParseEntireSeries(task : DownloaderTaskBase?) {
+                        if (task != null) {
+                            startDownload(task)
+                        }
+
+                        parsingDialog?.dismissDialog()
+                        parsingDialog = null
+                    }*/
                 })
                 .create()
         parsingDialog?.show()

@@ -132,9 +132,6 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
     override fun isValid(urlString: String) : Boolean {
 
-        // TODO temp
-        RTPPlayPaginationParserTask().isValid(urlString)
-
         if (!NetworkUtils.isValidURL(urlString)) {
             return false
         }
