@@ -10,7 +10,7 @@ import android.widget.CompoundButton
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
-import java.util.*
+import kotlin.collections.ArrayList
 
 class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
 
@@ -79,6 +79,28 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
                 index++
             }
         }
+    }
+
+    fun clear() {
+        synchronized(parsingItemList) {
+            parsingItemList.clear()
+        }
+    }
+
+    fun addAll(tasks: ArrayList<DownloaderTaskBase>) {
+
+        tasks.forEach(action = { task ->
+            var alreadyInList = false
+            for (parsingItem in parsingItemList) {
+                if (parsingItem.task == task) {
+                    alreadyInList = true
+                    break
+                }
+            }
+            if (!alreadyInList) {
+                parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
+            }
+        })
     }
 
     inner class ViewHolder(val binding: ParsingItemBinding) :

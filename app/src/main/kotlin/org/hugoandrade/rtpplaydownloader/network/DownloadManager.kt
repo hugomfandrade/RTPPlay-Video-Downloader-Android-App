@@ -1,11 +1,14 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
+import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
 
@@ -61,7 +64,61 @@ class DownloadManager  {
                 }
 
                 val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
+
                 future.success(ParsingData(downloaderTask, paginationTask))
+            }
+        }.start()
+
+        return future
+    }
+
+    fun parsePagination(urlString: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
+
+        val future = PaginationParseFuture(urlString, paginationTask)
+
+        object : Thread("Pagination Parsing Thread") {
+
+            override fun run() {
+
+                if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                    future.failed("no network")
+                    return
+                }
+
+                val paginationUrls = paginationTask.parsePagination(urlString)
+                val paginationUrlsProcessed = ArrayList<String>()
+                val paginationDownloadTasks = ArrayList<DownloaderTaskBase>()
+
+                paginationUrls.forEach(action = { paginationUrl ->
+                    val paginationFuture : ParseFuture = parseUrl(paginationUrl)
+                    paginationFuture.addCallback(object : FutureCallback<ParsingData> {
+
+                        override fun onSuccess(result: ParsingData) {
+                            paginationDownloadTasks.add(result.task)
+                            fireCallbackIfNeeded(paginationUrl)
+                        }
+
+                        override fun onFailed(errorMessage: String) {
+                            Log.d(TAG, "failed to download: $errorMessage")
+                            fireCallbackIfNeeded(paginationUrl)
+                        }
+
+                        private fun fireCallbackIfNeeded(paginationUrl: String) {
+                            synchronized(paginationUrls) {
+                                paginationUrlsProcessed.add(paginationUrl)
+
+                                if (paginationUrls.size == paginationUrlsProcessed.size) {
+                                    if (paginationDownloadTasks.size == 0) {
+                                        future.failed("no pagination urls found")
+                                    }
+                                    else {
+                                        future.success(paginationDownloadTasks)
+                                    }
+                                }
+                            }
+                        }
+                    })
+                })
             }
         }.start()
 

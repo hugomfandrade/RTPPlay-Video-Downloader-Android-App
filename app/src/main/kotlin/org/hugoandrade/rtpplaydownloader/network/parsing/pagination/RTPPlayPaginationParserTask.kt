@@ -8,7 +8,6 @@ import java.net.SocketTimeoutException
 class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
 
     override fun isValid(urlString: String) : Boolean {
-        android.util.Log.e(TAG, "isValid")
 
         if (!NetworkUtils.isValidURL(urlString)) {
             return false
@@ -27,7 +26,46 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
                     return false
                 }
 
-                android.util.Log.e(TAG, "try get episode-items")
+                val episodeItems = doc?.getElementsByClass("episode-item")
+
+                if (episodeItems != null && !episodeItems.isEmpty()) {
+
+                    for (episodeItem in episodeItems.iterator()) {
+
+                        episodeItem.attr("href") ?: continue
+
+                        return true
+                    }
+                }
+            }
+            catch (e : java.lang.Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        return false
+    }
+
+    override fun parsePagination(urlString: String): ArrayList<String> {
+
+        val paginationUrl : ArrayList<String> = ArrayList()
+
+        if (!NetworkUtils.isValidURL(urlString)) {
+            return paginationUrl
+        }
+
+        val isFileType: Boolean = urlString.contains("www.rtp.pt/play")
+
+        if (isFileType) {
+
+            try {
+                val doc: Document?
+
+                try {
+                    doc = Jsoup.connect(urlString).timeout(10000).get()
+                } catch (ignored: SocketTimeoutException) {
+                    return paginationUrl
+                }
 
                 val episodeItems = doc?.getElementsByClass("episode-item")
 
@@ -39,8 +77,7 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
 
                         val episodeUrlString = doc.location() + href
 
-                        android.util.Log.e(TAG, href)
-                        android.util.Log.e(TAG, episodeUrlString)
+                        paginationUrl.add(episodeUrlString)
 
                         /*
                         getDocumentInUrl(window.location.origin + , function(doc) {
@@ -68,6 +105,6 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
             }
         }
 
-        return false
+        return paginationUrl
     }
 }

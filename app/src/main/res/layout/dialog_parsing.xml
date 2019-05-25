@@ -64,6 +64,21 @@
                 android:text="cancel"/>
 
             <TextView
+                android:id="@+id/tv_parse_entire_series"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="20dp"
+                android:padding="4dp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:textColor="@color/colorPrimary"
+                android:background="?selectableItemBackground"
+                android:text="All Episodes"/>
+
+            <TextView
                 android:id="@+id/tv_download"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
