@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import android.support.v4.util.ArrayMap
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
@@ -87,14 +88,14 @@ class DownloadManager  {
 
                 val paginationUrls = paginationTask.parsePagination(urlString)
                 val paginationUrlsProcessed = ArrayList<String>()
-                val paginationDownloadTasks = ArrayList<DownloaderTaskBase>()
+                val paginationDownloadTasks = ArrayMap<Int, DownloaderTaskBase>()
 
                 paginationUrls.forEach(action = { paginationUrl ->
                     val paginationFuture : ParseFuture = parseUrl(paginationUrl)
                     paginationFuture.addCallback(object : FutureCallback<ParsingData> {
 
                         override fun onSuccess(result: ParsingData) {
-                            paginationDownloadTasks.add(result.task)
+                            paginationDownloadTasks.put(paginationUrls.indexOf(paginationUrl), result.task)
                             fireCallbackIfNeeded(paginationUrl)
                         }
 
@@ -112,7 +113,7 @@ class DownloadManager  {
                                         future.failed("no pagination urls found")
                                     }
                                     else {
-                                        future.success(paginationDownloadTasks)
+                                        future.success(ArrayList(paginationDownloadTasks.values))
                                     }
                                 }
                             }
