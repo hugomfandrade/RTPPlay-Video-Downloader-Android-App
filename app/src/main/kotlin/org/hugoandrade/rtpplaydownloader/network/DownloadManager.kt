@@ -2,6 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network
 
 import android.support.v4.util.ArrayMap
 import android.util.Log
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
@@ -66,7 +67,14 @@ class DownloadManager  {
 
                 val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
 
-                future.success(ParsingData(downloaderTask, paginationTask))
+                if (downloaderTask is DownloaderMultiPartTaskBase) {
+                    future.success(ParsingData(
+                            downloaderTask.tasks,
+                            paginationTask))
+                }
+                else {
+                    future.success(ParsingData(downloaderTask, paginationTask))
+                }
             }
         }.start()
 
@@ -88,14 +96,20 @@ class DownloadManager  {
 
                 val paginationUrls = paginationTask.parsePagination(urlString)
                 val paginationUrlsProcessed = ArrayList<String>()
-                val paginationDownloadTasks = ArrayMap<Int, DownloaderTaskBase>()
+                val paginationDownloadTasks = ArrayMap<Double, DownloaderTaskBase>()
 
                 paginationUrls.forEach(action = { paginationUrl ->
                     val paginationFuture : ParseFuture = parseUrl(paginationUrl)
                     paginationFuture.addCallback(object : FutureCallback<ParsingData> {
 
                         override fun onSuccess(result: ParsingData) {
-                            paginationDownloadTasks.put(paginationUrls.indexOf(paginationUrl), result.task)
+                            Log.e(TAG, "pagination :: onSuccess")
+                            for (task : DownloaderTaskBase in result.tasks) {
+                                Log.e(TAG, "pagination :: " + task.videoFileName)
+                                // unique index
+                                paginationDownloadTasks[paginationUrls.indexOf(paginationUrl)
+                                        + (result.tasks.indexOf(task) * 0.1 / result.tasks.size)] = task
+                            }
                             fireCallbackIfNeeded(paginationUrl)
                         }
 
@@ -108,7 +122,7 @@ class DownloadManager  {
                             synchronized(paginationUrls) {
                                 paginationUrlsProcessed.add(paginationUrl)
 
-                                if (paginationUrls.size == paginationUrlsProcessed.size) {
+                                if (paginationUrlsProcessed.size == paginationUrls.size) {
                                     if (paginationDownloadTasks.size == 0) {
                                         future.failed("no pagination urls found")
                                     }

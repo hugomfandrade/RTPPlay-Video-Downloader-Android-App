@@ -87,13 +87,12 @@ class ParsingDialog(val mContext: Context) {
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
-        val task: DownloaderTaskBase = parsingData.task
-        val tasks : ArrayList<DownloaderTaskBase> = ArrayList()
-        tasks.add(task)
+        val tasks : ArrayList<DownloaderTaskBase> = parsingData.tasks
         val paginationTask: PaginationParserTaskBase? = parsingData.paginationTask
 
         mParsingItemsAdapter.clear()
-        mParsingItemsAdapter.add(task)
+        mParsingItemsAdapter.addAll(tasks)
+        mParsingItemsAdapter.notifyDataSetChanged()
 
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
         mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {

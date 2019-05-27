@@ -75,7 +75,7 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
 
                         val href = episodeItem.attr("href") ?: continue
 
-                        val episodeUrlString = doc.location() + href
+                        val episodeUrlString = "https://www.rtp.pt$href"
 
                         paginationUrl.add(episodeUrlString)
 

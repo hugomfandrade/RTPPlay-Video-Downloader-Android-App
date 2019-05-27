@@ -12,7 +12,7 @@ import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.SocketTimeoutException
 
-class RTPPlayDownloaderTask : DownloaderTaskBase() {
+open class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
     private lateinit var mDownloaderTaskListener: DownloaderTaskListener
 
