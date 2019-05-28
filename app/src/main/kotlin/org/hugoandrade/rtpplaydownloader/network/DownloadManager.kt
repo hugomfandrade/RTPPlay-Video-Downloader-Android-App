@@ -1,6 +1,5 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import android.support.v4.util.ArrayMap
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
@@ -13,6 +12,8 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationPa
 import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
+import java.util.*
+import kotlin.collections.ArrayList
 
 class DownloadManager  {
 
@@ -96,21 +97,28 @@ class DownloadManager  {
 
                 val paginationUrls = paginationTask.parsePagination(urlString)
                 val paginationUrlsProcessed = ArrayList<String>()
-                val paginationDownloadTasks = ArrayMap<Double, DownloaderTaskBase>()
+                val paginationDownloadTasks = TreeMap<Double, DownloaderTaskBase>()
 
                 paginationUrls.forEach(action = { paginationUrl ->
                     val paginationFuture : ParseFuture = parseUrl(paginationUrl)
                     paginationFuture.addCallback(object : FutureCallback<ParsingData> {
 
                         override fun onSuccess(result: ParsingData) {
-                            Log.e(TAG, "pagination :: onSuccess")
+
                             for (task : DownloaderTaskBase in result.tasks) {
-                                Log.e(TAG, "pagination :: " + task.videoFileName)
+                                val i : Double = uniqueIndex(paginationUrls, paginationUrl, result.tasks, task)
+                                // Log.e(TAG, "pagination :: " + task.videoFileName + "::" + i)
                                 // unique index
-                                paginationDownloadTasks[paginationUrls.indexOf(paginationUrl)
-                                        + (result.tasks.indexOf(task) * 0.1 / result.tasks.size)] = task
+                                paginationDownloadTasks[i] = task
                             }
                             fireCallbackIfNeeded(paginationUrl)
+                        }
+
+                        private fun uniqueIndex(paginationUrls: ArrayList<String>,
+                                                paginationUrl: String,
+                                                tasks: ArrayList<DownloaderTaskBase>,
+                                                task: DownloaderTaskBase): Double {
+                            return paginationUrls.indexOf(paginationUrl) + ((tasks.indexOf(task) + 1) * 0.1 / tasks.size)
                         }
 
                         override fun onFailed(errorMessage: String) {

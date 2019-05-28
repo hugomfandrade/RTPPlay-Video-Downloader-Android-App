@@ -1,7 +1,5 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
-import android.util.Log
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -29,13 +27,21 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
 
         tasks.clear()
 
-        val urls: ArrayList<String> = getUrls(urlString)
+        val urls: ArrayList<RTPPlayMultiPartMetadata> = getUrls(urlString)
 
         urls.forEach(action = { url ->
-            Log.e(TAG, "parseMediaFile::" + url)
             val task = RTPPlayDownloaderTask()
 
-            if (task.isValid(url) && task.parseMediaFile(url)) {
+            if (task.isValid(url.urlString) && task.parseMediaFile(url.urlString)) {
+                val part = url.suffix
+                val originalFilename = task.videoFileName
+
+                if (part != null && originalFilename != null) {
+                    val lastDot = originalFilename.lastIndexOf(".")
+                    val preFilename = originalFilename.substring(0, lastDot)
+                    val extFilename = originalFilename.substring(lastDot, originalFilename.length)
+                    task.videoFileName = "$preFilename.$part$extFilename"
+                }
                 tasks.add(task)
             }
         })
@@ -89,8 +95,9 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
         return false
     }
 
-    private fun getUrls(urlString: String): ArrayList<String> {
+    private fun getUrls(urlString: String): ArrayList<RTPPlayMultiPartMetadata> {
         val urls = ArrayList<String>()
+        val urlsMetadata = ArrayList<RTPPlayMultiPartMetadata>()
 
         // is Multi Part
         try {
@@ -99,10 +106,10 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
             try {
                 doc = Jsoup.connect(urlString).timeout(10000).get()
             } catch (ignored: SocketTimeoutException) {
-                return urls
+                return urlsMetadata
             }
 
-            val sectionParts = doc?.getElementsByClass("section-parts") ?: return urls
+            val sectionParts = doc?.getElementsByClass("section-parts") ?: return urlsMetadata
 
             for (sectionPart: Element in sectionParts.iterator()) {
 
@@ -111,16 +118,31 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
                     for (li: Element in parts.getElementsByTag("li")) {
 
                         if (li.hasClass("active")) {
-                            urls.add(urlString)
+
+                            for (span: Element in li.getElementsByTag("span")) {
+
+                                val part: String = span.html().capitalize()
+                                        .replace("PARTE", "P")
+                                        .replace("\\s+","")
+                                        .replace(" ","")
+
+                                urls.add(urlString)
+                                urlsMetadata.add(RTPPlayMultiPartMetadata(urlString, part))
+                            }
+                            // urls.add(urlString)
                             continue
                         }
                         for (a: Element in li.getElementsByTag("a")) {
 
                             val href: String = a.attr("href")
+                            val part: String = a.html().capitalize()
+                                    .replace("PARTE", "P")
+                                    .replace("\\s+","")
+                                    .replace(" ","")
 
                             if (href.isEmpty()) continue
-                            // urls.add("https://www.rtp.pt$href")
-                            urls.add(doc.location() + href)
+                            urls.add("https://www.rtp.pt$href")
+                            urlsMetadata.add(RTPPlayMultiPartMetadata("https://www.rtp.pt$href", part))
                         }
                     }
                 }
@@ -131,48 +153,6 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
             e.printStackTrace()
         }
 
-        return urls
-    }
-
-    private fun getVideoFileName(urlString: String, videoFile: String?): String {
-        try {
-            val doc: Document?
-
-            try {
-                doc = Jsoup.connect(urlString).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
-                return videoFile ?: urlString
-            }
-
-            val titleElements = doc?.getElementsByTag("title")
-
-            if (videoFile != null && titleElements != null && titleElements.size > 0) {
-
-                val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
-                        .replace(".RTP.Play.RTP", "")
-
-                if (videoFile.indexOf(".mp4") >= 0) {  // is video file
-
-                    return "$title.mp4"
-
-                } else if (videoFile.indexOf(".mp3") >= 0) { // is audio file
-                    return "$title.mp3"
-                }
-
-                return title
-            }
-        }
-        catch (e : java.lang.Exception) {
-            e.printStackTrace()
-        }
-
-        return videoFile?:urlString
-    }
-
-    private fun indexOfEx(string : String, subString: String) : Int {
-        if (string.contains(subString)) {
-            return string.indexOf(subString) + subString.length
-        }
-        return 0
+        return urlsMetadata
     }
 }
