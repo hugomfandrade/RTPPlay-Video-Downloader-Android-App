@@ -96,7 +96,8 @@ class ParsingDialog(val mContext: Context) {
 
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
         mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
-            mListener?.onDownload(tasks)
+
+            mListener?.onDownload(mParsingItemsAdapter.getSelectedTasks())
 
             dismissDialog()
         }
@@ -125,7 +126,7 @@ class ParsingDialog(val mContext: Context) {
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
         mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
 
-            mListener?.onDownload(tasks)
+            mListener?.onDownload(mParsingItemsAdapter.getSelectedTasks())
 
             dismissDialog()
         }

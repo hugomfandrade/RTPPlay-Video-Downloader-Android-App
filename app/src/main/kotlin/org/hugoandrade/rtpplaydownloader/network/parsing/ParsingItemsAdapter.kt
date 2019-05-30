@@ -68,15 +68,13 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
 
     fun remove(task: DownloaderTaskBase) {
         synchronized(parsingItemList) {
-            var index = 0
-            for (parsingItem in parsingItemList) {
+            for ((index, parsingItem) in parsingItemList.withIndex()) {
                 if (parsingItem.task == task) {
                     parsingItemList.removeAt(index)
                     notifyItemRemoved(index)
                     notifyItemRangeChanged(index, itemCount)
                     return
                 }
-                index++
             }
         }
     }
@@ -101,6 +99,18 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
                 parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
             }
         })
+    }
+
+    fun getSelectedTasks(): ArrayList<DownloaderTaskBase> {
+        synchronized(parsingItemList) {
+            val tasks : ArrayList<DownloaderTaskBase> = ArrayList()
+            for (parsingItem in parsingItemList) {
+                if (parsingItem.isSelected.get()) {
+                    tasks.add(parsingItem.task)
+                }
+            }
+            return tasks
+        }
     }
 
     inner class ViewHolder(val binding: ParsingItemBinding) :
