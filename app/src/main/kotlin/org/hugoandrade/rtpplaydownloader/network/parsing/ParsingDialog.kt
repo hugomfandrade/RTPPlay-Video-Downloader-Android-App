@@ -82,6 +82,11 @@ class ParsingDialog(val mContext: Context) {
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
     }
 
+    fun loadingMore() {
+        mParsingItemsAdapter.hideLoadMoreButton()
+        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+    }
+
     fun showParsingResult(parsingData: ParsingData) {
         mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
@@ -111,15 +116,21 @@ class ParsingDialog(val mContext: Context) {
         }
     }
 
-    fun showPaginationResult(tasks: ArrayList<DownloaderTaskBase>) {
+    fun showPaginationResult(paginationTask: PaginationParserTaskBase,
+                             tasks: ArrayList<DownloaderTaskBase>) {
 
         mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
-
         mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
         mParsingItemsAdapter.clear()
+
+        showPaginationMoreResult(paginationTask, tasks)
+    }
+
+    fun showPaginationMoreResult(paginationTask: PaginationParserTaskBase,
+                                 tasks: ArrayList<DownloaderTaskBase>) {
+
         mParsingItemsAdapter.addAll(tasks)
         mParsingItemsAdapter.notifyDataSetChanged()
 
@@ -129,6 +140,22 @@ class ParsingDialog(val mContext: Context) {
             mListener?.onDownload(mParsingItemsAdapter.getSelectedTasks())
 
             dismissDialog()
+        }
+
+        val show = !paginationTask.getPaginationComplete()
+
+        if (show) {
+            mParsingItemsAdapter.showLoadMoreButton()
+            mParsingItemsAdapter.setListener(object : ParsingItemsAdapter.Listener {
+                override fun onLoadMoreClicked() {
+                    // load more
+                    mListener?.onParseMore(paginationTask)
+                }
+            })
+        }
+        else {
+            mParsingItemsAdapter.hideLoadMoreButton()
+            mParsingItemsAdapter.setListener(null)
         }
     }
 
@@ -163,6 +190,7 @@ class ParsingDialog(val mContext: Context) {
         fun onCancelled()
         fun onDownload(tasks : ArrayList<DownloaderTaskBase>)
         fun onParseEntireSeries(paginationTask : PaginationParserTaskBase)
+        fun onParseMore(paginationTask: PaginationParserTaskBase)
     }
 
     class Builder private constructor(context: Context) {

@@ -8,6 +8,9 @@ import java.net.SocketTimeoutException
 
 class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
 
+    private var cacheDoc: Document? = null
+    private var cachePage: Int = 1
+
     override fun isValid(urlString: String) : Boolean {
 
         if (!NetworkUtils.isValidURL(urlString)) {
@@ -68,34 +71,7 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
                     return paginationUrl
                 }
 
-                // temp
-
-                val stamp = findHtmlOfLastClass(doc, "last_id")//: 234238
-                val listDate = findInScript(doc, "RTPPLAY.currentHPListDate").replace("\"", "")//:
-                val listQuery = findInScript(doc, "RTPPLAY.currentHPListQuery").replace("\"", "")//:
-                val listProgram = findInScript(doc, "RTPPLAY.currentHPListProgram").replace("\"", "")//: 2383
-                val listcategory = findInScript(doc, "RTPPLAY.currentHPListCategory").replace("\"", "")//:
-                val listchannel = findInScript(doc, "RTPPLAY.currentHPListChannel").replace("\"", "")//:
-                val listtype = findInScript(doc, "RTPPLAY.currentHPList").replace("\"", "")//: recent
-                val page = findInScript(doc, "RTPPLAY.currentHPPageList").replace("\"", "")//: 2
-                val type = findInScript(doc, "RTPPLAY.currentHPListType").replace("\"", "")//: tv
-                val currentItemSelected = findInScript(doc, "RTPPLAY.currentItemSelected").replace("\"", "")//: 236098
-
-                val req = "https://www.rtp.pt/play/bg_l_ep/?" +
-                        "stamp=" + stamp + "&" +
-                        "listDate=" + listDate + "&" +
-                        "listQuery=" + listQuery + "&" +
-                        "listProgram=" + listProgram + "&" +
-                        "listcategory=" + listcategory + "&" +
-                        "listchannel=" + listchannel + "&" +
-                        "listtype=" + "recent" + "&" +
-                        "page=" + page + "&" +
-                        "type=" + type + "&" +
-                        "currentItemSelected=" + currentItemSelected
-
-                android.util.Log.e(TAG, "req = " + req)
-
-                // end temp
+                cacheDoc = doc
 
                 val episodeItems = doc?.getElementsByClass("episode-item")
 
@@ -108,25 +84,6 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
                         val episodeUrlString = "https://www.rtp.pt$href"
 
                         paginationUrl.add(episodeUrlString)
-
-                        /*
-                        getDocumentInUrl(window.location.origin + , function(doc) {
-
-                            if (isValid(doc) === true) {
-                                sendIsAllValidMessage(true);
-                            }
-                            else {
-                                var nextIt = it + 1;
-
-                                if (nextIt === episodeItems.length) {
-                                    sendIsAllValidMessage(false);
-                                }
-                                else {
-                                    isEpisodeItemValid(episodeItems, nextIt);
-                                }
-                            }
-                        });*/
-
                     }
                 }
             }
@@ -134,6 +91,80 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
                 e.printStackTrace()
             }
         }
+
+        setPaginationComplete(paginationUrl.size == 0)
+
+        return paginationUrl
+    }
+
+    override fun parseMore(): ArrayList<String> {
+
+        return cacheDoc?.let { parseMore(it) } ?: super.parseMore()
+    }
+
+    private fun parseMore(doc: Document): ArrayList<String> {
+
+        val paginationUrl : ArrayList<String> = ArrayList()
+
+        cachePage += 1
+
+        val stamp = findHtmlOfLastClass(doc, "last_id")//: 234238
+        val listDate = findInScript(doc, "RTPPLAY.currentHPListDate").replace("\"", "")//:
+        val listQuery = findInScript(doc, "RTPPLAY.currentHPListQuery").replace("\"", "")//:
+        val listProgram = findInScript(doc, "RTPPLAY.currentHPListProgram").replace("\"", "")//: 2383
+        val listcategory = findInScript(doc, "RTPPLAY.currentHPListCategory").replace("\"", "")//:
+        val listchannel = findInScript(doc, "RTPPLAY.currentHPListChannel").replace("\"", "")//:
+        val listtype = findInScript(doc, "RTPPLAY.currentHPList").replace("\"", "")//: recent
+        val page = findInScript(doc, "RTPPLAY.currentHPPageList").replace("\"", "")//: 2
+        val type = findInScript(doc, "RTPPLAY.currentHPListType").replace("\"", "")//: tv
+        val currentItemSelected = findInScript(doc, "RTPPLAY.currentItemSelected").replace("\"", "")//: 236098
+
+        val req = "https://www.rtp.pt/play/bg_l_ep/?" +
+                "stamp=" + stamp + "&" +
+                "listDate=" + listDate + "&" +
+                "listQuery=" + listQuery + "&" +
+                "listProgram=" + listProgram + "&" +
+                "listcategory=" + listcategory + "&" +
+                "listchannel=" + listchannel + "&" +
+                "listtype=" + "recent" + "&" +
+                "page=" + cachePage + "&" +
+                "type=" + type + "&" +
+                "currentItemSelected=" + currentItemSelected
+
+        android.util.Log.e(TAG, "req = $req")
+
+        try {
+
+            val d: Document?
+
+            try {
+                d = Jsoup.connect(req).timeout(10000).get()
+            } catch (ignored: SocketTimeoutException) {
+                setPaginationComplete(paginationUrl.size == 0)
+                return paginationUrl
+            }
+
+            // end temp
+
+            val episodeItems = d.getElementsByClass("episode-item")
+
+            if (episodeItems != null && !episodeItems.isEmpty()) {
+
+                for (episodeItem in episodeItems.iterator()) {
+
+                    val href = episodeItem.attr("href") ?: continue
+
+                    val episodeUrlString = "https://www.rtp.pt$href"
+
+                    paginationUrl.add(episodeUrlString)
+                }
+            }
+
+        } catch (e: SocketTimeoutException) {
+            e.printStackTrace()
+        }
+
+        setPaginationComplete(paginationUrl.size == 0)
 
         return paginationUrl
     }
@@ -148,7 +179,7 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
 
                 for (dataNode: DataNode in scriptElement.dataNodes()) {
 
-                    if (dataNode.wholeData.contains(id + " = ")) {
+                    if (dataNode.wholeData.contains("$id = ")) {
                         return extractValue(dataNode, "$id = ", ";")
                     }
                 }

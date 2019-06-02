@@ -14,8 +14,10 @@ import kotlin.collections.ArrayList
 
 class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
 
+    private var showLoadMore: Boolean = false
     private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
+    private var listener: Listener? = null
 
     private val parsingItemList: ArrayList<ParsingItem> = ArrayList()
 
@@ -47,6 +49,9 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
 
         holder.binding.selectedCheckBox.visibility = if (itemCount > 1) View.VISIBLE else View.GONE
 
+        holder.binding.loadMoreButton.visibility = if (itemCount == (holder.adapterPosition + 1) && showLoadMore)
+            View.VISIBLE else
+            View.GONE
     }
 
     override fun getItemCount(): Int {
@@ -113,9 +118,35 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
+    fun showLoadMoreButton() {
+        if (!showLoadMore) {
+            showLoadMore = true
+            notifyItemChanged(itemCount - 1)
+        }
+    }
+
+    fun hideLoadMoreButton() {
+        if (showLoadMore) {
+            showLoadMore = false
+            notifyItemChanged(itemCount - 1)
+        }
+    }
+
+    interface Listener {
+        fun onLoadMoreClicked()
+    }
+
+    fun setListener(listener: Listener?) {
+        this.listener = listener
+    }
+
     inner class ViewHolder(val binding: ParsingItemBinding) :
             RecyclerView.ViewHolder(binding.root),
-            CompoundButton.OnCheckedChangeListener {
+            CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+
+        override fun onClick(v: View?) {
+            listener?.onLoadMoreClicked()
+        }
 
         override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
             val item : ParsingItem
@@ -127,6 +158,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
 
         init {
             binding.selectedCheckBox.setOnCheckedChangeListener(this)
+            binding.loadMoreButton.setOnClickListener(this)
         }
     }
 }
