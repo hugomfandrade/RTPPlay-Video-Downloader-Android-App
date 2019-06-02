@@ -89,6 +89,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
+
+        binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
     }
 
     private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {
@@ -247,37 +249,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         })
         runOnUiThread {
             mDownloadItemsAdapter.add(item)
+            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }
-
-    /*override fun onParsingError(url: String, message: String) {
-        runOnUiThread {
-            val errorMessage = "Unable to parse $message"
-
-            Log.e(TAG, errorMessage)
-            binding.root.let { Snackbar.make(it, errorMessage, Snackbar.LENGTH_LONG).show() }
-        }
-    }
-
-    override fun onParsingSuccessful(item: DownloadableItem) {
-        item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
-            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-                // listen for end of download and show message
-                if (downloadableItem.state == DownloadableItemState.End) {
-                    runOnUiThread {
-                        val message = "Finished downloading " + downloadableItem.filename
-                        Log.e(TAG, message)
-                        binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
-                    }
-                    downloadableItem.removeDownloadStateChangeListener(this)
-                }
-            }
-
-        })
-        runOnUiThread {
-            mDownloadItemsAdapter.add(item)
-        }
-    }*/
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>,
