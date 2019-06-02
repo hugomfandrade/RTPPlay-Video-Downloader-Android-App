@@ -96,6 +96,10 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
                     fos.write(buffer, 0, len)
                     len = inputStream.read(buffer)
                     progress += len
+                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                        // do cancelling while paused
+                        return
+                    }
                     mDownloaderTaskListener.onProgress(progress.toFloat() / size.toFloat())
                     mDownloaderTaskListener.onProgress(progress, size)
                 }
@@ -131,6 +135,7 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
             f.delete()
 
             mDownloaderTaskListener.downloadFailed(null)
+            doCanceling = false
             return true
         }
         return false

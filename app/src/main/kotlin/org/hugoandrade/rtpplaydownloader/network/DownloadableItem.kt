@@ -79,7 +79,6 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
             cancel()
         }
         startDownload()
-
     }
 
     fun play() {

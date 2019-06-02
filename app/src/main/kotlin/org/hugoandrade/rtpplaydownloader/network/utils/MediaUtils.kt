@@ -36,6 +36,28 @@ private constructor() {
             return false
         }
 
+        fun deleteMediaFileIfExist(item: DownloadableItem) : Boolean {
+
+            val filepath = item.filepath
+
+            if (filepath != null) {
+
+                // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+                // val file = File(storagePath, item.filename)
+                // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+                val file = File(filepath)
+                return file.exists()
+            }
+            return false
+        }
+
+        fun deleteMediaFileIfExist(file : File) : Boolean {
+            if (Companion.doesMediaFileExist(file)) {
+                return file.delete()
+            }
+            return false
+        }
+
         fun getTitleAsFilename(title: String) : String {
 
             var filename = title
