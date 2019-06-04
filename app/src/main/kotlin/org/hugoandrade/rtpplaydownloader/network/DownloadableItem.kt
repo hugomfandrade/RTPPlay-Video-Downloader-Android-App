@@ -23,6 +23,8 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
     var filepath: String? = null
     var progressSize : Long = 0
     var fileSize : Long = 0
+    var downloadingSpeed : Float = 0f // Per Second
+    var remainingTime : Long = 0 // In Millis
     var state: DownloadableItemState = DownloadableItemState.Start
     var progress : Float = 0f
 
@@ -78,6 +80,7 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
         if (downloaderTask.isDownloading) {
             cancel()
         }
+        MediaUtils.deleteMediaFileIfExist(this)
         startDownload()
     }
 
@@ -107,6 +110,14 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
         this.progressSize = progress
         this.fileSize = size
         this.state = DownloadableItemState.Downloading
+        // fireDownloadStateChange()
+    }
+
+    override fun onProgress(downloadingSpeed: Float, remainingTime: Long) {
+        this.downloadingSpeed = downloadingSpeed
+        this.remainingTime = remainingTime
+        this.state = DownloadableItemState.Downloading
+        // fireDownloadStateChange()
     }
 
     override fun downloadStarted(f: File) {

@@ -68,6 +68,9 @@ class DownloadItemsAdapter :
                 holder.binding.downloadProgressTextView.text =
                         MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
                         MediaUtils.humanReadableByteCount(downloadableItem.fileSize, true)
+                holder.binding.downloadProgressTextView.text =
+                        MediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
+                        MediaUtils.humanReadableTime(downloadableItem.remainingTime)
             }
             downloadableItem.state == DownloadableItemState.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)

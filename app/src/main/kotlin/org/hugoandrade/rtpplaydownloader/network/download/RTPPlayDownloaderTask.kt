@@ -1,35 +1,14 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
-import android.os.Build
-import android.os.Environment
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import java.net.URL
 import org.jsoup.nodes.DataNode
-import java.io.*
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
+import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
+import java.net.URL
 
 class RTPPlayDownloaderTask : DownloaderTaskBase() {
-
-    private lateinit var mDownloaderTaskListener: DownloaderTaskListener
-
-    private var doCanceling: Boolean = false
-
-    override fun cancel() {
-        doCanceling = true
-    }
-
-    override fun resume() {
-        isDownloading = true
-    }
-
-    override fun pause() {
-        isDownloading = false
-    }
 
     override fun parseMediaFile(urlString: String): Boolean {
 
@@ -45,100 +24,6 @@ class RTPPlayDownloaderTask : DownloaderTaskBase() {
         }
 
         return true
-    }
-
-    override fun downloadMediaFile(listener: DownloaderTaskListener) {
-
-        mDownloaderTaskListener = listener
-
-        val u: URL?
-        var inputStream: InputStream? = null
-
-        try {
-            u = URL(videoFile)
-            inputStream = u.openStream()
-            val huc = u.openConnection() as HttpURLConnection //to know the size of video
-            val size = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                huc.contentLengthLong
-            } else {
-                huc.contentLength.toLong()
-            }
-
-            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            val f = File(storagePath, videoFileName)
-            if (MediaUtils.doesMediaFileExist(f)) {
-                mDownloaderTaskListener.downloadFailed("file with same name already exists")
-                return
-            }
-            mDownloaderTaskListener.downloadStarted(f)
-
-            val fos = FileOutputStream(f)
-            val buffer = ByteArray(1024)
-            if (inputStream != null) {
-                var len = inputStream.read(buffer)
-                var progress = len.toLong()
-                while (len > 0) {
-
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling
-                        return
-                    }
-
-                    while (!isDownloading){
-                        // pause
-
-                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                            // do cancelling while paused
-                            return
-                        }
-                    }
-
-                    fos.write(buffer, 0, len)
-                    len = inputStream.read(buffer)
-                    progress += len
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling while paused
-                        return
-                    }
-                    mDownloaderTaskListener.onProgress(progress.toFloat() / size.toFloat())
-                    mDownloaderTaskListener.onProgress(progress, size)
-                }
-            }
-            mDownloaderTaskListener.downloadFinished(f)
-
-            fos.close()
-
-        } catch (mue: MalformedURLException) {
-            mue.printStackTrace()
-            mDownloaderTaskListener.downloadFailed(null)
-        } catch (ioe: IOException) {
-            ioe.printStackTrace()
-            mDownloaderTaskListener.downloadFailed(null)
-        } finally {
-            try {
-                inputStream?.close()
-            } catch (ioe: IOException) {
-                // just going to ignore this one
-            }
-        }
-    }
-
-    private fun tryToCancelIfNeeded(fos: FileOutputStream, inputStream: InputStream, f: File): Boolean {
-
-        if (doCanceling) {
-            fos.close()
-            try {
-                inputStream.close()
-            } catch (ioe: IOException) {
-                // just going to ignore this one
-            }
-            f.delete()
-
-            mDownloaderTaskListener.downloadFailed(null)
-            doCanceling = false
-            return true
-        }
-        return false
     }
 
     override fun isValid(urlString: String) : Boolean {

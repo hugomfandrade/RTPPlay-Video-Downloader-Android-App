@@ -52,13 +52,14 @@ private constructor() {
         }
 
         fun deleteMediaFileIfExist(file : File) : Boolean {
-            if (Companion.doesMediaFileExist(file)) {
+            if (doesMediaFileExist(file)) {
                 return file.delete()
             }
             return false
         }
 
         fun getTitleAsFilename(title: String) : String {
+
 
             var filename = title
                     .replace('-', ' ')
@@ -73,7 +74,7 @@ private constructor() {
             filename = Normalizer.normalize(filename, Normalizer.Form.NFKD)
             filename = filename
                     .replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
-                    .replace("\\.{2,}".toRegex(), "")
+                    .replace("\\.{2,}".toRegex(), ".")
 
             return filename
         }
@@ -101,6 +102,44 @@ private constructor() {
             val exp = (Math.log(bytes.toDouble()) / Math.log(unit.toDouble())).toInt()
             val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1] + if (si) "" else "i"
             return String.format("%.1f %sB", bytes / Math.pow(unit.toDouble(), exp.toDouble()), pre)
+        }
+
+        fun humanReadableTime(time: Long): String {
+            return when {
+                time < 1000 -> // less than one second
+                    "0s"
+                time / 1000 < 60 -> // less than 60 second
+                    (time / 1000).toString() + "s"
+                time / 1000 / 60 < 60 -> // less than 60 minutes
+                    (time / 1000 / 60).toString() + "min"
+                time / 1000 / 60 / 60 < 24 -> // less than 24h
+                    (time / 1000 / 60 / 60).toString() + "h"
+                else -> // in days
+                    (time / 1000 / 60 / 60 / 24).toString() + "days"
+            }
+        }
+
+        fun calculateRemainingDownloadTime(oldTimestamp: Long,
+                                           timestamp: Long,
+                                           oldProgress: Long,
+                                           progress: Long,
+                                           total: Long): Long {
+            return if (timestamp > oldTimestamp && progress > oldProgress) {
+                (total - progress) * (timestamp - oldTimestamp) / (progress - oldProgress)
+            } else {
+                0
+            }
+        }
+
+        fun calculateDownloadingSpeed(oldTimestamp: Long,
+                                      timestamp: Long,
+                                      oldProgress: Long,
+                                      progress: Long): Float {
+            return if (timestamp > oldTimestamp && progress > oldProgress) {
+                (progress - oldProgress).toFloat() * 1000f / (timestamp - oldTimestamp).toFloat()
+            } else {
+                0f
+            }
         }
     }
 }
