@@ -22,6 +22,8 @@
             android:padding="4dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             app:stroke_color="@android:color/transparent"
             app:stroke_width="0dp"
             app:background_color="#ddd">

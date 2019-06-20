@@ -49,7 +49,9 @@ abstract class DownloaderTaskBase {
         return true
     }
 
-    protected open fun downloadMediaFile(listener: DownloaderTaskListener) {
+    open fun downloadMediaFile(listener: DownloaderTaskListener) {
+
+        isDownloading = true
 
         mDownloaderTaskListener = listener
 
@@ -138,6 +140,7 @@ abstract class DownloaderTaskBase {
                 // just going to ignore this one
             }
         }
+        isDownloading = false
     }
 
     open fun cancel() {

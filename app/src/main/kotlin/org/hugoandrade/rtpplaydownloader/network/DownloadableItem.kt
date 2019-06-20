@@ -9,6 +9,7 @@ import kotlin.collections.HashSet
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 
 class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
@@ -19,44 +20,41 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
 
-    var filename: String? = null
+    var filename: String? = downloaderTask.videoFileName
     var filepath: String? = null
     var progressSize : Long = 0
     var fileSize : Long = 0
     var downloadingSpeed : Float = 0f // Per Second
     var remainingTime : Long = 0 // In Millis
-    var state: DownloadableItemState = DownloadableItemState.Start
+    var state: DownloadableItemState = DownloadableItemState.Downloading
     var progress : Float = 0f
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
 
     fun startDownload(): DownloadableItem {
 
-        object : Thread() {
-            override fun run() {
+        val downloading : Boolean = downloaderTask.isDownloading
 
-                val downloading : Boolean = downloaderTask.downloadMediaFileAsync(this@DownloadableItem)
+        if (downloading) {
+            this@DownloadableItem.state = DownloadableItemState.Failed
 
-                if (!downloading) {
-                    this@DownloadableItem.state = DownloadableItemState.Failed
+            stopRefreshTimer()
 
-                    stopRefreshTimer()
+            fireDownloadStateChange()
 
-                    fireDownloadStateChange()
+            downloadFailed("task is currently downloading")
+        }
+        else {
+            this@DownloadableItem.progress = 0.0f
+            this@DownloadableItem.progressSize = 0
+            this@DownloadableItem.state = DownloadableItemState.Downloading
+            downloaderTask.downloadMediaFile(this@DownloadableItem)
 
-                    downloadFailed("could not find filetype")
-                }
-                else {
-                    this@DownloadableItem.progress = 0.0f
-                    this@DownloadableItem.progressSize = 0
-                    this@DownloadableItem.state = DownloadableItemState.Downloading
+            startRefreshTimer()
 
-                    startRefreshTimer()
+            fireDownloadStateChange()
+        }
 
-                    fireDownloadStateChange()
-                }
-            }
-        }.start()
         return this
     }
 

@@ -20,18 +20,39 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="20dp"
-                android:padding="4dp"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textAllCaps="true"
-                android:textColor="@color/colorPrimary"
-                android:text="parsing..."
-                />
+            <android.support.v4.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="20dp"
+                        android:padding="4dp"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:textColor="@color/colorPrimary"
+                        android:text="parsing..."
+                        />
+
+                    <android.support.v7.widget.RecyclerView
+                        android:id="@+id/parsing_items"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+
+                </LinearLayout>
+
+
+            </android.support.v4.widget.NestedScrollView>
 
             <ProgressBar
                 android:id="@+id/parsing_progress_bar"
@@ -42,12 +63,6 @@
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
                 style="@android:style/Widget.Holo.Light.ProgressBar.Horizontal" />
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/parsing_items"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"/>
 
             <TextView
                 android:id="@+id/tv_cancel"
@@ -91,7 +106,6 @@
                 android:textColor="#fff"
                 android:background="@color/colorPrimary"
                 android:text="download"/>
-
 
         </LinearLayout>
 

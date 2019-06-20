@@ -1,18 +1,20 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.util.Log
+import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
 import java.util.*
+import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
 class DownloadManager  {
@@ -25,18 +27,23 @@ class DownloadManager  {
 
     private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
+    private val parsingExecutors = Executors.newFixedThreadPool(DevConstants.nParsingThreads)
+    private val downloadExecutors = Executors.newFixedThreadPool(DevConstants.nDownloadThreads)
+
     fun onCreate(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
     }
 
     fun onDestroy() {
+        parsingExecutors.shutdownNow()
+        downloadExecutors.shutdownNow()
     }
 
     fun parseUrl(urlString: String) : ParseFuture {
 
         val future = ParseFuture(urlString)
 
-        object : Thread("Parsing Thread") {
+        parsingExecutors.execute(object : Runnable {
 
             override fun run() {
 
@@ -77,20 +84,24 @@ class DownloadManager  {
                     future.success(ParsingData(downloaderTask, paginationTask))
                 }
             }
-        }.start()
+        })
 
         return future
     }
 
     fun download(task: DownloaderTaskBase) : DownloadableItem  {
-        return DownloadableItem(task, mViewOps.get()).startDownload()
+        val downloadableItem = DownloadableItem(task, mViewOps.get())
+        downloadExecutors.execute {
+            downloadableItem.startDownload()
+        }
+        return downloadableItem
     }
 
     fun parsePagination(urlString: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
 
         val future = PaginationParseFuture(urlString, paginationTask)
 
-        object : Thread("Pagination Parsing Thread") {
+        parsingExecutors.execute(object : Runnable {
 
             override fun run() {
 
@@ -152,7 +163,7 @@ class DownloadManager  {
                     })
                 })
             }
-        }.start()
+        })
 
         return future
     }
@@ -160,7 +171,7 @@ class DownloadManager  {
     fun parseMore(urlString : String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
         val future = PaginationParseFuture(urlString, paginationTask)
 
-        object : Thread("Pagination Parsing More Thread") {
+        parsingExecutors.execute(object : Runnable {
 
             override fun run() {
 
@@ -222,7 +233,7 @@ class DownloadManager  {
                     })
                 })
             }
-        }.start()
+        })
 
         return future
     }

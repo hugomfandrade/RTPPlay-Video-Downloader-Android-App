@@ -156,7 +156,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     fun download(view: View) {
 
-        ViewUtils.hideSoftKeyboardAndClearFocus(binding.root)
+        ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
+        binding.inputUriEditText.clearFocus()
 
         if (!PermissionUtils.hasGrantedPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             PermissionDialog.Builder.instance(this)
