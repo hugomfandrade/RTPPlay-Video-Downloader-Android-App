@@ -23,6 +23,9 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.*
 import android.content.Intent
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -191,9 +194,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
 
         val future : ParseFuture = mDownloadManager.parseUrl(url)
-        future.addCallback(object : FutureCallback<DownloaderTaskBase> {
+        future.addCallback(object : FutureCallback<ParsingData> {
 
-            override fun onSuccess(result: DownloaderTaskBase?) {
+            override fun onSuccess(result: ParsingData) {
 
                 runOnUiThread {
                     parsingDialog?.showParsingResult(result)
@@ -214,18 +217,80 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         })
 
         parsingDialog = ParsingDialog.Builder.instance(this)
-                .setOnParsingDialog(object : ParsingDialog.OnParsingListener {
+                .setOnParsingDialogListener(object : ParsingDialog.OnParsingListener {
+
+                    var paginationFuture : PaginationParseFuture? = null
+                    var paginationMoreFuture : PaginationParseFuture? = null
+
                     override fun onCancelled() {
                         future.failed("parsing was cancelled")
+
+                        paginationFuture?.failed("parsing was cancelled");
+                        paginationMoreFuture?.failed("parsing was cancelled");
                     }
-                    override fun onDownload(task : DownloaderTaskBase?) {
-                        if (task != null) {
+
+                    override fun onDownload(tasks : ArrayList<DownloaderTaskBase>) {
+                        tasks.forEach(action = { task ->
                             startDownload(task)
-                        }
+                        })
 
                         parsingDialog?.dismissDialog()
                         parsingDialog = null
                     }
+
+                    override fun onParseEntireSeries(paginationTask: PaginationParserTaskBase) {
+                        parsingDialog?.loading()
+                        paginationFuture = mDownloadManager.parsePagination(url, paginationTask)
+                        paginationFuture?.addCallback(object : FutureCallback<ArrayList<DownloaderTaskBase>> {
+
+                            override fun onSuccess(result: ArrayList<DownloaderTaskBase>) {
+
+                                runOnUiThread {
+                                    parsingDialog?.showPaginationResult(paginationTask, result)
+                                }
+                            }
+
+                            override fun onFailed(errorMessage: String) {
+
+                                runOnUiThread {
+                                    val message = "Unable to parse pagination: $errorMessage"
+
+                                    binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+
+                                    parsingDialog?.dismissDialog()
+                                    parsingDialog = null
+                                }
+                            }
+                        })
+                    }
+
+                    override fun onParseMore(paginationTask: PaginationParserTaskBase) {
+                        parsingDialog?.loadingMore()
+                        paginationMoreFuture = mDownloadManager.parseMore(url, paginationTask)
+                        paginationMoreFuture?.addCallback(object : FutureCallback<ArrayList<DownloaderTaskBase>> {
+
+                            override fun onSuccess(result: ArrayList<DownloaderTaskBase>) {
+
+                                runOnUiThread {
+                                    parsingDialog?.showPaginationMoreResult(paginationTask, result)
+                                }
+                            }
+
+                            override fun onFailed(errorMessage: String) {
+
+                                runOnUiThread {
+                                    val message = "Unable to parse more pagination: $errorMessage"
+
+                                    binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+
+                                    parsingDialog?.dismissDialog()
+                                    parsingDialog = null
+                                }
+                            }
+                        })
+
+                    }
+
                 })
                 .create()
         parsingDialog?.show()

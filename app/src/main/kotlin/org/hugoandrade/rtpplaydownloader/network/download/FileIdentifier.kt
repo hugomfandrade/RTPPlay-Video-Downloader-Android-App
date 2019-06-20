@@ -1,9 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.parsing
-
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
-import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayDownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.SAPODownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.SICDownloaderTask
+package org.hugoandrade.rtpplaydownloader.network.download
 
 class FileIdentifier() {
 
@@ -17,6 +12,7 @@ class FileIdentifier() {
             for (fileType: FileType in FileType.values()) {
                 if (fileType.downloaderTask.isValid(urlString)) {
                     when (fileType) {
+                        FileType.RTPPlayMultiPart -> return RTPPlayDownloaderMultiPartTask()
                         FileType.RTPPlay -> return RTPPlayDownloaderTask()
                         FileType.SIC -> return SICDownloaderTask()
                         FileType.SAPO -> return SAPODownloaderTask()
@@ -25,5 +21,12 @@ class FileIdentifier() {
             }
             return null
         }
+    }
+
+    enum class FileType(var downloaderTask: DownloaderTaskBase) {
+        RTPPlayMultiPart(RTPPlayDownloaderMultiPartTask()),
+        RTPPlay(RTPPlayDownloaderTask()),
+        SIC(SICDownloaderTask()),
+        SAPO(SAPODownloaderTask())
     }
 }

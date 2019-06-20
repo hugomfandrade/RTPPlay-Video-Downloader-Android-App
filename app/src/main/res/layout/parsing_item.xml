@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable name="item" type="org.hugoandrade.rtpplaydownloader.network.parsing.ParsingItem"/>
+    </data>
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:padding="6dp">
+
+        <CheckBox
+            android:id="@+id/selected_check_box"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingEnd="6dp"
+            android:paddingRight="6dp"
+            android:checked="@={item.isSelected}"
+            app:layout_constraintTop_toTopOf="@id/parsing_item_media_image_view"
+            app:layout_constraintBottom_toBottomOf="@id/parsing_item_media_image_view"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <ImageView
+            android:id="@+id/parsing_item_media_image_view"
+            android:layout_width="60dp"
+            android:layout_height="40dp"
+            android:background="@android:color/darker_gray"
+            android:src="@drawable/media_file_icon"
+            android:padding="4dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/selected_check_box"
+            />
+
+        <EditText
+            android:id="@+id/parsing_item_title_text_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="6dp"
+            android:layout_marginLeft="6dp"
+            android:singleLine="true"
+            android:clickable="false"
+            android:cursorVisible="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:background="@android:color/transparent"
+            android:textSize="14sp"
+            app:layout_constraintStart_toEndOf="@id/parsing_item_media_image_view"
+            app:layout_constraintTop_toTopOf="@id/parsing_item_media_image_view"
+            app:layout_constraintBottom_toBottomOf="@id/parsing_item_media_image_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="Hello"
+            android:text="@={item.task.videoFileName}" />
+
+        <TextView
+            android:id="@+id/load_more_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_margin="10dp"
+            android:padding="4dp"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:textColor="@color/colorPrimary"
+            android:background="?selectableItemBackground"
+            android:text="Load More"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/parsing_item_media_image_view"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

@@ -6,20 +6,24 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Handler
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.KeyEvent
 import android.view.View
-import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import kotlin.collections.ArrayList
 
-class ParsingDialog(context: Context) {
+class ParsingDialog(val mContext: Context) {
 
     @Suppress("unused")
     private val TAG = ParsingDialog::class.java.simpleName
 
     private var mAlertDialog: AlertDialog? = null
     private var mView: View? = null
-    private var mContext: Context = context
+    private val mParsingItemsAdapter = ParsingItemsAdapter()
+
     private var mListener: OnParsingListener? = null
 
     private var mHandler: Handler = Handler()
@@ -49,7 +53,10 @@ class ParsingDialog(context: Context) {
         }
 
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.parsing_item_layout)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
+        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.visibility = View.GONE
+        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.layoutManager = LinearLayoutManager(mContext)
+        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.adapter = mParsingItemsAdapter
 
         mAlertDialog = AlertDialog.Builder(mContext)
                 .setOnKeyListener(DialogInterface.OnKeyListener { _, keyCode, event ->
@@ -66,19 +73,89 @@ class ParsingDialog(context: Context) {
                 .create()
     }
 
-    fun showParsingResult(task: DownloaderTaskBase?) {
+    fun loading() {
+        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.GONE
+
+        mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.VISIBLE
+        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
+    }
+
+    fun loadingMore() {
+        mParsingItemsAdapter.hideLoadMoreButton()
+        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+    }
+
+    fun showParsingResult(parsingData: ParsingData) {
         mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
-        mView?.findViewById<View>(R.id.parsing_item_layout)?.visibility = View.VISIBLE
-        mView?.findViewById<TextView>(R.id.parsing_item_title_text_view)?.text = task?.videoFileName
-        mView?.findViewById<TextView>(R.id.parsing_item_title_text_view)?.isSelected = true
+        val tasks : ArrayList<DownloaderTaskBase> = parsingData.tasks
+        val paginationTask: PaginationParserTaskBase? = parsingData.paginationTask
+
+        mParsingItemsAdapter.clear()
+        mParsingItemsAdapter.addAll(tasks)
+        mParsingItemsAdapter.notifyDataSetChanged()
+
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
         mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
 
-            mListener?.onDownload(task)
+            mListener?.onDownload(mParsingItemsAdapter.getSelectedTasks())
 
             dismissDialog()
+        }
+
+        if (paginationTask != null) {
+            mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.VISIBLE
+            mView?.findViewById<View>(R.id.tv_parse_entire_series)?.setOnClickListener {
+
+                mListener?.onParseEntireSeries(paginationTask)
+            }
+        }
+    }
+
+    fun showPaginationResult(paginationTask: PaginationParserTaskBase,
+                             tasks: ArrayList<DownloaderTaskBase>) {
+
+        mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
+
+        mParsingItemsAdapter.clear()
+
+        showPaginationMoreResult(paginationTask, tasks)
+    }
+
+    fun showPaginationMoreResult(paginationTask: PaginationParserTaskBase,
+                                 tasks: ArrayList<DownloaderTaskBase>) {
+
+        mParsingItemsAdapter.addAll(tasks)
+        mParsingItemsAdapter.notifyDataSetChanged()
+
+        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
+        mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
+
+            mListener?.onDownload(mParsingItemsAdapter.getSelectedTasks())
+
+            dismissDialog()
+        }
+
+        val show = !paginationTask.getPaginationComplete()
+
+        if (show) {
+            mParsingItemsAdapter.showLoadMoreButton()
+            mParsingItemsAdapter.setListener(object : ParsingItemsAdapter.Listener {
+                override fun onLoadMoreClicked() {
+                    // load more
+                    mListener?.onParseMore(paginationTask)
+                }
+            })
+        }
+        else {
+            mParsingItemsAdapter.hideLoadMoreButton()
+            mParsingItemsAdapter.setListener(null)
         }
     }
 
@@ -109,31 +186,28 @@ class ParsingDialog(context: Context) {
         return mAlertDialog?.isShowing ?: false
     }
 
-
     interface OnParsingListener {
         fun onCancelled()
-        fun onDownload(task : DownloaderTaskBase?)
+        fun onDownload(tasks : ArrayList<DownloaderTaskBase>)
+        fun onParseEntireSeries(paginationTask : PaginationParserTaskBase)
+        fun onParseMore(paginationTask: PaginationParserTaskBase)
     }
 
     class Builder private constructor(context: Context) {
 
-        private val P: CalendarDialogParams
+        private val params: ParsingDialogParams = ParsingDialogParams(context)
 
-        init {
-            P = CalendarDialogParams(context)
-        }
-
-        fun setOnParsingDialog(listener: OnParsingListener): Builder {
-            P.mOnParsingListener = listener
+        fun setOnParsingDialogListener(listener: OnParsingListener): Builder {
+            params.mOnParsingListener = listener
             return this
         }
 
         fun create(): ParsingDialog {
-            val permissionDialog = ParsingDialog(P.mContext)
+            val parsingDialog = ParsingDialog(params.mContext)
 
-            P.apply(permissionDialog)
+            params.apply(parsingDialog)
 
-            return permissionDialog
+            return parsingDialog
         }
 
         companion object {
@@ -144,12 +218,12 @@ class ParsingDialog(context: Context) {
         }
     }
 
-    private class CalendarDialogParams internal constructor(internal var mContext: Context) {
+    private class ParsingDialogParams internal constructor(internal var mContext: Context) {
 
         internal var mOnParsingListener: OnParsingListener? = null
 
-        internal fun apply(permissionDialog: ParsingDialog) {
-            permissionDialog.setOnParsingDialogListener(mOnParsingListener)
+        internal fun apply(parsingDialog: ParsingDialog) {
+            parsingDialog.setOnParsingDialogListener(mOnParsingListener)
         }
     }
 }

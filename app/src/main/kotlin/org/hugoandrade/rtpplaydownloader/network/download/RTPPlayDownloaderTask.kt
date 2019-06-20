@@ -8,7 +8,7 @@ import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class RTPPlayDownloaderTask : DownloaderTaskBase() {
+open class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
     override fun parseMediaFile(urlString: String): Boolean {
 
