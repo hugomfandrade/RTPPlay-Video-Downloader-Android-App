@@ -1,11 +1,17 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.net.SocketTimeoutException
 
 class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
+
+    override fun getVideoFileName(urlString: String, videoFile: String?): String {
+        // do nothing
+        return null.toString()
+    }
 
     override fun downloadMediaFile(listener: DownloaderTaskListener) {
         // do nothing
@@ -34,13 +40,13 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
 
             if (task.isValid(url.urlString) && task.parseMediaFile(url.urlString)) {
                 val part = url.suffix
-                val originalFilename = task.videoFileName
+                val originalFilename = task.getVideoFileName(url.urlString, task.videoFile)
 
-                if (part != null && originalFilename != null) {
+                if (part != null) {
                     val lastDot = originalFilename.lastIndexOf(".")
                     val preFilename = originalFilename.substring(0, lastDot)
                     val extFilename = originalFilename.substring(lastDot, originalFilename.length)
-                    task.videoFileName = "$preFilename.$part$extFilename"
+                    task.videoFileName = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
                 }
                 tasks.add(task)
             }

@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.databinding.DataBindingUtil
+import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -136,7 +137,16 @@ class DownloadItemsAdapter :
                 if (recyclerView == null) {
                     notifyItemChanged(index)
                 } else {
-                    val v : View? = recyclerView?.getChildAt(index)
+                    val lm = recyclerView?.layoutManager
+
+                    val v: View?
+                    if (lm is LinearLayoutManager) {
+                        val llm : LinearLayoutManager = lm
+                        v = llm.findViewByPosition(index)
+                    }
+                    else {
+                        v = null
+                    }
 
                     if (v != null) {
 
@@ -145,13 +155,19 @@ class DownloadItemsAdapter :
                         if (viewHolder is ViewHolder) {
                             val holder : ViewHolder = viewHolder
                             while (recyclerView?.isComputingLayout == true) { }
+
+                            var m = holder.hashCode().toString() + ": updating what was at (" + index.toString() + ") " + holder.binding.downloadItemTitleTextView.text.toString()
                             onBindViewHolder(holder, index)
+                            m = m + " and now is " + holder.binding.downloadItemTitleTextView.text.toString()
+                            android.util.Log.e(javaClass.simpleName, m)
                         } else {
                             // update here
+                            android.util.Log.e(javaClass.simpleName, "viewholder not found of $index")
                             notifyItemChanged(index)
                         }
                     } else {
                         // update here
+                        android.util.Log.e(javaClass.simpleName, "view not found of $index")
                         notifyItemChanged(index)
                     }
                 }

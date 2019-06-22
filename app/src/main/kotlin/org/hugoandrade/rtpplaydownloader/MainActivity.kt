@@ -26,6 +26,7 @@ import android.content.Intent
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -226,12 +227,17 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     override fun onCancelled() {
                         future.failed("parsing was cancelled")
 
-                        paginationFuture?.failed("parsing was cancelled");
-                        paginationMoreFuture?.failed("parsing was cancelled");
+                        paginationFuture?.failed("parsing was cancelled")
+                        paginationMoreFuture?.failed("parsing was cancelled")
+                        FilenameLockerAdapter.instance.clear()
                     }
 
                     override fun onDownload(tasks : ArrayList<DownloaderTaskBase>) {
                         tasks.forEach(action = { task ->
+                            val filename: String? = task.videoFileName
+                            if (filename != null) {
+                                FilenameLockerAdapter.instance.putUnremovable(filename)
+                            }
                             startDownload(task)
                         })
 

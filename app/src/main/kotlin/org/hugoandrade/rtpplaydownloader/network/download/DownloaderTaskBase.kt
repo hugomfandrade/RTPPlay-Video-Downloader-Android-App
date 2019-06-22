@@ -2,6 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import android.os.Environment
+import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -31,6 +32,8 @@ abstract class DownloaderTaskBase {
 
     abstract fun parseMediaFile(urlString: String): Boolean
 
+    abstract fun getVideoFileName(urlString: String, videoFile: String?): String
+
     fun downloadMediaFileAsync(listener: DownloaderTaskListener) : Boolean {
         if (isDownloading) {
             return false
@@ -55,6 +58,39 @@ abstract class DownloaderTaskBase {
 
         mDownloaderTaskListener = listener
 
+        if (DevConstants.simDownload) {
+            val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), videoFileName)
+            mDownloaderTaskListener.downloadStarted(f)
+            var progress = 0L
+            var size = 1024L
+            while (progress < size) {
+                if (doCanceling) {
+                    mDownloaderTaskListener.downloadFailed("Downloading was cancelled")
+                    isDownloading = false
+                    doCanceling = false
+                    return
+                }
+                while (!isDownloading){
+                    // paused
+
+                    if (doCanceling) {
+                        mDownloaderTaskListener.downloadFailed("Downloading was cancelled")
+                        isDownloading = false
+                        doCanceling = false
+                        return
+                    }
+                }
+                mDownloaderTaskListener.onProgress(1024F, 3000)
+                mDownloaderTaskListener.onProgress(progress.toFloat() / size.toFloat())
+                mDownloaderTaskListener.onProgress(progress, size)
+                progress += 8
+                Thread.sleep(1000)
+            }
+            mDownloaderTaskListener.downloadFinished(f)
+            isDownloading = false
+            return
+        }
+
         val u: URL?
         var inputStream: InputStream? = null
 
@@ -71,6 +107,7 @@ abstract class DownloaderTaskBase {
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
             val f = File(storagePath, videoFileName)
             if (MediaUtils.doesMediaFileExist(f)) {
+                isDownloading = false
                 mDownloaderTaskListener.downloadFailed("file with same name already exists")
                 return
             }
@@ -129,10 +166,10 @@ abstract class DownloaderTaskBase {
 
         } catch (mue: MalformedURLException) {
             mue.printStackTrace()
-            mDownloaderTaskListener.downloadFailed(null)
+            mDownloaderTaskListener.downloadFailed("Internal error while downloading")
         } catch (ioe: IOException) {
             ioe.printStackTrace()
-            mDownloaderTaskListener.downloadFailed(null)
+            mDownloaderTaskListener.downloadFailed("Internal error while downloading")
         } finally {
             try {
                 inputStream?.close()
@@ -166,7 +203,8 @@ abstract class DownloaderTaskBase {
             }
             f.delete()
 
-            mDownloaderTaskListener.downloadFailed(null)
+            mDownloaderTaskListener.downloadFailed("Downloading was aborted")
+            isDownloading = false
             doCanceling = false
             return true
         }

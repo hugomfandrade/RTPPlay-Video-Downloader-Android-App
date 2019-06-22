@@ -3,6 +3,7 @@ package org.hugoandrade.rtpplaydownloader
 interface DevConstants {
 
     companion object {
+        const val simDownload: Boolean = true
         const val showLog: Boolean = false
 
         const val nParsingThreads: Int = 10

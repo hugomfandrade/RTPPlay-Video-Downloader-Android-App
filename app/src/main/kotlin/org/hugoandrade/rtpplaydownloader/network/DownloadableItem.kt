@@ -9,11 +9,12 @@ import kotlin.collections.HashSet
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import java.util.concurrent.ExecutorService
 
 class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
-                       private val viewOps : DownloadManagerViewOps?) :
+                       private val viewOps : DownloadManagerViewOps?,
+                       private val downloadExecutors: ExecutorService) :
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
@@ -31,7 +32,7 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
 
-    fun startDownload(): DownloadableItem {
+    fun startDownload() {
 
         val downloading : Boolean = downloaderTask.isDownloading
 
@@ -48,14 +49,15 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
             this@DownloadableItem.progress = 0.0f
             this@DownloadableItem.progressSize = 0
             this@DownloadableItem.state = DownloadableItemState.Downloading
-            downloaderTask.downloadMediaFile(this@DownloadableItem)
 
             startRefreshTimer()
 
             fireDownloadStateChange()
-        }
 
-        return this
+            downloadExecutors.execute {
+                downloaderTask.downloadMediaFile(this@DownloadableItem)
+            }
+        }
     }
 
     fun cancel() {
@@ -85,9 +87,9 @@ class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
     fun play() {
         if (!downloaderTask.isDownloading && state == DownloadableItemState.End) {
             if (MediaUtils.doesMediaFileExist(this)) {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
-                intent.setDataAndType(Uri.parse(filepath), "video/mp4")
-                viewOps?.getApplicationContext()?.startActivity(intent)
+                viewOps?.getApplicationContext()?.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+                                .setDataAndType(Uri.parse(filepath), "video/mp4"))
             } else {
                 Toast.makeText(viewOps?.getActivityContext(), "File not found", Toast.LENGTH_LONG).show()
             }

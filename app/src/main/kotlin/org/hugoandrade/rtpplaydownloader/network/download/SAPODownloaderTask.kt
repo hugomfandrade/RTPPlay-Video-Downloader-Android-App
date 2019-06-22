@@ -1,18 +1,10 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
-import android.os.Build
-import android.os.Environment
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
 import java.net.SocketTimeoutException
 import java.net.URL
 
@@ -21,7 +13,7 @@ class SAPODownloaderTask : DownloaderTaskBase() {
     override fun parseMediaFile(urlString: String): Boolean {
 
         videoFile = getVideoFile(urlString) ?: return false
-        videoFileName = MediaUtils.getUniqueFilename(getVideoFileName(urlString, videoFile))
+        videoFileName = MediaUtils.getUniqueFilenameAndLock(getVideoFileName(urlString, videoFile))
 
         try {
             URL(videoFile)
@@ -103,7 +95,7 @@ class SAPODownloaderTask : DownloaderTaskBase() {
         return null
     }
 
-    private fun getVideoFileName(urlString: String, videoFile: String?): String {
+    override fun getVideoFileName(urlString: String, videoFile: String?): String {
 
         try {
             val doc: Document?

@@ -13,7 +13,7 @@ class SICDownloaderTask : DownloaderTaskBase() {
     override fun parseMediaFile(urlString: String): Boolean {
 
         videoFile = getVideoFile(urlString) ?: return false
-        videoFileName = MediaUtils.getUniqueFilename(getVideoFileName(urlString, videoFile))
+        videoFileName = MediaUtils.getUniqueFilenameAndLock(getVideoFileName(urlString, videoFile))
 
         try {
             URL(videoFile)
@@ -90,7 +90,7 @@ class SICDownloaderTask : DownloaderTaskBase() {
         return null
     }
 
-    private fun getVideoFileName(urlString: String, videoFile: String?): String {
+    override fun getVideoFileName(urlString: String, videoFile: String?): String {
 
         try {
             val doc: Document?

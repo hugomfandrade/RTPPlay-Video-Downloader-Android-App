@@ -13,7 +13,6 @@ import android.view.View
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
-import kotlin.collections.ArrayList
 
 class ParsingDialog(val mContext: Context) {
 

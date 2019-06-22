@@ -90,10 +90,8 @@ class DownloadManager  {
     }
 
     fun download(task: DownloaderTaskBase) : DownloadableItem  {
-        val downloadableItem = DownloadableItem(task, mViewOps.get())
-        downloadExecutors.execute {
-            downloadableItem.startDownload()
-        }
+        val downloadableItem = DownloadableItem(task, mViewOps.get(), downloadExecutors)
+        downloadableItem.startDownload()
         return downloadableItem
     }
 

@@ -4,6 +4,7 @@ import android.os.Environment
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import java.io.File
 import java.text.Normalizer
+import kotlin.math.ln
 
 class MediaUtils
 
@@ -60,7 +61,6 @@ private constructor() {
 
         fun getTitleAsFilename(title: String) : String {
 
-
             var filename = title
                     .replace('-', ' ')
                     .replace(':', ' ')
@@ -93,13 +93,36 @@ private constructor() {
             val filename = originalFile.name.substring(0, originalFile.name.lastIndexOf("."))
             val fullFilename = "$filename($index)$extension"
             val file = File(originalFile.parentFile, fullFilename)
-            return if (!doesMediaFileExist(file)) file.name else internalGetUniqueFilename(file, index + 1)
+            return if (!doesMediaFileExist(file)) file.name else internalGetUniqueFilename(originalFile, index + 1)
+        }
+
+        fun getUniqueFilenameAndLock(filename : String) : String  {
+            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+            return getUniqueFilenameAndLock(File(storagePath, filename))
+        }
+
+        fun getUniqueFilenameAndLock(file : File) : String  {
+            return if (!doesMediaFileExist(file) && FilenameLockerAdapter.instance.put(file.name))
+                file.name
+            else
+                internalGetUniqueFilenameAndLock(file, 1)
+        }
+
+        private fun internalGetUniqueFilenameAndLock(originalFile : File, index : Int) : String  {
+            val extension = originalFile.name.substring(originalFile.name.lastIndexOf("."))
+            val filename = originalFile.name.substring(0, originalFile.name.lastIndexOf("."))
+            val fullFilename = "$filename($index)$extension"
+            val file = File(originalFile.parentFile, fullFilename)
+            return if (!doesMediaFileExist(file) && FilenameLockerAdapter.instance.put(fullFilename))
+                file.name
+            else
+                internalGetUniqueFilenameAndLock(originalFile, index + 1)
         }
 
         fun humanReadableByteCount(bytes: Long, si: Boolean): String {
             val unit = if (si) 1000 else 1024
             if (bytes < unit) return "$bytes B"
-            val exp = (Math.log(bytes.toDouble()) / Math.log(unit.toDouble())).toInt()
+            val exp = (ln(bytes.toDouble()) / ln(unit.toDouble())).toInt()
             val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1] + if (si) "" else "i"
             return String.format("%.1f %sB", bytes / Math.pow(unit.toDouble(), exp.toDouble()), pre)
         }
