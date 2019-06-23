@@ -34,6 +34,9 @@ dependencies {
 
     // html parsing lib
     implementation 'org.jsoup:jsoup:1.10.1'
+
+    // azure
+    implementation 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
 }
 
 repositories {

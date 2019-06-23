@@ -37,14 +37,14 @@ private constructor() {
         /**
          * RequestListener ID used in permission request calls.
          */
-        private val REQUEST_WRITE_STORAGE = 1
+        private const val REQUEST_WRITE_STORAGE = 1
 
         fun requestPermission(activity: Activity, permission: String) {
             val locationPermission = hasGrantedPermission(activity, permission)
 
             // Permission has not been granted.
             if (!locationPermission) {
-                PermissionUtils.requestPermission(
+                requestPermission(
                         activity,
                         permission,
                         activity.findViewById<View>(android.R.id.content) as ViewGroup)
@@ -70,7 +70,7 @@ private constructor() {
                 grantResults: IntArray,
                 callback: OnRequestPermissionsResultCallback?): Boolean {
 
-            if (requestCode == PermissionUtils.REQUEST_WRITE_STORAGE) {
+            if (requestCode == REQUEST_WRITE_STORAGE) {
 
                 val layout = activity.findViewById<View>(android.R.id.content) as ViewGroup
 
