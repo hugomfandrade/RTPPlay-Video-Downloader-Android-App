@@ -1,0 +1,27 @@
+apply plugin: "java"
+
+
+repositories {
+    jcenter()
+}
+
+sourceSets {
+    
+    main {
+        java {
+            srcDir 'src'
+        }
+        resources {
+            srcDir 'resources'
+        }
+    }
+    test {
+        java {
+            srcDir 'test'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:7.0.0.jre8'
+}

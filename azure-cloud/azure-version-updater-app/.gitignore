@@ -1,0 +1,12 @@
+/bin
+/target
+/gen
+/.idea
+/.settings
+/.gradle
+/classes
+*.iml
+gradlew
+gradlew.bat
+gradle
+azure-sql.properties
