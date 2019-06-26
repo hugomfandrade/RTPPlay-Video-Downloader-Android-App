@@ -35,7 +35,13 @@ abstract class DatabaseModel {
             override fun doInBackground(vararg params: Void): List<DownloadableEntry> {
                 val downloadableItems = ArrayList<DownloadableEntry>()
 
-                val cursor = database?.query(DownloadableEntry.Entry.TABLE_NAME, null, null, null, null, null, null)
+                val cursor = database?.query(DownloadableEntry.Entry.TABLE_NAME,
+                        null,
+                        DownloadableEntry.Entry.Cols.IS_ARCHIVED + " = ?",
+                        arrayOf("0"),
+                        null,
+                        null,
+                        null)
 
                 if (cursor != null) {
                     cursor.moveToFirst()
@@ -165,15 +171,14 @@ abstract class DatabaseModel {
                         DownloadableEntry.Entry.Cols._ID + " = ?",
                         arrayOf(downloadableEntry.id))
 
+
                 return if (nRowsAffected != 0) {
                     downloadableEntry
                 } else {
-                    // TODO
-                    // update by urlString
                     val cursor = database?.query(DownloadableEntry.Entry.TABLE_NAME,
                             null,
-                            DownloadableEntry.Entry.Cols.URL + " = ?",
-                            arrayOf(downloadableEntry.urlString),
+                            DownloadableEntry.Entry.Cols._ID + " = ?",
+                            arrayOf(downloadableEntry.id),
                             null, null, null)
 
                     if (cursor != null) {
@@ -193,8 +198,6 @@ abstract class DatabaseModel {
                                     DownloadableEntryParser.format(d),
                                     DownloadableEntry.Entry.Cols._ID + " = ?",
                                     arrayOf(d.id))
-
-                            android.util.Log.e(TAG, "update::" + d.state.toString() + "::" + rowsAffected)
 
                             return if (rowsAffected == 0) null else downloadableEntry
                         }

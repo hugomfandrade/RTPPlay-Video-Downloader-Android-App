@@ -31,13 +31,12 @@ private constructor() {
 
         fun parse(downloadableItem: DownloadableItem): DownloadableEntry {
             return DownloadableEntry(
-                    // TODO
                     downloadableItem.id,
                     downloadableItem.url,
                     downloadableItem.filename,
                     downloadableItem.filename,
                     downloadableItem.state,
-                    false)
+                    downloadableItem.isArchived)
         }
 
         fun formatCollection(downloadableEntries: List<DownloadableEntry>): List<DownloadableItem> {

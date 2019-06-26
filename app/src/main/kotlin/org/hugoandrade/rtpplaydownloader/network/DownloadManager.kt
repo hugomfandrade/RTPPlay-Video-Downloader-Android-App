@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
@@ -109,5 +110,10 @@ class DownloadManager  {
 
     fun emptyDB() {
         mDatabaseModel.deleteAllDownloadableEntries()
+    }
+
+    fun archive(downloadableItem: DownloadableItem) {
+        downloadableItem.isArchived = true
+        mDatabaseModel.updateDownloadableEntry(downloadableItem)
     }
 }

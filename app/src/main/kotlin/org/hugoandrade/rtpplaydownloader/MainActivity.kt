@@ -23,6 +23,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.*
 import android.content.Intent
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.Menu
 import android.view.MenuItem
 
@@ -108,6 +109,23 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+                0,
+                ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
+
+            override fun onMove(recyclerView: RecyclerView,
+                                viewHolder1: RecyclerView.ViewHolder,
+                                viewHolder2: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
+                val position = viewHolder.adapterPosition
+                val downloadableItem = mDownloadItemsAdapter.get(position)
+                mDownloadManager.archive(downloadableItem)
+                mDownloadItemsAdapter.remove(downloadableItem)
+            }
+        }).attachToRecyclerView(mDownloadItemsRecyclerView)
     }
 
     private fun populateDownloadItemsRecyclerView() {

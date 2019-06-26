@@ -45,7 +45,7 @@ class DownloadItemsAdapter() :
         // holder.binding.setPost(downloadableItemList[position])
         val downloadableItem: DownloadableItem = downloadableItemList[position]
 
-        holder.binding.downloadItemTitleTextView.text = downloadableItem.filename
+        holder.binding.downloadItemTitleTextView.setText(downloadableItem.filename)
 
         if (downloadableItem.state == DownloadableItemState.Start) {
             holder.binding.downloadItemTitleProgressView.setProgress(0.0)
@@ -71,6 +71,10 @@ class DownloadItemsAdapter() :
         holder.binding.pauseDownloadImageView.visibility = if (isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
         holder.binding.resumeDownloadImageView.visibility = if (isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
         holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
+    }
+
+    fun get(index: Int): DownloadableItem {
+        return downloadableItemList[index]
     }
 
     override fun getItemCount(): Int {
