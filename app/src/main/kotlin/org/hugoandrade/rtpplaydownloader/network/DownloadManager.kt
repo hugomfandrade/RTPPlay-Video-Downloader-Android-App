@@ -93,10 +93,10 @@ class DownloadManager  {
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
                 // TODO
                 if (downloadableItem.state == DownloadableItemState.Start) {
-                    mDatabaseModel.insertDownloadableEntry(DownloadableEntryParser.parse(downloadableItem))
+                    mDatabaseModel.insertDownloadableEntry(downloadableItem)
                 }
                 else {
-                    mDatabaseModel.updateDownloadableEntry(DownloadableEntryParser.parse(downloadableItem))
+                    mDatabaseModel.updateDownloadableEntry(downloadableItem)
                 }
             }
         })

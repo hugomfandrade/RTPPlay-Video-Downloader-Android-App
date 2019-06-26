@@ -4,9 +4,14 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.AsyncTask
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import java.util.ArrayList
 
 abstract class DatabaseModel {
+
+    companion object {
+        private val TAG = DatabaseModel::class.java.simpleName
+    }
 
     // Database fields
     private var database: SQLiteDatabase? = null
@@ -53,7 +58,7 @@ abstract class DatabaseModel {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    fun insertDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    fun insertDownloadableEntry(downloadableItem: DownloadableItem) {
         val task = object : AsyncTask<Void, Void, DownloadableEntry?>() {
 
             override fun doInBackground(vararg params: Void): DownloadableEntry? {
@@ -64,7 +69,7 @@ abstract class DatabaseModel {
                     c.close()
 
                     // Create a new map of values, where column names are the keys
-                    val values = DownloadableEntryParser.format(downloadableEntry)
+                    val values = DownloadableEntryParser.format(DownloadableEntryParser.parse(downloadableItem))
                     values.remove(DownloadableEntry.Entry.Cols._ID)
 
                     // Insert the new row, returning the primary key value of the new row
@@ -77,6 +82,7 @@ abstract class DatabaseModel {
                         cursor.moveToFirst()
                         while (!cursor.isAfterLast) {
                             val downloadableEntry = DownloadableEntryParser.parse(cursor)
+                            downloadableItem.id = downloadableEntry.id
                             cursor.close()
                             return downloadableEntry
                         }
@@ -146,11 +152,12 @@ abstract class DatabaseModel {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
     }
 
-    fun updateDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    fun updateDownloadableEntry(downloadableItem: DownloadableItem) {
         val task = object : AsyncTask<Void, Void, DownloadableEntry?>() {
 
             override fun doInBackground(vararg params: Void): DownloadableEntry? {
                 // Create a new map of values, where column names are the keys
+                val downloadableEntry: DownloadableEntry = DownloadableEntryParser.parse(downloadableItem)
                 val values = DownloadableEntryParser.format(downloadableEntry)
 
                 val nRowsAffected = database?.update(
@@ -286,10 +293,5 @@ abstract class DatabaseModel {
 
             private val TAG = DatabaseHelper::class.java.simpleName
         }
-    }
-
-    companion object {
-
-        private val TAG = DatabaseModel::class.java.simpleName
     }
 }

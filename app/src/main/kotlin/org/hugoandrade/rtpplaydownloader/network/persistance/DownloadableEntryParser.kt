@@ -32,7 +32,7 @@ private constructor() {
         fun parse(downloadableItem: DownloadableItem): DownloadableEntry {
             return DownloadableEntry(
                     // TODO
-                    null,
+                    downloadableItem.id,
                     downloadableItem.url,
                     downloadableItem.filename,
                     downloadableItem.filename,
@@ -53,12 +53,12 @@ private constructor() {
         fun formatSingleton(downloadableEntry: DownloadableEntry): DownloadableItem {
 
             return DownloadableItem(
-                    // TODO
-                    // downloadableEntry.id,
+                    downloadableEntry.id,
                     downloadableEntry.urlString,
                     downloadableEntry.filename,
                     downloadableEntry.filename,
-                    downloadableEntry.state)
+                    downloadableEntry.state,
+                    downloadableEntry.isArchived)
         }
 
         fun format(downloadableEntry: DownloadableEntry): ContentValues {

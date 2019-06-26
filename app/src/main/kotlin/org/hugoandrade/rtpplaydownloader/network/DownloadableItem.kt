@@ -9,33 +9,41 @@ import kotlin.collections.HashSet
 import android.content.Intent
 import android.net.Uri
 import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
+import org.hugoandrade.rtpplaydownloader.network.parsing.FileType
 
 class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
                        private val viewOps: DownloadManagerViewOps?) :
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
-    constructor(url: String?,
+    constructor(id: String?,
+                url: String?,
                 filename: String?,
                 filepath: String?,
-                state: DownloadableItemState?)
-            // TODO
-            : this(EmptyDownloaderTask(), null) {
+                state: DownloadableItemState?,
+                isArchived: Boolean?)
+            : this(FileIdentifier.findHost(url ?: "unknown")?: EmptyDownloaderTask(), null) {
+
+        this.id = id
         this.url = url
         this.filename = filename
         this.filepath = filepath
-        this.state = if (state == null) DownloadableItemState.Start else state
+        this.state = state ?: DownloadableItemState.Start
         this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
+        this.isArchived = isArchived ?: false
     }
 
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
 
+    var id: String? = null
     var url: String? = null
     var filename: String? = null
     var filepath: String? = null
     var state: DownloadableItemState = DownloadableItemState.Start
     var progress : Float = 0f
+    var isArchived : Boolean = false
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
 
