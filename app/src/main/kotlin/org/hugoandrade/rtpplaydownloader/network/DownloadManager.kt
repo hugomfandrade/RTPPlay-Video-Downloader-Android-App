@@ -1,12 +1,13 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import android.util.Log
+import android.content.Context
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.persistance.DatabaseModel
 import org.hugoandrade.rtpplaydownloader.network.persistance.DownloadableEntry
 import org.hugoandrade.rtpplaydownloader.network.persistance.DownloadableEntryParser
+import org.hugoandrade.rtpplaydownloader.network.persistance.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
 
@@ -25,25 +26,33 @@ class DownloadManager  {
     fun onCreate(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
 
-        mDatabaseModel = object : DatabaseModel() {
+        mDatabaseModel = object : DatabaseModel(){}
+        mDatabaseModel.onCreate(object : PersistencePresenterOps {
+
             override fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
                 mViewOps.get()?.populateDownloadableItemsRecyclerView(DownloadableEntryParser.formatCollection(downloadableEntries))
             }
 
             override fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
-                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList<DownloadableItem>())
+                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
             }
 
             override fun onResetDatabase(wasSuccessfullyDeleted : Boolean){
-                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList<DownloadableItem>())
+                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
             }
-        }
-        mDatabaseModel.onInitialize(viewOps.getActivityContext())
-        mDatabaseModel.open()
+
+            override fun getActivityContext(): Context {
+                return mViewOps.get()?.getActivityContext()!!
+            }
+
+            override fun getApplicationContext(): Context {
+                return mViewOps.get()?.getApplicationContext()!!
+            }
+        })
     }
 
     fun onDestroy() {
-        mDatabaseModel.close()
+        mDatabaseModel.onDestroy()
     }
 
     fun parseUrl(urlString: String) : ParseFuture {

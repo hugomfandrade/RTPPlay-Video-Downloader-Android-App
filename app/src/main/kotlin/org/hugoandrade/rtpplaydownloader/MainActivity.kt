@@ -122,6 +122,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
                 val position = viewHolder.adapterPosition
                 val downloadableItem = mDownloadItemsAdapter.get(position)
+                if (downloadableItem.isDownloading()) {
+                    downloadableItem.cancel()
+                }
                 mDownloadManager.archive(downloadableItem)
                 mDownloadItemsAdapter.remove(downloadableItem)
             }
@@ -134,10 +137,11 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     override fun populateDownloadableItemsRecyclerView(downloadableItems: List<DownloadableItem>) {
 
-        mDownloadItemsAdapter.clear()
-        mDownloadItemsAdapter.addAll(downloadableItems)
-        mDownloadItemsAdapter.notifyDataSetChanged()
-
+        runOnUiThread {
+            mDownloadItemsAdapter.clear()
+            mDownloadItemsAdapter.addAll(downloadableItems)
+            mDownloadItemsAdapter.notifyDataSetChanged()
+        }
     }
 
     private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {
