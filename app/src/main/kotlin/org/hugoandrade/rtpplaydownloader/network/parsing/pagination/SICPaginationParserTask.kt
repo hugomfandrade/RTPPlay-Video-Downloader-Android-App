@@ -169,7 +169,7 @@ class SICPaginationParserTask : PaginationParserTaskBase() {
             }
         }
 
-        setPaginationComplete(paginationUrl.size == 0)
+        setPaginationComplete(true)
 
         return paginationUrl
     }
