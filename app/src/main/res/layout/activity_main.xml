@@ -37,7 +37,7 @@
                 android:ems="10"
                 android:hint="Url (eg. RTP Play, SIC, Sapo)"
                 android:background="@android:color/transparent"
-                android:text="https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe" />
+                android:text="https://sicradical.pt/programas/cabaret-da-coxa/episodios" />
 
             <!-- android:text="https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe" -->
             <!-- android:text="https://www.rtp.pt/play/p5682/bad-breakfast" -->

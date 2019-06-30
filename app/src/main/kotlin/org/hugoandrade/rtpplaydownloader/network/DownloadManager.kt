@@ -54,27 +54,33 @@ class DownloadManager  {
 
                 val downloaderTask: DownloaderTaskBase? = FileIdentifier.findHost(urlString)
 
-                if (downloaderTask == null) {
+                /*if (downloaderTask == null) {
                     future.failed("is not a valid website")
                     return
-                }
+                }*/
 
-                val parsing : Boolean = downloaderTask.parseMediaFile(urlString)
+                val parsing : Boolean = downloaderTask?.parseMediaFile(urlString) ?:false
 
-                if (!parsing) {
+                /*if (!parsing) {
                     future.failed("could not find filetype")
                     return
-                }
+                }*/
 
                 val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
 
-                if (downloaderTask is DownloaderMultiPartTaskBase) {
+                if (downloaderTask == null && paginationTask == null) {
+                    future.failed("could not find filetype")
+                }
+                else if (downloaderTask is DownloaderMultiPartTaskBase) {
                     future.success(ParsingData(
                             downloaderTask.tasks,
                             paginationTask))
                 }
-                else {
+                else if (downloaderTask != null)  {
                     future.success(ParsingData(downloaderTask, paginationTask))
+                }
+                else {
+                    future.success(ParsingData(paginationTask))
                 }
             }
         }.start()

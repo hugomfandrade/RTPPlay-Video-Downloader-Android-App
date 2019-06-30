@@ -12,4 +12,7 @@ data class ParsingData(val tasks : ArrayList<DownloaderTaskBase>,
 
     constructor(task : DownloaderTaskBase) :
             this(arrayListOf(task), null)
+
+    constructor(paginationTask: PaginationParserTaskBase?) :
+            this(ArrayList(), paginationTask)
 }
