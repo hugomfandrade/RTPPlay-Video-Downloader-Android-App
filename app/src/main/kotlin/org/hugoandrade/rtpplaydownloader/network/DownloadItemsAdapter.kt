@@ -156,18 +156,18 @@ class DownloadItemsAdapter :
                             val holder : ViewHolder = viewHolder
                             while (recyclerView?.isComputingLayout == true) { }
 
-                            var m = holder.hashCode().toString() + ": updating what was at (" + index.toString() + ") " + holder.binding.downloadItemTitleTextView.text.toString()
+                            // var m = holder.hashCode().toString() + ": updating what was at (" + index.toString() + ") " + holder.binding.downloadItemTitleTextView.text.toString()
                             onBindViewHolder(holder, index)
-                            m = m + " and now is " + holder.binding.downloadItemTitleTextView.text.toString()
-                            android.util.Log.e(javaClass.simpleName, m)
+                            // m = m + " and now is " + holder.binding.downloadItemTitleTextView.text.toString()
+                            // android.util.Log.e(javaClass.simpleName, m)
                         } else {
                             // update here
-                            android.util.Log.e(javaClass.simpleName, "viewholder not found of $index")
+                            // android.util.Log.e(javaClass.simpleName, "viewholder not found of $index")
                             notifyItemChanged(index)
                         }
                     } else {
                         // update here
-                        android.util.Log.e(javaClass.simpleName, "view not found of $index")
+                        // android.util.Log.e(javaClass.simpleName, "view not found of $index")
                         notifyItemChanged(index)
                     }
                 }

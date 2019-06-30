@@ -6,8 +6,10 @@ import android.content.pm.PackageManager
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceJsonTable
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.net.MalformedURLException
@@ -108,8 +110,10 @@ private constructor() {
             } catch (e: MalformedURLException) {
                 e.printStackTrace()
                 currentUpdateFuture.failed("Url is malformed")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                currentUpdateFuture.failed(e.message.toString())
             }
-
 
             return currentUpdateFuture
         }
@@ -126,6 +130,51 @@ private constructor() {
             }
 
             return packageInfo.versionName
+        }
+
+        private const val appTableHistoryName: String =  "RTPPlayAppDownloadHistory"
+        private const val appTableHistoryUrl: String =  "Url"
+        private const val appTableHistoryUrlTaskID: String =  "UrlTaskID"
+
+        fun uploadHistory(context : Context, downloadableItem: DownloadableItem): ListenableFutureImpl<String> {
+
+            val uploadHistoryFuture : ListenableFutureImpl<String> = ListenableFutureImpl()
+
+            if (!NetworkUtils.isNetworkAvailable(context)) {
+                uploadHistoryFuture.failed("no network")
+                return uploadHistoryFuture
+            }
+
+            val insertObject = JsonObject()
+            insertObject.addProperty(appTableHistoryUrl, downloadableItem.downloaderTask.videoFile)
+            insertObject.addProperty(appTableHistoryUrlTaskID, downloadableItem.downloaderTask.TAG)
+
+            try {
+                val mClient = MobileServiceClient(
+                        appUrl,
+                        null,
+                        context)
+
+                val future = MobileServiceJsonTable(appTableHistoryName, mClient)
+                        .insert(insertObject)
+                Futures.addCallback(future, object : FutureCallback<JsonObject> {
+                    override fun onSuccess(jsonObject: JsonObject?) {
+                        uploadHistoryFuture.success("history successfully uploaded history")
+                    }
+
+                    override fun onFailure(t: Throwable) {
+                        uploadHistoryFuture.failed("failed to uploaded history: " + t.message)
+                    }
+                })
+            } catch (e: MalformedURLException) {
+                e.printStackTrace()
+                uploadHistoryFuture.failed("Url is malformed")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                uploadHistoryFuture.failed(e.message.toString())
+            }
+
+            return uploadHistoryFuture
         }
     }
 }

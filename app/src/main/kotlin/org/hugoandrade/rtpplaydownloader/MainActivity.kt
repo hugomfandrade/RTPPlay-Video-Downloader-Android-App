@@ -322,6 +322,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
                     }
                     downloadableItem.removeDownloadStateChangeListener(this)
+
+                    // upload history
+                    VersionUtils.uploadHistory(getActivityContext(), downloadableItem)
                 }
             }
 

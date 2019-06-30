@@ -12,7 +12,7 @@ import android.widget.Toast
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.concurrent.ExecutorService
 
-class DownloadableItem(private val downloaderTask: DownloaderTaskBase,
+class DownloadableItem(val downloaderTask: DownloaderTaskBase,
                        private val viewOps : DownloadManagerViewOps?,
                        private val downloadExecutors: ExecutorService) :
         DownloaderTaskListener,
