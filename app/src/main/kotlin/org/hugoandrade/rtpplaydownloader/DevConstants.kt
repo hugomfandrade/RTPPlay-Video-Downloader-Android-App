@@ -8,5 +8,17 @@ interface DevConstants {
 
         const val nParsingThreads: Int = 10
         const val nDownloadThreads: Int = 5
+
+        private const val url_1 = "https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe"
+        private const val url_2 = "https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe"
+        private const val url_3 = "https://www.rtp.pt/play/p5682/bad-breakfast"
+        private const val url_4 = "https://www.rtp.pt/play/p5421/teorias-da-conspiracao"
+        private const val url_5 = "https://sicnoticias.pt/programas/verdade-ou-consequencia/2019-03-31-Verdade-ou-Consequencia-com-Adolfo-Mesquita-Nunes"
+        private const val url_6 = "https://www.rtp.pt/play/p4257/o-outro-lado"
+        private const val url_7 = "https://www.rtp.pt/play/p5683/menos-um"
+        private const val url_8 = "http://videos.sapo.pt/30CEmMITz50Tizli6EYv"
+        private const val url_9 = "https://sic.pt/Programas/e-se-fosse-consigo/2019-05-03-E-se-fosse-consigo---brevemente-na-SIC"
+
+        val url : String? = url_1
     }
 }

@@ -38,17 +38,7 @@
                 android:inputType="textUri"
                 android:ems="10"
                 android:hint="Url (eg. RTP Play, SIC, Sapo)"
-                android:background="@android:color/transparent"
-                android:text="https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe" />
-
-            <!-- android:text="https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe" -->
-            <!-- android:text="https://www.rtp.pt/play/p5682/bad-breakfast" -->
-            <!-- android:text="https://www.rtp.pt/play/p5421/teorias-da-conspiracao" -->
-            <!-- android:text="https://sicnoticias.pt/programas/verdade-ou-consequencia/2019-03-31-Verdade-ou-Consequencia-com-Adolfo-Mesquita-Nunes" -->
-            <!-- android:text="https://www.rtp.pt/play/p4257/o-outro-lado" -->
-            <!-- android:text="https://www.rtp.pt/play/p5683/menos-um" -->
-            <!-- android:text="http://videos.sapo.pt/30CEmMITz50Tizli6EYv" -->
-            <!-- android:text="https://sic.pt/Programas/e-se-fosse-consigo/2019-05-03-E-se-fosse-consigo- - -brevemente-na-SIC" -->
+                android:background="@android:color/transparent" />
 
             <ImageView
                 android:id="@+id/clear_text_button"

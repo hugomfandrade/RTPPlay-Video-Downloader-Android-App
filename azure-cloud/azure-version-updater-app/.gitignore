@@ -2,6 +2,7 @@
 /target
 /gen
 /.idea
+/out
 /.settings
 /.gradle
 /classes

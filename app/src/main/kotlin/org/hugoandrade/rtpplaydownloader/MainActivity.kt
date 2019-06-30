@@ -60,6 +60,13 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             mDownloadManager = oldDownloadManager
         }
 
+        val url : String? = DevConstants.url
+        url.let {
+            binding.inputUriEditText.setText(it)
+            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+            ViewUtils.showSoftKeyboardAndRequestFocus(binding.inputUriEditText)
+        }
+
         extractActionSendIntentAndUpdateUI(intent)
     }
 
