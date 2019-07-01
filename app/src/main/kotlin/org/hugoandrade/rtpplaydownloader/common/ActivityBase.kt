@@ -22,7 +22,7 @@ abstract class ActivityBase : AppCompatActivity(), ContextView {
      * Used to retain the objects between runtime
      * configuration changes.
      */
-    val retainedFragmentManager = RetainedFragmentManager(this.fragmentManager, TAG)
+    val retainedFragmentManager = RetainedFragmentManager(this.supportFragmentManager, TAG)
 
     /**
      * Network UI/UX
@@ -45,7 +45,7 @@ abstract class ActivityBase : AppCompatActivity(), ContextView {
         super.onCreate(savedInstanceState)
 
         if (retainedFragmentManager.firstTimeIn()) {
-            // mRetainedFragmentManager.put(opsType.getSimpleName(), mPresenterInstance);
+            // no-ops
         }
         initializeNetworkFooter()
     }

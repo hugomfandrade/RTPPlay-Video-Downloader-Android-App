@@ -7,10 +7,6 @@ import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v7.widget.DefaultItemAnimator
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.SimpleItemAnimator
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -23,10 +19,12 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.*
 import android.content.Intent
+import android.support.v7.widget.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
+import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -47,9 +45,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        initializeUI()
-
-        val oldDownloadManager : DownloadManager? = retainedFragmentManager[DownloadManager::class.java.simpleName]
+        val oldDownloadManager = retainedFragmentManager.get<DownloadManager>(DownloadManager::class.java.simpleName)
 
         if (oldDownloadManager == null) {
             mDownloadManager = DownloadManager()
@@ -58,7 +54,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
         else{
             mDownloadManager = oldDownloadManager
+            mDownloadManager.onConfigurationChanged(this)
         }
+
+        initializeUI()
 
         val url : String? = DevConstants.url
         url.let {
@@ -97,7 +96,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         mDownloadItemsRecyclerView = binding.downloadItemsRecyclerView
         mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
-        mDownloadItemsRecyclerView.layoutManager = LinearLayoutManager(this)
+        mDownloadItemsRecyclerView.layoutManager =
+                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) LinearLayoutManager(this)
+                else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
 

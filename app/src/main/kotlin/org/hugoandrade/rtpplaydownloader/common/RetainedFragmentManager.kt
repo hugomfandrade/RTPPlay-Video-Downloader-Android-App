@@ -1,9 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.common
 
-import android.app.Activity
-import android.app.Fragment
-import android.app.FragmentManager
 import android.os.Bundle
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentActivity
+import android.support.v4.app.FragmentManager
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import java.lang.ref.WeakReference
@@ -43,7 +43,7 @@ class RetainedFragmentManager
      * Return the Activity the RetainedFragment is attached to or null
      * if it's not currently attached.
      */
-    val activity: Activity
+    val activity: FragmentActivity?
         get() = mRetainedFragment!!.activity
 
     init {
@@ -66,29 +66,35 @@ class RetainedFragmentManager
 
             // A value of null means it's the first time in, so there's
             // extra work to do.
-            if (tmpRetainedFragment == null) {
+            if (tmpRetainedFragment !is RetainedFragment) {
                 if (DevConstants.showLog)
-                    Log.d(TAG,
+                    Log.e(TAG,
                             "Creating new RetainedFragment $mRetainedFragmentTag")
 
                 // Create a new RetainedFragment.
-                mRetainedFragment = RetainedFragment()
+                val retainedFragment = RetainedFragment()
 
                 // Commit this RetainedFragment to the FragmentManager.
                 mFragmentManager.get()?.
                         beginTransaction()?.
-                        add(mRetainedFragment, mRetainedFragmentTag)?.
+                        add(retainedFragment, mRetainedFragmentTag)?.
                         commit()
+
+                mRetainedFragment = retainedFragment
+
                 return true
             } else {
+
+                mRetainedFragment = tmpRetainedFragment as RetainedFragment
+
                 if (DevConstants.showLog)
-                    Log.d(TAG,
+                    Log.e(TAG,
                             "Returning existing RetainedFragment $mRetainedFragmentTag")
                 return false
             }// A value of non-null means it's not first time in.
         } catch (e: NullPointerException) {
             if (DevConstants.showLog)
-                Log.d(TAG,
+                Log.e(TAG,
                         "NPE in firstTimeIn()")
             return false
         }
@@ -99,7 +105,7 @@ class RetainedFragmentManager
      * Add the @a object with the @a key.
      */
     fun put(key: String, `object`: Any) {
-        mRetainedFragment!!.put(key, `object`)
+        mRetainedFragment?.put(key, `object`)
     }
 
     /**

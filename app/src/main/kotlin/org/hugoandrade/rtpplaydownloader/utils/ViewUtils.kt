@@ -2,6 +2,7 @@ package org.hugoandrade.rtpplaydownloader.utils
 
 import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.support.annotation.ColorRes
@@ -20,6 +21,8 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.Toast
 import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.MainActivity
+import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.widget.ExpandCollapseAnimation
 import java.util.*
 
@@ -342,6 +345,18 @@ private constructor() {
 
         fun getColor(context: Context, colorRes: Int): Int {
             return context.resources.getColor(colorRes)
+        }
+
+        fun isLandscape(context: Context): Boolean {
+            return context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        }
+
+        fun isPortrait(context: Context): Boolean {
+            return context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+        }
+
+        fun isTablet(context: Context): Boolean {
+            return context.resources.getBoolean(R.bool.isTablet);
         }
     }
 }

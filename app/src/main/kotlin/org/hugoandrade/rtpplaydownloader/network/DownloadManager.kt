@@ -2,6 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network
 
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.MainActivity
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
@@ -31,6 +32,10 @@ class DownloadManager  {
     private val downloadExecutors = Executors.newFixedThreadPool(DevConstants.nDownloadThreads)
 
     fun onCreate(viewOps: DownloadManagerViewOps) {
+        mViewOps = WeakReference(viewOps)
+    }
+
+    fun onConfigurationChanged(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
     }
 
