@@ -128,16 +128,20 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
+        val primaryClipDescription = clipboard.primaryClipDescription
+
         // If it does contain data, decide if you can handle the data.
-        if (clipboard.hasPrimaryClip() && clipboard.primaryClipDescription!!.hasMimeType(MIMETYPE_TEXT_PLAIN)) {
+        if (clipboard.hasPrimaryClip()
+                && primaryClipDescription != null
+                && primaryClipDescription.hasMimeType(MIMETYPE_TEXT_PLAIN)) {
 
             // since the clipboard has data but it is not plain text
 
             //since the clipboard contains plain text.
-            val item = clipboard.primaryClip!!.getItemAt(0)
+            val item = clipboard.primaryClip?.getItemAt(0)
 
             // Gets the clipboard as text.
-            val pasteData = item.text.toString()
+            val pasteData = item?.text.toString()
 
             if (NetworkUtils.isValidURL(pasteData)) {
                 binding.inputUriEditText.setText(pasteData)

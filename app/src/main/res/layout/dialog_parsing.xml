@@ -54,15 +54,19 @@
 
             </android.support.v4.widget.NestedScrollView>
 
-            <ProgressBar
+            <org.hugoandrade.rtpplaydownloader.widget.ProgressBarView
                 android:id="@+id/parsing_progress_bar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                style="@android:style/Widget.Holo.Light.ProgressBar.Horizontal" />
+                android:layout_height="8dp"
+                android:background="@android:color/darker_gray"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:indicator_color="@color/colorPrimary"
+                app:indicator_width="50dp"
+                app:bar_type="back_and_forward"
+                app:anim_enabled="true" />
 
             <TextView
                 android:id="@+id/tv_cancel"

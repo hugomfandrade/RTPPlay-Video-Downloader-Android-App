@@ -51,9 +51,9 @@ class ProgressView @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
 
         mPaint = Paint()
-        mPaint!!.style = Paint.Style.FILL
-        mPaint!!.color = mCursorColor
-        mPaint!!.isAntiAlias = true
+        mPaint?.style = Paint.Style.FILL
+        mPaint?.color = mCursorColor
+        mPaint?.isAntiAlias = true
     }
 
     fun setColor(color: Int) {
@@ -78,6 +78,6 @@ class ProgressView @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawPath(cursorPath, mPaint!!)
+        mPaint?.let { paint -> canvas.drawPath(cursorPath, paint) }
     }
 }

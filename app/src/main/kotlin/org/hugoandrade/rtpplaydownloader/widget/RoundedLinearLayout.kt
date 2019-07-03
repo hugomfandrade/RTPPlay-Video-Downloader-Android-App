@@ -51,8 +51,8 @@ class RoundedLinearLayout : LinearLayout {
         if (!hasBackgroundAttribute) {
 
             val a = context.obtainStyledAttributes(attrs, R.styleable.RoundedLinearLayout, defStyleAttr, 0)
-            val strokeWidth = a.getDimension(R.styleable.RoundedLinearLayout_stroke_width, convertDpToPixel(2f, context)).toInt()
-            val strokeColor = a.getColor(R.styleable.RoundedLinearLayout_stroke_color, getThemePrimaryDarkColor(context))
+            val strokeWidth = a.getDimension(R.styleable.RoundedLinearLayout_stroke_width, WidgetUtils.convertDpToPixel(2f, context)).toInt()
+            val strokeColor = a.getColor(R.styleable.RoundedLinearLayout_stroke_color, WidgetUtils.getThemePrimaryDarkColor(context))
             val backgroundColor = a.getColor(R.styleable.RoundedLinearLayout_background_color, Color.WHITE)
             a.recycle()
 
@@ -160,22 +160,5 @@ class RoundedLinearLayout : LinearLayout {
         } else {
             super.onDraw(canvas)
         }
-    }
-
-    private fun getThemePrimaryDarkColor(context: Context): Int {
-        val colorAttr: Int
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            colorAttr = android.R.attr.colorPrimaryDark
-        } else {
-            //Get colorAccent defined for AppCompat
-            colorAttr = context.resources.getIdentifier("colorPrimaryDark", "attr", context.packageName)
-        }
-        val outValue = TypedValue()
-        context.theme.resolveAttribute(colorAttr, outValue, true)
-        return outValue.data
-    }
-
-    private fun convertDpToPixel(dp: Float, context: Context): Float {
-        return dp * (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
     }
 }
