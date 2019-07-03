@@ -15,6 +15,7 @@ import kotlin.collections.ArrayList
 class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
 
     private var showLoadMore: Boolean = false
+    private var showProgressBar: Boolean = false
     private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
     private var listener: Listener? = null
@@ -52,6 +53,9 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         holder.binding.loadMoreButton.visibility = if (itemCount == (holder.adapterPosition + 1) && showLoadMore)
             View.VISIBLE else
             View.GONE
+        holder.binding.progressBarView.visibility = if (itemCount == (holder.adapterPosition + 1) && showProgressBar)
+            View.VISIBLE else
+            View.GONE
     }
 
     override fun getItemCount(): Int {
@@ -66,8 +70,19 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
                 }
             }
             parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
-            notifyItemInserted(parsingItemList.size)
-            notifyItemRangeChanged(parsingItemList.size, itemCount)
+        }
+    }
+
+    fun addAndNotify(task: DownloaderTaskBase) {
+        synchronized(parsingItemList) {
+            for (parsingItem in parsingItemList) {
+                if (parsingItem.task == task) {
+                    return
+                }
+            }
+            parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
+            notifyItemInserted(parsingItemList.size - 1)
+            notifyItemRangeChanged(parsingItemList.size - 1, itemCount)
         }
     }
 
@@ -90,20 +105,42 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun addAll(tasks: ArrayList<DownloaderTaskBase>) {
-
-        tasks.forEach(action = { task ->
-            var alreadyInList = false
-            for (parsingItem in parsingItemList) {
-                if (parsingItem.task == task) {
-                    alreadyInList = true
-                    break
+    fun addAllAndNotify(tasks: ArrayList<DownloaderTaskBase>) {
+        synchronized(parsingItemList) {
+            val prevItemCount: Int = itemCount
+            tasks.forEach(action = { task ->
+                var alreadyInList = false
+                for (parsingItem in parsingItemList) {
+                    if (parsingItem.task == task) {
+                        alreadyInList = true
+                        break
+                    }
                 }
+                if (!alreadyInList) {
+                    parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
+                }
+            })
+            if (prevItemCount != itemCount) {
+                notifyItemRangeChanged(prevItemCount, itemCount)
             }
-            if (!alreadyInList) {
-                parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
-            }
-        })
+        }
+    }
+
+    fun addAll(tasks: ArrayList<DownloaderTaskBase>) {
+        synchronized(parsingItemList) {
+            tasks.forEach(action = { task ->
+                var alreadyInList = false
+                for (parsingItem in parsingItemList) {
+                    if (parsingItem.task == task) {
+                        alreadyInList = true
+                        break
+                    }
+                }
+                if (!alreadyInList) {
+                    parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
+                }
+            })
+        }
     }
 
     fun getSelectedTasks(): ArrayList<DownloaderTaskBase> {
@@ -128,6 +165,20 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
     fun hideLoadMoreButton() {
         if (showLoadMore) {
             showLoadMore = false
+            notifyItemChanged(itemCount - 1)
+        }
+    }
+
+    fun showProgressBarView() {
+        if (!showProgressBar) {
+            showProgressBar = true
+            notifyItemChanged(itemCount - 1)
+        }
+    }
+
+    fun hideProgressBarView() {
+        if (showProgressBar) {
+            showProgressBar = false
             notifyItemChanged(itemCount - 1)
         }
     }

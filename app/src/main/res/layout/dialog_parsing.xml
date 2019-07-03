@@ -6,8 +6,6 @@
     android:padding="30dp">
 
     <android.support.v7.widget.CardView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -30,18 +28,46 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginTop="20dp"
-                        android:padding="4dp"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textAllCaps="true"
-                        android:textColor="@color/colorPrimary"
-                        android:text="parsing..."
-                        />
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <TextView
+                            android:id="@+id/title_text_view"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginLeft="8dp"
+                            android:layout_marginStart="8dp"
+                            android:padding="4dp"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textAllCaps="true"
+                            android:textColor="@color/colorPrimary"
+                            android:text="parsing..."
+                            />
+
+                        <TextView
+                            android:id="@+id/tv_parse_entire_series"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_marginStart="2dp"
+                            android:layout_marginEnd="2dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignBottom="@id/title_text_view"
+                            android:padding="4dp"
+                            android:textStyle="bold"
+                            android:textAllCaps="true"
+                            android:textColor="@color/colorPrimary"
+                            android:background="?selectableItemBackground"
+                            android:text="All Episodes"/>
+
+                    </RelativeLayout>
 
                     <android.support.v7.widget.RecyclerView
                         android:id="@+id/parsing_items"
@@ -50,7 +76,6 @@
                         android:layout_weight="1"/>
 
                 </LinearLayout>
-
 
             </android.support.v4.widget.NestedScrollView>
 
@@ -63,10 +88,10 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                app:indicator_color="@color/colorPrimary"
-                app:indicator_width="50dp"
-                app:bar_type="back_and_forward"
-                app:anim_enabled="true" />
+                app:indicatorColor="@color/colorPrimary"
+                app:indicatorWidth="50dp"
+                app:progressBarType="back_and_forward"
+                app:isAnimEnabled="true" />
 
             <TextView
                 android:id="@+id/tv_cancel"
@@ -82,21 +107,6 @@
                 android:textColor="@color/colorPrimary"
                 android:background="?selectableItemBackground"
                 android:text="cancel"/>
-
-            <TextView
-                android:id="@+id/tv_parse_entire_series"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginBottom="20dp"
-                android:padding="4dp"
-                android:textStyle="bold"
-                android:textAllCaps="true"
-                android:textColor="@color/colorPrimary"
-                android:background="?selectableItemBackground"
-                android:text="All Episodes"/>
 
             <TextView
                 android:id="@+id/tv_download"

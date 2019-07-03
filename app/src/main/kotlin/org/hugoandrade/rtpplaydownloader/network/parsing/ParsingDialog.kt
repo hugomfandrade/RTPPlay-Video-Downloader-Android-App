@@ -84,7 +84,9 @@ class ParsingDialog(val mContext: Context) {
 
     fun loadingMore() {
         mParsingItemsAdapter.hideLoadMoreButton()
+        mParsingItemsAdapter.showProgressBarView()
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
     }
 
     fun showParsingResult(parsingData: ParsingData) {
@@ -133,6 +135,7 @@ class ParsingDialog(val mContext: Context) {
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
+        mParsingItemsAdapter.hideProgressBarView()
         mParsingItemsAdapter.clear()
 
         showPaginationMoreResult(paginationTask, tasks)
@@ -141,9 +144,10 @@ class ParsingDialog(val mContext: Context) {
     fun showPaginationMoreResult(paginationTask: PaginationParserTaskBase,
                                  tasks: ArrayList<DownloaderTaskBase>) {
 
-        mParsingItemsAdapter.addAll(tasks)
-        mParsingItemsAdapter.notifyDataSetChanged()
+        mParsingItemsAdapter.hideProgressBarView()
+        mParsingItemsAdapter.addAllAndNotify(tasks)
 
+        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
         mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
 

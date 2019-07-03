@@ -19,6 +19,6 @@ interface DevConstants {
         private const val url_8 = "http://videos.sapo.pt/30CEmMITz50Tizli6EYv"
         private const val url_9 = "https://sic.pt/Programas/e-se-fosse-consigo/2019-05-03-E-se-fosse-consigo---brevemente-na-SIC"
 
-        val url : String? = url_9
+        val url : String? = url_1
     }
 }

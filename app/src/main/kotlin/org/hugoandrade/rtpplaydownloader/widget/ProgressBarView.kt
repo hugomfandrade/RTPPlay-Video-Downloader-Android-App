@@ -51,10 +51,10 @@ class ProgressBarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.ProgressBarView)
-            mIndicatorColor = a.getColor(R.styleable.ProgressBarView_indicator_color, WidgetUtils.getThemePrimaryDarkColor(context))
-            mIndicatorWidth = a.getDimension(R.styleable.ProgressBarView_indicator_width, WidgetUtils.convertDpToPixel(70f, context)).toInt()
-            mIndicatorType = a.getInt(R.styleable.ProgressBarView_bar_type, 0)
-            isAnimEnabled = a.getBoolean(R.styleable.ProgressBarView_anim_enabled, false)
+            mIndicatorColor = a.getColor(R.styleable.ProgressBarView_indicatorColor, WidgetUtils.getThemePrimaryDarkColor(context))
+            mIndicatorWidth = a.getDimension(R.styleable.ProgressBarView_indicatorWidth, WidgetUtils.convertDpToPixel(70f, context)).toInt()
+            mIndicatorType = a.getInt(R.styleable.ProgressBarView_progressBarType, 0)
+            isAnimEnabled = a.getBoolean(R.styleable.ProgressBarView_isAnimEnabled, false)
             a.recycle()
         } else {
             mIndicatorColor = WidgetUtils.getThemePrimaryDarkColor(context)
@@ -68,12 +68,17 @@ class ProgressBarView @JvmOverloads constructor(context: Context, attrs: Attribu
         mPaint.color = mIndicatorColor
         mPaint.isAntiAlias = true
 
-        setProgressAnimation(isAnimEnabled)
+        setProgressAnimationImpl(isAnimEnabled)
     }
 
-    private fun setProgressAnimation(enabled: Boolean) {
+    public fun setProgressAnimation(enabled: Boolean) {
         isAnimEnabled = enabled
-        if (!isAnimEnabled) {
+
+        setProgressAnimationImpl(isAnimEnabled)
+    }
+
+    private fun setProgressAnimationImpl(enabled: Boolean) {
+        if (!enabled) {
             animInitX = -mIndicatorWidth.toFloat()
             animTimer?.cancel()
         }
@@ -85,7 +90,6 @@ class ProgressBarView @JvmOverloads constructor(context: Context, attrs: Attribu
                 var i : Int = 0
 
                 override fun run() {
-                    android.util.Log.e(TAG, "run anim")
 
                     val width = width
                     val totalWidth = width + mIndicatorWidth
@@ -145,16 +149,16 @@ class ProgressBarView @JvmOverloads constructor(context: Context, attrs: Attribu
         super.setVisibility(visibility)
 
         if (visibility == VISIBLE) {
-            setProgressAnimation(isAnimEnabled)
+            setProgressAnimationImpl(isAnimEnabled)
         }
         else {
-            setProgressAnimation(false)
+            setProgressAnimationImpl(false)
         }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
 
-        setProgressAnimation(false)
+        setProgressAnimationImpl(false)
     }
 }
