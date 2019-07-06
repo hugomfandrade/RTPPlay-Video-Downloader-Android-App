@@ -2,7 +2,6 @@ package org.hugoandrade.rtpplaydownloader.network
 
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
-import org.hugoandrade.rtpplaydownloader.MainActivity
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
@@ -80,18 +79,107 @@ class DownloadManager  {
 
                 val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
 
+                val isPaginationUrlTheSameOfTheOriginalUrl : Boolean =
+                        isPaginationUrlTheSameOfTheOriginalUrl(urlString, downloaderTask, paginationTask)
+
                 if (downloaderTask is DownloaderMultiPartTaskBase) {
                     future.success(ParsingData(
                             downloaderTask.tasks,
-                            paginationTask))
+                            if (isPaginationUrlTheSameOfTheOriginalUrl) null else paginationTask))
                 }
                 else {
-                    future.success(ParsingData(downloaderTask, paginationTask))
+                    future.success(ParsingData(
+                            downloaderTask,
+                            if (isPaginationUrlTheSameOfTheOriginalUrl) null else paginationTask))
                 }
             }
         })
 
         return future
+    }
+
+    private fun isPaginationUrlTheSameOfTheOriginalUrl(urlString: String,
+                                                       downloaderTask: DownloaderTaskBase,
+                                                       paginationTask: PaginationParserTaskBase?): Boolean {
+
+        if (paginationTask == null) {
+            return false
+        }
+
+        val paginationUrls : ArrayList<String> = paginationTask.parsePagination(urlString)
+
+        if (paginationUrls.size == 0) {
+            return false
+        }
+
+        val tasks : ArrayList<DownloaderTaskBase> = if (downloaderTask is DownloaderMultiPartTaskBase) {
+            downloaderTask.tasks
+        }
+        else {
+            arrayListOf(downloaderTask)
+        }
+
+        if (paginationUrls.size != 1) {
+            return false
+        }
+
+        val paginationVideoFileNames : ArrayList<String> = ArrayList()
+        val videoFileNames : ArrayList<String> = ArrayList()
+        tasks.forEach(action = { task ->
+            val videoFile = task.videoFile ?: return false
+            videoFileNames.add(videoFile)
+        })
+
+        paginationUrls.forEach(action = { p ->
+
+            if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                return false
+            }
+
+            val isUrl : Boolean = NetworkUtils.isValidURL(p)
+
+            if (!isUrl) {
+                return false
+            }
+
+            val paginationDownloaderTask: DownloaderTaskBase = FileIdentifier.findHost(p) ?: return false
+
+            val parsing : Boolean = paginationDownloaderTask.parseMediaFile(p)
+
+            if (!parsing) {
+                return false
+            }
+
+            if (paginationDownloaderTask is DownloaderMultiPartTaskBase) {
+                paginationDownloaderTask.tasks.forEach { t ->
+                    val paginationVideoFileName = t.videoFile ?: return false
+                    paginationVideoFileNames.add(paginationVideoFileName)
+                }
+            }
+            else {
+                val paginationVideoFileName = paginationDownloaderTask.videoFile ?: return false
+                paginationVideoFileNames.add(paginationVideoFileName)
+            }
+        })
+
+        return areEqual(videoFileNames, paginationVideoFileNames)
+    }
+
+    private fun areEqual(array0: ArrayList<String>, array1: ArrayList<String>): Boolean {
+        if (array0.size != array1.size) {
+            return false
+        }
+
+        array0.forEach { item0 ->
+            var contains = false
+            array1.forEach { item1 ->
+                if (item0 == item1) contains = true
+            }
+            if (!contains) {
+                return false
+            }
+        }
+        return true
     }
 
     fun download(task: DownloaderTaskBase) : DownloadableItem  {
