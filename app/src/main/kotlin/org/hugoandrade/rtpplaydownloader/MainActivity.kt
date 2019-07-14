@@ -111,6 +111,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)
             binding.inputUriEditText.setText(url)
             binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+
+            ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
+            binding.inputUriEditText.clearFocus()
+            doDownload(binding.inputUriEditText.text.toString())
         }
     }
 
