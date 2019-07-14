@@ -5,6 +5,7 @@ import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
+import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
@@ -14,6 +15,7 @@ open class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
         videoFile = getVideoFile(urlString) ?: return false
         videoFileName = MediaUtils.getUniqueFilenameAndLock(getVideoFileName(urlString, videoFile))
+        thumbnailPath = getThumbnailPath(urlString)
 
         try {
             URL(videoFile)
@@ -139,6 +141,47 @@ open class RTPPlayDownloaderTask : DownloaderTaskBase() {
         }
 
         return videoFile?:urlString
+    }
+
+    private fun getThumbnailPath(urlString: String): String? {
+        try {
+            val doc: Document
+
+            try {
+                doc = Jsoup.connect(urlString).timeout(10000).get()
+            } catch (ignored: SocketTimeoutException) {
+                return null
+            }
+
+            val headElements = doc.getElementsByTag("head")?:return null
+
+            for (headElement in headElements.iterator()) {
+
+                val metaElements = headElement.getElementsByTag("meta")?: Elements()
+
+                for (metaElement in metaElements.iterator()) {
+
+                    if (!metaElement.hasAttr("property") ||
+                            !metaElement.hasAttr("content") ||
+                            metaElement.attr("property") != "og:image") {
+                        continue
+                    }
+
+                    val thumbnail = metaElement.attr("content")
+                    if (thumbnail.isNullOrEmpty()) {
+                        continue
+                    }
+                    else {
+                        return thumbnail
+                    }
+                }
+            }
+        }
+        catch (e : java.lang.Exception) {
+            e.printStackTrace()
+        }
+
+        return null
     }
 
     private fun indexOfEx(string : String, subString: String) : Int {

@@ -22,6 +22,7 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
     private val TAG : String = javaClass.simpleName
 
     var filename: String? = downloaderTask.videoFileName
+    val thumbnailPath: String? = downloaderTask.thumbnailPath
     var filepath: String? = null
     var progressSize : Long = 0
     var fileSize : Long = 0

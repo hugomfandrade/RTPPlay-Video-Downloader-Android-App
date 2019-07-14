@@ -22,6 +22,7 @@ abstract class DownloaderTaskBase {
 
     var videoFile: String? = null
     var videoFileName: String? = null
+    var thumbnailPath: String? = null
     var isDownloading : Boolean = false
 
     lateinit var mDownloaderTaskListener: DownloaderTaskListener

@@ -8,7 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
+import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import kotlin.collections.ArrayList
 
@@ -40,26 +42,55 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater: LayoutInflater = LayoutInflater.from(parent.context)
-        val binding : ParsingItemBinding = DataBindingUtil.inflate(layoutInflater, R.layout.parsing_item, parent, false)
-        return ViewHolder(binding)
+        return if (viewType == 0) {
+            val binding: ParsingItemBinding = DataBindingUtil.inflate(layoutInflater, R.layout.parsing_item, parent, false)
+            ViewHolder(binding)
+        }
+        else  {
+            val binding: ParsingItemLoadingBinding = DataBindingUtil.inflate(layoutInflater, R.layout.parsing_item_loading, parent, false)
+            ViewHolder(binding)
+        }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return if (position == parsingItemList.size) 1 else 0
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val parsingItem: ParsingItem = parsingItemList[position]
-        holder.binding.item = parsingItem
 
-        holder.binding.selectedCheckBox.visibility = if (itemCount > 1) View.VISIBLE else View.GONE
+        if (holder.binding != null) {
+            val parsingItem: ParsingItem = parsingItemList[position]
+            val parsingItemCount: Int = parsingItemList.size
+            holder.binding.item = parsingItem
 
-        holder.binding.loadMoreButton.visibility = if (itemCount == (holder.adapterPosition + 1) && showLoadMore)
-            View.VISIBLE else
-            View.GONE
-        holder.binding.progressBarView.visibility = if (itemCount == (holder.adapterPosition + 1) && showProgressBar)
-            View.VISIBLE else
-            View.GONE
+            val thumbnailPath = parsingItem.task.thumbnailPath
+            if (thumbnailPath == null) {
+                holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+            } else {
+                // holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+                ImageHolder.Builder.instance(holder.binding.parsingItemMediaImageView)
+                        .setFileUrl(thumbnailPath)
+                        .setDefaultImageResource(R.drawable.media_file_icon)
+                        .execute()
+            }
+
+            holder.binding.selectedCheckBox.visibility = if (parsingItemCount > 1) View.VISIBLE else View.GONE
+        }
+
+        if (holder.bindingLoading != null) {
+
+            holder.bindingLoading.loadMoreButton.visibility = if (showLoadMore)
+                View.VISIBLE else
+                View.GONE
+            holder.bindingLoading.progressBarView.visibility = if (showProgressBar)
+                View.VISIBLE else
+                View.GONE
+        }
+
     }
 
     override fun getItemCount(): Int {
-        return parsingItemList.size
+        return parsingItemList.size + if (showLoadMore || showProgressBar) 1 else 0
     }
 
     fun add(task: DownloaderTaskBase) {
@@ -82,7 +113,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
             }
             parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
             notifyItemInserted(parsingItemList.size - 1)
-            notifyItemRangeChanged(parsingItemList.size - 1, itemCount)
+            notifyItemRangeChanged(parsingItemList.size - 1, parsingItemList.size)
         }
     }
 
@@ -92,7 +123,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
                 if (parsingItem.task == task) {
                     parsingItemList.removeAt(index)
                     notifyItemRemoved(index)
-                    notifyItemRangeChanged(index, itemCount)
+                    notifyItemRangeChanged(index, parsingItemList.size)
                     return
                 }
             }
@@ -121,7 +152,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
                 }
             })
             if (prevItemCount != itemCount) {
-                notifyItemRangeChanged(prevItemCount, itemCount)
+                notifyItemRangeChanged(prevItemCount, parsingItemList.size)
             }
         }
     }
@@ -157,29 +188,59 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
 
     fun showLoadMoreButton() {
         if (!showLoadMore) {
+            val preItemCount = itemCount
             showLoadMore = true
-            notifyItemChanged(itemCount - 1)
+
+            if (preItemCount != itemCount) {
+                notifyItemInserted(itemCount)
+                notifyItemRangeChanged(preItemCount, itemCount)
+            }
+            else {
+                notifyItemChanged(itemCount)
+            }
         }
     }
 
     fun hideLoadMoreButton() {
         if (showLoadMore) {
+            val preItemCount = itemCount
             showLoadMore = false
-            notifyItemChanged(itemCount - 1)
+
+            if (preItemCount != itemCount) {
+                notifyItemRemoved(itemCount)
+            }
+            else {
+                notifyItemChanged(itemCount)
+            }
         }
     }
 
     fun showProgressBarView() {
         if (!showProgressBar) {
+            val preItemCount = itemCount
             showProgressBar = true
-            notifyItemChanged(itemCount - 1)
+
+            if (preItemCount != itemCount) {
+                notifyItemInserted(itemCount)
+                notifyItemRangeChanged(itemCount - 1, itemCount)
+            }
+            else {
+                notifyItemChanged(itemCount)
+            }
         }
     }
 
     fun hideProgressBarView() {
         if (showProgressBar) {
+            val preItemCount = itemCount
             showProgressBar = false
-            notifyItemChanged(itemCount - 1)
+
+            if (preItemCount != itemCount) {
+                notifyItemRemoved(itemCount)
+            }
+            else {
+                notifyItemChanged(itemCount)
+            }
         }
     }
 
@@ -191,9 +252,18 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         this.listener = listener
     }
 
-    inner class ViewHolder(val binding: ParsingItemBinding) :
-            RecyclerView.ViewHolder(binding.root),
-            CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+    inner class ViewHolder(val binding: ParsingItemBinding?,
+                           val bindingLoading: ParsingItemLoadingBinding?) :
+
+            RecyclerView.ViewHolder(binding?.root?: bindingLoading?.root ?: View(null)),
+            CompoundButton.OnCheckedChangeListener,
+            View.OnClickListener {
+
+        constructor(bindingLoading: ParsingItemLoadingBinding) :
+            this(null, bindingLoading)
+
+        constructor(binding: ParsingItemBinding):
+                this(binding, null)
 
         override fun onClick(v: View?) {
             listener?.onLoadMoreClicked()
@@ -208,8 +278,8 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
 
         init {
-            binding.selectedCheckBox.setOnCheckedChangeListener(this)
-            binding.loadMoreButton.setOnClickListener(this)
+            binding?.selectedCheckBox?.setOnCheckedChangeListener(this)
+            bindingLoading?.loadMoreButton?.setOnClickListener(this)
         }
     }
 }

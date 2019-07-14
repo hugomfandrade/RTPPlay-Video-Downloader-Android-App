@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.*
@@ -54,6 +55,18 @@ class DownloadItemsAdapter :
         }
         if (!holder.binding.downloadItemTitleTextView.isSelected) {
             holder.binding.downloadItemTitleTextView.isSelected = true
+        }
+
+        val thumbnailPath = downloadableItem.thumbnailPath
+        if (thumbnailPath == null) {
+            holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+        }
+        else {
+            // holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+            ImageHolder.Builder.instance(holder.binding.downloadItemMediaImageView)
+                    .setFileUrl(thumbnailPath)
+                    .setDefaultImageResource(R.drawable.media_file_icon)
+                    .execute()
         }
 
         when {
