@@ -82,15 +82,13 @@ class DownloadManager  {
                 val isPaginationUrlTheSameOfTheOriginalUrl : Boolean =
                         isPaginationUrlTheSameOfTheOriginalUrl(urlString, downloaderTask, paginationTask)
 
+                paginationTask?.setPaginationComplete(isPaginationUrlTheSameOfTheOriginalUrl)
+
                 if (downloaderTask is DownloaderMultiPartTaskBase) {
-                    future.success(ParsingData(
-                            downloaderTask.tasks,
-                            if (isPaginationUrlTheSameOfTheOriginalUrl) null else paginationTask))
+                    future.success(ParsingData(downloaderTask.tasks, paginationTask))
                 }
                 else {
-                    future.success(ParsingData(
-                            downloaderTask,
-                            if (isPaginationUrlTheSameOfTheOriginalUrl) null else paginationTask))
+                    future.success(ParsingData(downloaderTask, paginationTask))
                 }
             }
         })
@@ -101,6 +99,7 @@ class DownloadManager  {
     private fun isPaginationUrlTheSameOfTheOriginalUrl(urlString: String,
                                                        downloaderTask: DownloaderTaskBase,
                                                        paginationTask: PaginationParserTaskBase?): Boolean {
+        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::")
 
         if (paginationTask == null) {
             return false
@@ -108,6 +107,7 @@ class DownloadManager  {
 
         val paginationUrls : ArrayList<String> = paginationTask.parsePagination(urlString)
 
+        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::0")
         if (paginationUrls.size == 0) {
             return false
         }
@@ -119,6 +119,7 @@ class DownloadManager  {
             arrayListOf(downloaderTask)
         }
 
+        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::1::" + paginationUrls.toString())
         if (paginationUrls.size != 1) {
             return false
         }
@@ -130,6 +131,7 @@ class DownloadManager  {
             videoFileNames.add(videoFile)
         })
 
+        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::2")
         paginationUrls.forEach(action = { p ->
 
             if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
@@ -166,6 +168,8 @@ class DownloadManager  {
     }
 
     private fun areEqual(array0: ArrayList<String>, array1: ArrayList<String>): Boolean {
+        Log.e(TAG, "areEqual::" + array0.toString())
+        Log.e(TAG, "areEqual::" + array1.toString())
         if (array0.size != array1.size) {
             return false
         }

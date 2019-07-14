@@ -114,7 +114,7 @@ class ParsingDialog(val mContext: Context) {
             dismissDialog()
         }
 
-        if (paginationTask != null) {
+        if (paginationTask != null && !paginationTask.getPaginationComplete()) {
             mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.VISIBLE
             mView?.findViewById<View>(R.id.tv_parse_entire_series)?.setOnClickListener {
 

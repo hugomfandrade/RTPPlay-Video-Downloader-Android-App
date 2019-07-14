@@ -258,6 +258,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     }
 
                     override fun onParseEntireSeries(paginationTask: PaginationParserTaskBase) {
+                        FilenameLockerAdapter.instance.clear()
                         parsingDialog?.loading()
                         paginationFuture = mDownloadManager.parsePagination(url, paginationTask)
                         paginationFuture?.addCallback(object : FutureCallback<ArrayList<DownloaderTaskBase>> {

@@ -73,7 +73,13 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
 
                 cacheDoc = doc
 
-                val episodeItems = doc?.getElementsByClass("episode-item")
+                val episodeContainer = doc?.getElementsByAttributeValue("id", "listProgramsContent")
+
+                if (episodeContainer == null || episodeContainer.isEmpty()) {
+                    return paginationUrl
+                }
+
+                val episodeItems = episodeContainer.first().getElementsByClass("episode-item")
 
                 if (episodeItems != null && !episodeItems.isEmpty()) {
 
