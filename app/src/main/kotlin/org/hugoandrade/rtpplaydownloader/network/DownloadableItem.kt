@@ -11,6 +11,9 @@ import android.net.Uri
 import android.widget.Toast
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.concurrent.ExecutorService
+import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
+import org.hugoandrade.rtpplaydownloader.network.parsing.FileType
 
 class DownloadableItem(val downloaderTask: DownloaderTaskBase,
                        private val viewOps : DownloadManagerViewOps?,
@@ -18,11 +21,31 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
         DownloaderTaskListener,
         DownloadableItemStateChangeSupport {
 
+    constructor(id: String?,
+                url: String?,
+                filename: String?,
+                filepath: String?,
+                state: DownloadableItemState?,
+                isArchived: Boolean?)
+            : this(FileIdentifier.findHost(url ?: "unknown")?: EmptyDownloaderTask(), null) {
+
+        this.id = id
+        this.url = url
+        this.filename = filename
+        this.filepath = filepath
+        this.state = state ?: DownloadableItemState.Start
+        this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
+        this.isArchived = isArchived ?: false
+    }
+
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
 
     var filename: String? = downloaderTask.videoFileName
     val thumbnailPath: String? = downloaderTask.thumbnailPath
+    var id: String? = null
+    var url: String? = null
+    var filename: String? = null
     var filepath: String? = null
     var progressSize : Long = 0
     var fileSize : Long = 0
@@ -30,10 +53,13 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
     var remainingTime : Long = 0 // In Millis
     var state: DownloadableItemState = DownloadableItemState.Downloading
     var progress : Float = 0f
+    var isArchived : Boolean = false
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
 
     fun startDownload() {
+
+        url = downloaderTask.url
 
         val downloading : Boolean = downloaderTask.isDownloading
 

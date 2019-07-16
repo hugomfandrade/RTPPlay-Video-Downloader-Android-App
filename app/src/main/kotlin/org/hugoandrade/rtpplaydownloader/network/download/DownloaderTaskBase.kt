@@ -20,6 +20,7 @@ abstract class DownloaderTaskBase {
         const val DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS : Long = 1000 // 1second
     }
 
+    var url: String? = null
     var videoFile: String? = null
     var videoFileName: String? = null
     var thumbnailPath: String? = null

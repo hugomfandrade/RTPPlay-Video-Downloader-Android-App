@@ -19,6 +19,9 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.utils.*
 import android.content.Intent
+import android.support.v7.widget.helper.ItemTouchHelper
+import android.view.Menu
+import android.view.MenuItem
 import android.support.v7.widget.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
@@ -67,6 +70,23 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
 
         extractActionSendIntentAndUpdateUI(intent)
+
+        populateDownloadItemsRecyclerView()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.getItemId()) {
+            R.id.action_empty_db -> {
+                mDownloadManager.emptyDB()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onDestroy() {
@@ -103,6 +123,39 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
 
         binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+                0,
+                ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
+
+            override fun onMove(recyclerView: RecyclerView,
+                                viewHolder1: RecyclerView.ViewHolder,
+                                viewHolder2: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
+                val position = viewHolder.adapterPosition
+                val downloadableItem = mDownloadItemsAdapter.get(position)
+                if (downloadableItem.isDownloading()) {
+                    downloadableItem.cancel()
+                }
+                mDownloadManager.archive(downloadableItem)
+                mDownloadItemsAdapter.remove(downloadableItem)
+            }
+        }).attachToRecyclerView(mDownloadItemsRecyclerView)
+    }
+
+    private fun populateDownloadItemsRecyclerView() {
+        mDownloadManager.retrieveItemsFromDB()
+    }
+
+    override fun populateDownloadableItemsRecyclerView(downloadableItems: List<DownloadableItem>) {
+
+        runOnUiThread {
+            mDownloadItemsAdapter.clear()
+            mDownloadItemsAdapter.addAll(downloadableItems)
+            mDownloadItemsAdapter.notifyDataSetChanged()
+        }
     }
 
     private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {

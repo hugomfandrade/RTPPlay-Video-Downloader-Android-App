@@ -3,6 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
+import android.content.Context
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
@@ -11,6 +12,10 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationId
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
+import org.hugoandrade.rtpplaydownloader.network.persistance.DatabaseModel
+import org.hugoandrade.rtpplaydownloader.network.persistance.DownloadableEntry
+import org.hugoandrade.rtpplaydownloader.network.persistance.DownloadableEntryParser
+import org.hugoandrade.rtpplaydownloader.network.persistance.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
 import java.util.*
@@ -30,8 +35,34 @@ class DownloadManager  {
     private val parsingExecutors = Executors.newFixedThreadPool(DevConstants.nParsingThreads)
     private val downloadExecutors = Executors.newFixedThreadPool(DevConstants.nDownloadThreads)
 
+    private lateinit var mDatabaseModel: DatabaseModel
+
     fun onCreate(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
+
+        mDatabaseModel = object : DatabaseModel(){}
+        mDatabaseModel.onCreate(object : PersistencePresenterOps {
+
+            override fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+                mViewOps.get()?.populateDownloadableItemsRecyclerView(DownloadableEntryParser.formatCollection(downloadableEntries))
+            }
+
+            override fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
+            }
+
+            override fun onResetDatabase(wasSuccessfullyDeleted : Boolean){
+                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
+            }
+
+            override fun getActivityContext(): Context {
+                return mViewOps.get()?.getActivityContext()!!
+            }
+
+            override fun getApplicationContext(): Context {
+                return mViewOps.get()?.getApplicationContext()!!
+            }
+        })
     }
 
     fun onConfigurationChanged(viewOps: DownloadManagerViewOps) {
@@ -41,6 +72,7 @@ class DownloadManager  {
     fun onDestroy() {
         parsingExecutors.shutdownNow()
         downloadExecutors.shutdownNow()
+        mDatabaseModel.onDestroy()
     }
 
     fun parseUrl(urlString: String) : ParseFuture {
@@ -187,6 +219,32 @@ class DownloadManager  {
     }
 
     fun download(task: DownloaderTaskBase) : DownloadableItem  {
+        val downloadableItem = DownloadableItem(task, mViewOps.get())
+        downloadableItem.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
+            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+                // TODO
+                if (downloadableItem.state == DownloadableItemState.Start) {
+                    mDatabaseModel.insertDownloadableEntry(downloadableItem)
+                }
+                else {
+                    mDatabaseModel.updateDownloadableEntry(downloadableItem)
+                }
+            }
+        })
+        return downloadableItem.startDownload()
+    }
+
+    fun retrieveItemsFromDB() {
+        mDatabaseModel.retrieveAllDownloadableEntries()
+    }
+
+    fun emptyDB() {
+        mDatabaseModel.deleteAllDownloadableEntries()
+    }
+
+    fun archive(downloadableItem: DownloadableItem) {
+        downloadableItem.isArchived = true
+        mDatabaseModel.updateDownloadableEntry(downloadableItem)
         val downloadableItem = DownloadableItem(task, mViewOps.get(), downloadExecutors)
         downloadableItem.startDownload()
         return downloadableItem

@@ -109,8 +109,24 @@ class DownloadItemsAdapter :
         holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
     }
 
+    fun get(index: Int): DownloadableItem {
+        return downloadableItemList[index]
+    }
+
     override fun getItemCount(): Int {
         return downloadableItemList.size
+    }
+
+    fun clear() {
+        synchronized(downloadableItemList) {
+            downloadableItemList.forEach(action = {remove(it)})
+        }
+    }
+
+    fun addAll(downloadableItems: List<DownloadableItem>) {
+        synchronized(downloadableItemList) {
+            downloadableItems.forEach(action = {add(it)})
+        }
     }
 
     fun add(downloadableItem: DownloadableItem) {

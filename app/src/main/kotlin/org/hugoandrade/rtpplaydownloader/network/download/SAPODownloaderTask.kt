@@ -12,6 +12,7 @@ class SAPODownloaderTask : DownloaderTaskBase() {
 
     override fun parseMediaFile(urlString: String): Boolean {
 
+        url = urlString
         videoFile = getVideoFile(urlString) ?: return false
         videoFileName = MediaUtils.getUniqueFilenameAndLock(getVideoFileName(urlString, videoFile))
 

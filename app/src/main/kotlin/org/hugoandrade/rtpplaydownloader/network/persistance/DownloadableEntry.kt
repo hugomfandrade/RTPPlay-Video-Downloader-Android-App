@@ -18,7 +18,7 @@ class DownloadableEntry() {
             val FILENAME = "FileName"
             val FILEPATH = "FilePath"
             val STAGE = "Stage"
-            val PROGRESS = "Progress"
+            val IS_ARCHIVED = "IsArchived"
         }
     }
 
@@ -27,19 +27,19 @@ class DownloadableEntry() {
     var filename: String? = null
     var filepath: String? = null
     var state: DownloadableItemState? = null
-    var progress : Float? = null
+    var isArchived: Boolean? = null
 
     constructor(id: String?,
                 urlString: String?,
                 filename: String?,
                 filepath: String?,
                 state: DownloadableItemState?,
-                progress: Float?) : this() {
+                isArchived: Boolean?) : this() {
         this.id = id
         this.urlString = urlString
         this.filename = filename
         this.filepath = filepath
         this.state = state
-        this.progress = progress
+        this.isArchived = isArchived
     }
 }
