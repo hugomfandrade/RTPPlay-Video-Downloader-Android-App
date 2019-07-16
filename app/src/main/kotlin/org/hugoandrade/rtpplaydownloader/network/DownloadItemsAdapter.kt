@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
@@ -103,8 +104,8 @@ class DownloadItemsAdapter :
         val isDownloading : Boolean = downloadableItem.isDownloading()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
-        holder.binding.pauseDownloadImageView.visibility = if (isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
-        holder.binding.resumeDownloadImageView.visibility = if (isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
+        holder.binding.pauseDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
+        holder.binding.resumeDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
         holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
     }
 

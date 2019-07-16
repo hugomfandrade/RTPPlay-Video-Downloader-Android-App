@@ -5,6 +5,7 @@ interface DevConstants {
     companion object {
         const val simDownload: Boolean = false
         const val showLog: Boolean = false
+        const val enablePauseResume = false
 
         const val nParsingThreads: Int = 10
         const val nDownloadThreads: Int = 5
