@@ -38,8 +38,7 @@
                 android:inputType="textUri"
                 android:ems="10"
                 android:hint="Url (eg. RTP Play, SIC, Sapo)"
-                android:background="@android:color/transparent"
-                android:text="https://sic.pt/Programas/e-se-fosse-consigo/2019-05-03-E-se-fosse-consigo---brevemente-na-SIC" />
+                android:background="@android:color/transparent" />
 
             <ImageView
                 android:id="@+id/clear_text_button"

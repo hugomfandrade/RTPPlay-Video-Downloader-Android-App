@@ -41,6 +41,7 @@ abstract class DatabaseModel {
 
     fun retrieveAllDownloadableEntries() {
 
+        if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             val downloadableItems = ArrayList<DownloadableEntry>()
@@ -69,6 +70,7 @@ abstract class DatabaseModel {
 
     fun insertDownloadableEntry(downloadableItem: DownloadableItem) {
 
+        if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             val c = database?.query(DownloadableEntry.Entry.TABLE_NAME, null, null, null, null, null, null)
@@ -108,6 +110,7 @@ abstract class DatabaseModel {
 
     fun deleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
 
+        if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             val deletedDownloadableEntries = ArrayList<DownloadableEntry>()
@@ -128,6 +131,7 @@ abstract class DatabaseModel {
 
     fun deleteAllDownloadableEntries() {
 
+        if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             database?.delete(DownloadableEntry.Entry.TABLE_NAME, null, null)
@@ -138,6 +142,7 @@ abstract class DatabaseModel {
 
     fun updateDownloadableEntry(downloadableItem: DownloadableItem) {
 
+        if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             // Create a new map of values, where column names are the keys
@@ -196,6 +201,7 @@ abstract class DatabaseModel {
 
     fun deleteDownloadableEntry(downloadableEntry: DownloadableEntry) {
 
+        if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             val nRowsAffected = database?.delete(
@@ -234,13 +240,14 @@ abstract class DatabaseModel {
             private val TAG = DatabaseHelper::class.java.simpleName
 
             private val DATABASE_NAME = "RTPPlayDownloadAppDB"
-            private val DATABASE_VERSION = 1
+            private val DATABASE_VERSION = 2
 
             private val CREATE_DB_TABLE_PASSWORD_ENTRY = " CREATE TABLE " + DownloadableEntry.Entry.TABLE_NAME + " (" +
                     " " + DownloadableEntry.Entry.Cols._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     " " + DownloadableEntry.Entry.Cols.URL + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.FILENAME + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.FILEPATH + " TEXT NULL, " +
+                    " " + DownloadableEntry.Entry.Cols.THUMBNAIL + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.STAGE + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.IS_ARCHIVED + " INTEGER NULL " +
                     " );"

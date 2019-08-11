@@ -54,19 +54,20 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             mDownloadManager = DownloadManager()
             mDownloadManager.onCreate(this)
             retainedFragmentManager.put(DownloadManager::class.java.simpleName, mDownloadManager)
-        }
-        else{
+        } else {
             mDownloadManager = oldDownloadManager
             mDownloadManager.onConfigurationChanged(this)
         }
 
         initializeUI()
 
-        val url : String? = DevConstants.url
-        url.let {
-            binding.inputUriEditText.setText(it)
+        val devUrl: String? = DevConstants.url
+        if (devUrl != null) {
+            binding.inputUriEditText.setText(devUrl)
             binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-            ViewUtils.showSoftKeyboardAndRequestFocus(binding.inputUriEditText)
+        }
+        else {
+            ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
         }
 
         extractActionSendIntentAndUpdateUI(intent)
@@ -76,11 +77,12 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        menu.findItem(R.id.action_empty_db).isVisible = false
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.getItemId()) {
+        when (item.itemId) {
             R.id.action_empty_db -> {
                 mDownloadManager.emptyDB()
                 return true
@@ -121,28 +123,31 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
+        if (DevConstants.enablePersistence) {
+            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+                    0,
+                    ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
+
+                override fun onMove(recyclerView: RecyclerView,
+                                    viewHolder1: RecyclerView.ViewHolder,
+                                    viewHolder2: RecyclerView.ViewHolder): Boolean {
+                    return false
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
+                    val position = viewHolder.adapterPosition
+                    val downloadableItem = mDownloadItemsAdapter.get(position)
+                    if (downloadableItem.isDownloading()) {
+                        downloadableItem.cancel()
+                    }
+                    mDownloadManager.archive(downloadableItem)
+                    mDownloadItemsAdapter.remove(downloadableItem)
+                    binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+                }
+            }).attachToRecyclerView(mDownloadItemsRecyclerView)
+        }
 
         binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-                0,
-                ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
-
-            override fun onMove(recyclerView: RecyclerView,
-                                viewHolder1: RecyclerView.ViewHolder,
-                                viewHolder2: RecyclerView.ViewHolder): Boolean {
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
-                val position = viewHolder.adapterPosition
-                val downloadableItem = mDownloadItemsAdapter.get(position)
-                if (downloadableItem.isDownloading()) {
-                    downloadableItem.cancel()
-                }
-                mDownloadManager.archive(downloadableItem)
-                mDownloadItemsAdapter.remove(downloadableItem)
-            }
-        }).attachToRecyclerView(mDownloadItemsRecyclerView)
     }
 
     private fun populateDownloadItemsRecyclerView() {
@@ -155,6 +160,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             mDownloadItemsAdapter.clear()
             mDownloadItemsAdapter.addAll(downloadableItems)
             mDownloadItemsAdapter.notifyDataSetChanged()
+            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }
 
@@ -295,7 +301,6 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
                     override fun onCancelled() {
                         future.failed("parsing was cancelled")
-
                         paginationFuture?.failed("parsing was cancelled")
                         paginationMoreFuture?.failed("parsing was cancelled")
                         FilenameLockerAdapter.instance.clear()

@@ -12,8 +12,7 @@ import android.widget.Toast
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.concurrent.ExecutorService
 import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.FileIdentifier
-import org.hugoandrade.rtpplaydownloader.network.parsing.FileType
+import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
 
 class DownloadableItem(val downloaderTask: DownloaderTaskBase,
                        private val viewOps : DownloadManagerViewOps?,
@@ -25,14 +24,18 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
                 url: String?,
                 filename: String?,
                 filepath: String?,
+                thumbnailPath: String?,
                 state: DownloadableItemState?,
-                isArchived: Boolean?)
-            : this(FileIdentifier.findHost(url ?: "unknown")?: EmptyDownloaderTask(), null) {
+                isArchived: Boolean?,
+                viewOps: DownloadManagerViewOps?,
+                downloadExecutors: ExecutorService)
+            : this(FileIdentifier.findHost(url ?: "unknown")?: EmptyDownloaderTask(), viewOps, downloadExecutors) {
 
         this.id = id
         this.url = url
         this.filename = filename
         this.filepath = filepath
+        this.thumbnailPath = thumbnailPath
         this.state = state ?: DownloadableItemState.Start
         this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
         this.isArchived = isArchived ?: false
@@ -41,19 +44,19 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
 
-    var filename: String? = downloaderTask.videoFileName
-    val thumbnailPath: String? = downloaderTask.thumbnailPath
     var id: String? = null
     var url: String? = null
-    var filename: String? = null
+    var filename: String? = downloaderTask.videoFileName
+    var thumbnailPath: String? = downloaderTask.thumbnailPath
     var filepath: String? = null
+    var isArchived : Boolean = false
+
+    var state: DownloadableItemState = DownloadableItemState.Downloading
+    var progress : Float = 0f
     var progressSize : Long = 0
     var fileSize : Long = 0
     var downloadingSpeed : Float = 0f // Per Second
     var remainingTime : Long = 0 // In Millis
-    var state: DownloadableItemState = DownloadableItemState.Downloading
-    var progress : Float = 0f
-    var isArchived : Boolean = false
 
     private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
 

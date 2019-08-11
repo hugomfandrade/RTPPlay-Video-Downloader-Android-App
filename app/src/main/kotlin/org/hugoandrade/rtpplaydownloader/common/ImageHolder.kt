@@ -117,8 +117,10 @@ class ImageHolder(private val mImageView: ImageView?,
 
             if (f.exists()) {
                 val bitmap = BitmapFactory.decodeFile(f.absolutePath, options)
-                ImageCacheAdapter.instance.put(filePath, mInSampleSize, bitmap)
-                return bitmap
+                if (bitmap != null) {
+                    ImageCacheAdapter.instance.put(filePath, mInSampleSize, bitmap)
+                    return bitmap
+                }
             }
             return null
         }

@@ -2,9 +2,10 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 class EmptyDownloaderTask : DownloaderTaskBase() {
 
-    private lateinit var mDownloaderTaskListener: DownloaderTaskListener
+    override fun getVideoFileName(urlString: String, videoFile: String?): String {
 
-    private var doCanceling: Boolean = false
+        return null.toString()
+    }
 
     override fun cancel() {
         doCanceling = true
@@ -28,7 +29,7 @@ class EmptyDownloaderTask : DownloaderTaskBase() {
 
         mDownloaderTaskListener = listener
 
-        mDownloaderTaskListener.downloadFailed()
+        mDownloaderTaskListener.downloadFailed("No task found")
     }
 
     override fun isValid(urlString: String) : Boolean {

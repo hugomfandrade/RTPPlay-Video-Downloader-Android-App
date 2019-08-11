@@ -19,6 +19,7 @@ import org.hugoandrade.rtpplaydownloader.network.persistance.PersistencePresente
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.ref.WeakReference
 import java.util.*
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
@@ -44,23 +45,27 @@ class DownloadManager  {
         mDatabaseModel.onCreate(object : PersistencePresenterOps {
 
             override fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
-                mViewOps.get()?.populateDownloadableItemsRecyclerView(DownloadableEntryParser.formatCollection(downloadableEntries))
+                if (!DevConstants.enablePersistence) return
+                mViewOps.get()?.populateDownloadableItemsRecyclerView(
+                        DownloadableEntryParser.formatCollection(downloadableEntries, mViewOps.get(), downloadExecutors))
             }
 
             override fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+                if (!DevConstants.enablePersistence) return
                 mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
             }
 
             override fun onResetDatabase(wasSuccessfullyDeleted : Boolean){
+                if (!DevConstants.enablePersistence) return
                 mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
             }
 
-            override fun getActivityContext(): Context {
-                return mViewOps.get()?.getActivityContext()!!
+            override fun getActivityContext(): Context? {
+                return mViewOps.get()?.getActivityContext()
             }
 
-            override fun getApplicationContext(): Context {
-                return mViewOps.get()?.getApplicationContext()!!
+            override fun getApplicationContext(): Context? {
+                return mViewOps.get()?.getApplicationContext()
             }
         })
     }
@@ -96,6 +101,25 @@ class DownloadManager  {
                 }
 
                 val downloaderTask: DownloaderTaskBase? = FileIdentifier.findHost(urlString)
+                val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
+
+                if (downloaderTask == null && paginationTask != null) {
+
+                    try {
+                        val f : ArrayList<DownloaderTaskBase>? = parsePagination(urlString, paginationTask).get()
+                        if (f != null) {
+                            future.success(ParsingData(f, paginationTask))
+                        }
+                        else {
+                            future.failed("is not a valid website")
+                        }
+                    }
+                    catch (e : ExecutionException) {
+                        future.failed("is not a valid website")
+                    }
+
+                    return
+                }
 
                 if (downloaderTask == null) {
                     future.failed("is not a valid website")
@@ -108,8 +132,6 @@ class DownloadManager  {
                     future.failed("could not find filetype")
                     return
                 }
-
-                val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
 
                 val isPaginationUrlTheSameOfTheOriginalUrl : Boolean =
                         isPaginationUrlTheSameOfTheOriginalUrl(urlString, downloaderTask, paginationTask)
@@ -131,7 +153,6 @@ class DownloadManager  {
     private fun isPaginationUrlTheSameOfTheOriginalUrl(urlString: String,
                                                        downloaderTask: DownloaderTaskBase,
                                                        paginationTask: PaginationParserTaskBase?): Boolean {
-        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::")
 
         if (paginationTask == null) {
             return false
@@ -139,7 +160,6 @@ class DownloadManager  {
 
         val paginationUrls : ArrayList<String> = paginationTask.parsePagination(urlString)
 
-        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::0")
         if (paginationUrls.size == 0) {
             return false
         }
@@ -151,7 +171,6 @@ class DownloadManager  {
             arrayListOf(downloaderTask)
         }
 
-        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::1::" + paginationUrls.toString())
         if (paginationUrls.size != 1) {
             return false
         }
@@ -163,7 +182,6 @@ class DownloadManager  {
             videoFileNames.add(videoFile)
         })
 
-        Log.e(TAG, "isPaginationUrlTheSameOfTheOriginalUrl::2")
         paginationUrls.forEach(action = { p ->
 
             if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
@@ -200,8 +218,6 @@ class DownloadManager  {
     }
 
     private fun areEqual(array0: ArrayList<String>, array1: ArrayList<String>): Boolean {
-        Log.e(TAG, "areEqual::" + array0.toString())
-        Log.e(TAG, "areEqual::" + array1.toString())
         if (array0.size != array1.size) {
             return false
         }
@@ -219,10 +235,11 @@ class DownloadManager  {
     }
 
     fun download(task: DownloaderTaskBase) : DownloadableItem  {
-        val downloadableItem = DownloadableItem(task, mViewOps.get())
+        val downloadableItem = DownloadableItem(task, mViewOps.get(), downloadExecutors)
         downloadableItem.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-                // TODO
+
+                if (!DevConstants.enablePersistence) return
                 if (downloadableItem.state == DownloadableItemState.Start) {
                     mDatabaseModel.insertDownloadableEntry(downloadableItem)
                 }
@@ -231,23 +248,24 @@ class DownloadManager  {
                 }
             }
         })
-        return downloadableItem.startDownload()
+        downloadableItem.startDownload()
+        return downloadableItem
     }
 
     fun retrieveItemsFromDB() {
+        if (!DevConstants.enablePersistence) return
         mDatabaseModel.retrieveAllDownloadableEntries()
     }
 
     fun emptyDB() {
+        if (!DevConstants.enablePersistence) return
         mDatabaseModel.deleteAllDownloadableEntries()
     }
 
     fun archive(downloadableItem: DownloadableItem) {
+        if (!DevConstants.enablePersistence) return
         downloadableItem.isArchived = true
         mDatabaseModel.updateDownloadableEntry(downloadableItem)
-        val downloadableItem = DownloadableItem(task, mViewOps.get(), downloadExecutors)
-        downloadableItem.startDownload()
-        return downloadableItem
     }
 
     fun parsePagination(urlString: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {

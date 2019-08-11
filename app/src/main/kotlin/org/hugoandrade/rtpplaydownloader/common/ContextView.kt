@@ -7,10 +7,10 @@ interface ContextView {
     /**
      * Get the Activity Context.
      */
-    fun getActivityContext(): Context
+    fun getActivityContext(): Context?
 
     /**
      * Get the Application Context.
      */
-    fun getApplicationContext(): Context
+    fun getApplicationContext(): Context?
 }

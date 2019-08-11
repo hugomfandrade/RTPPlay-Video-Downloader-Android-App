@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.utils
 
 import android.os.Environment
+import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import java.io.File
 import java.text.Normalizer
@@ -43,11 +44,11 @@ private constructor() {
 
             if (filepath != null) {
 
-                // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-                // val file = File(storagePath, item.filename)
-                // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
                 val file = File(filepath)
-                return file.exists()
+                if (doesMediaFileExist(file)) {
+                    return file.delete()
+                }
+                return false
             }
             return false
         }

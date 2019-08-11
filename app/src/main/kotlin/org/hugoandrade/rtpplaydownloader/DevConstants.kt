@@ -7,10 +7,12 @@ interface DevConstants {
         const val showLog: Boolean = false
 
         const val nPersistenceThreads: Int = 5
-        const val enablePauseResume = false
 
         const val nParsingThreads: Int = 10
         const val nDownloadThreads: Int = 5
+
+        const val enablePauseResume = false
+        const val enablePersistence = false
 
         private const val url_1 = "https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe"
         private const val url_2 = "https://www.rtp.pt/play/p5407/barao-negro"
@@ -23,7 +25,8 @@ interface DevConstants {
         private const val url_9 = "https://sic.pt/Programas/e-se-fosse-consigo/2019-05-03-E-se-fosse-consigo---brevemente-na-SIC"
         private const val url_10 = "https://www.rtp.pt/play/p5986/a-revolucao-silenciosa"
         private const val url_11 = "https://www.rtp.pt/play/p5093/perdidos"
+        private const val url_12 = "https://sicradical.pt/programas/cabaret-da-coxa/episodios"
 
-        val url : String? = url_4
+        val url : String? = url_7
     }
 }
