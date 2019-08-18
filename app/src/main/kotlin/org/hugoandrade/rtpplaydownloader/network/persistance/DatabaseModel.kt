@@ -235,18 +235,26 @@ abstract class DatabaseModel {
             onCreate(db)
         }
 
+        override fun onDowngrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+            if (db != null) {
+                db.execSQL("DROP TABLE IF EXISTS " + DownloadableEntry.Entry.TABLE_NAME)
+                onCreate(db)
+            }
+        }
+
         companion object {
 
             private val TAG = DatabaseHelper::class.java.simpleName
 
             private val DATABASE_NAME = "RTPPlayDownloadAppDB"
-            private val DATABASE_VERSION = 2
+            private val DATABASE_VERSION = 1
 
             private val CREATE_DB_TABLE_PASSWORD_ENTRY = " CREATE TABLE " + DownloadableEntry.Entry.TABLE_NAME + " (" +
                     " " + DownloadableEntry.Entry.Cols._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     " " + DownloadableEntry.Entry.Cols.URL + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.FILENAME + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.FILEPATH + " TEXT NULL, " +
+                    " " + DownloadableEntry.Entry.Cols.FILESIZE + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.THUMBNAIL + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.STAGE + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.IS_ARCHIVED + " INTEGER NULL " +

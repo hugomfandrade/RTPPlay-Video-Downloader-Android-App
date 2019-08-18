@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RTP Play Downloader</string>
+
+    <string name="no_network_connection">Sem ligação à Internet</string>
+
+    <string name="write_external_storage_permission" >
+        Esta aplicação necessita da permissao para guardar os ficheiros na pasta \'Movies\'.</string>
+
+    <string name="storage_permission">
+        De modo a fazer download directamente para a pasta \'Movies\', por favor active a permissao Storage</string>
+
+    <string name="ok" >OK</string>
+
+    <string name="download">Download</string>
+
+    <string name="cancel">cancelar</string>
+
+    <string name="hint_uri_input" >Link (ex. RTP Play, SIC, Sapo)</string>
+
+    <string name="insert_link_and_download">insira o link e faça download</string>
+
+    <string name="parsing">analisando…</string>
+
+    <string name="all_episodes">Toda a Série</string>
+    <string name="not_now">mais tarde</string>
+    <string name="continue_text">continuar</string>
+
+    <string name="load_more">Carregar Mais</string>
+
+</resources>

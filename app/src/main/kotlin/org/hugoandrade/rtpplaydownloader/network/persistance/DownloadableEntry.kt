@@ -17,6 +17,7 @@ class DownloadableEntry() {
             val URL = "Url"
             val FILENAME = "FileName"
             val FILEPATH = "FilePath"
+            val FILESIZE = "FileSize"
             val THUMBNAIL = "Thumbnail"
             val STAGE = "Stage"
             val IS_ARCHIVED = "IsArchived"
@@ -27,6 +28,7 @@ class DownloadableEntry() {
     var urlString: String? = null
     var filename: String? = null
     var filepath: String? = null
+    var filesize: Long? = null
     var thumbnail: String? = null
     var state: DownloadableItemState? = null
     var isArchived: Boolean? = null
@@ -35,6 +37,7 @@ class DownloadableEntry() {
                 urlString: String?,
                 filename: String?,
                 filepath: String?,
+                filesize: Long?,
                 thumbnail: String?,
                 state: DownloadableItemState?,
                 isArchived: Boolean?) : this() {
@@ -42,6 +45,7 @@ class DownloadableEntry() {
         this.urlString = urlString
         this.filename = filename
         this.filepath = filepath
+        this.filesize = filesize
         this.thumbnail = thumbnail
         this.state = state
         this.isArchived = isArchived

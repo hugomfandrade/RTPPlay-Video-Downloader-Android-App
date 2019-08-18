@@ -24,6 +24,7 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
                 url: String?,
                 filename: String?,
                 filepath: String?,
+                filesize: Long?,
                 thumbnailPath: String?,
                 state: DownloadableItemState?,
                 isArchived: Boolean?,
@@ -35,6 +36,7 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
         this.url = url
         this.filename = filename
         this.filepath = filepath
+        this.fileSize = filesize?: 0L
         this.thumbnailPath = thumbnailPath
         this.state = state ?: DownloadableItemState.Start
         this.progress = if (this.state == DownloadableItemState.End) 1f else 0f

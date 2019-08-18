@@ -37,7 +37,7 @@
                 android:layout_marginRight="8dp"
                 android:inputType="textUri"
                 android:ems="10"
-                android:hint="Url (eg. RTP Play, SIC, Sapo)"
+                android:hint="@string/hint_uri_input"
                 android:background="@android:color/transparent" />
 
             <ImageView
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/input_layout"
             android:ems="10"
-            android:text="Download"
+            android:text="@string/download"
             android:onClick="download" />
             <!--android:onClick="@{MainActivity::download}"/-->
 
@@ -98,7 +98,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="insert link and download"
+                android:text="@string/insert_link_and_download"
                 android:textColor="#BFBFBF"/>
 
         </LinearLayout>

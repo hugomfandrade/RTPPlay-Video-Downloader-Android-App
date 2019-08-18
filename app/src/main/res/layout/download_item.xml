@@ -14,7 +14,7 @@
             android:layout_height="60dp"
             android:background="@android:color/darker_gray"
             android:src="@drawable/media_file_icon"
-            android:padding="4dp"
+            android:scaleType="centerCrop"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"

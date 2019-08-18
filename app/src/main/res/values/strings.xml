@@ -1,10 +1,23 @@
 <resources>
     <string name="app_name">RTP Play Downloader</string>
 
-    <string name="no_network_connection" translatable="true">No Network Connection</string>
+    <string name="no_network_connection" >No Network Connection</string>
 
-    <string name="write_external_storage_permission">External Storage permission is required to save the video files in the Movies folder.</string>
+    <string name="write_external_storage_permission" >External Storage permission is required to save the video files in the Movies folder.</string>
 
-    <string name="ok">OK</string>
+    <string name="ok" >OK</string>
+
+    <string name="cancel">cancel</string>
+
+    <string name="download">Download</string>
+
+    <string name="hint_uri_input" translatable="true">Url (eg. RTP Play, SIC, Sapo)</string>
+    <string name="insert_link_and_download">insert link and download</string>
+    <string name="parsing">parsing…</string>
+    <string name="all_episodes">All Episodes</string>
+    <string name="not_now">not now</string>
+    <string name="continue_text">continue</string>
+    <string name="storage_permission">In order to download media files directly to the Movies folder, please enable the Storage permission</string>
+    <string name="load_more">Load More</string>
 
 </resources>
