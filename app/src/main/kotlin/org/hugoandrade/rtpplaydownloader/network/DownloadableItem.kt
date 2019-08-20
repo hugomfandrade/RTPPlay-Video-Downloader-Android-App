@@ -9,10 +9,12 @@ import kotlin.collections.HashSet
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.concurrent.ExecutorService
 import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
+import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 class DownloadableItem(val downloaderTask: DownloaderTaskBase,
                        private val viewOps : DownloadManagerViewOps?,
@@ -123,7 +125,9 @@ class DownloadableItem(val downloaderTask: DownloaderTaskBase,
                         Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
                                 .setDataAndType(Uri.parse(filepath), "video/mp4"))
             } else {
-                Toast.makeText(viewOps?.getActivityContext(), "File not found", Toast.LENGTH_LONG).show()
+                ViewUtils.showToast(
+                        viewOps?.getActivityContext(),
+                        viewOps?.getActivityContext()?.getString(R.string.file_not_found))
             }
         }
     }

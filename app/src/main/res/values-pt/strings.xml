@@ -28,4 +28,12 @@
 
     <string name="load_more">Carregar Mais</string>
 
+    <string name="not_a_valid_url" >URL não reconhecido</string>
+    <string name="nothing_to_paste" >Não tem nada para colar</string>
+    <string name="unable_to_parse" >Não foi possível obter do link o ficheiro de multimédia</string>
+    <string name="unable_to_parse_pagination" >Não foi possível obter do link a paginação de ficheiros de multimédia</string>
+    <string name="finished_downloading" >Download completo do </string>
+    <string name="file_not_found" >Ficheiro não encontrado</string>
+
+
 </resources>

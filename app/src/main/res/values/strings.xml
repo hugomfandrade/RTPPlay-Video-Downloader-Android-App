@@ -19,5 +19,11 @@
     <string name="continue_text">continue</string>
     <string name="storage_permission">In order to download media files directly to the Movies folder, please enable the Storage permission</string>
     <string name="load_more">Load More</string>
+    <string name="not_a_valid_url" >Not a valid URL</string>
+    <string name="nothing_to_paste" >Nothing to paste from clipboard</string>
+    <string name="unable_to_parse" >Unable to parse URL</string>
+    <string name="unable_to_parse_pagination" >Unable to parse pagination from URL</string>
+    <string name="finished_downloading" >Finished downloading</string>
+    <string name="file_not_found" >File not found</string>
 
 </resources>

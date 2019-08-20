@@ -265,11 +265,14 @@ private constructor() {
         /**
          * Show a toast message.
          */
-        fun showToast(context: Context,
-                      message: String) {
-            Toast.makeText(context,
-                    message,
-                    Toast.LENGTH_SHORT).show()
+        fun showToast(context: Context?,
+                      message: String?) {
+
+            if (context != null && message != null) {
+                Toast.makeText(context,
+                        message,
+                        Toast.LENGTH_SHORT).show()
+            }
         }
 
         /**

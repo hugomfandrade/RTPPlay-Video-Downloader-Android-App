@@ -210,10 +210,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 binding.inputUriEditText.setText(pasteData)
                 binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
             } else {
-                binding.root.let { Snackbar.make(it, "Not a valid URL", Snackbar.LENGTH_LONG).show() }
+                ViewUtils.showSnackBar(binding.root, getString(R.string.not_a_valid_url))
             }
         } else {
-            binding.root.let { Snackbar.make(it, "Nothing to paste from clipboard", Snackbar.LENGTH_LONG).show() }
+            ViewUtils.showSnackBar(binding.root, getString(R.string.nothing_to_paste))
         }
     }
 
@@ -285,7 +285,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 runOnUiThread {
                     val message = "Unable to parse $errorMessage"
 
-                    binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+                    ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse))
 
                     parsingDialog?.dismissDialog()
                     parsingDialog = null
@@ -337,7 +337,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                                 runOnUiThread {
                                     val message = "Unable to parse pagination: $errorMessage"
 
-                                    binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+                                    ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
 
                                     parsingDialog?.dismissDialog()
                                     parsingDialog = null
@@ -363,7 +363,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                                 runOnUiThread {
                                     val message = "Unable to parse more pagination: $errorMessage"
 
-                                    binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+                                    ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
 
                                     parsingDialog?.dismissDialog()
                                     parsingDialog = null
@@ -385,9 +385,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 // listen for end of download and show message
                 if (downloadableItem.state == DownloadableItemState.End) {
                     runOnUiThread {
-                        val message = "Finished downloading " + downloadableItem.filename
+                        val message = getString(R.string.finished_downloading) + " " + downloadableItem.filename
                         Log.e(TAG, message)
-                        binding.root.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
+                        ViewUtils.showSnackBar(binding.root, message)
                     }
                     downloadableItem.removeDownloadStateChangeListener(this)
 

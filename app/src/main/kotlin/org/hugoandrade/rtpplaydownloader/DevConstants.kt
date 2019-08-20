@@ -1,8 +1,11 @@
 package org.hugoandrade.rtpplaydownloader
 
+import android.content.Context
+
 interface DevConstants {
 
     companion object {
+
         const val simDownload: Boolean = false
         const val showLog: Boolean = false
 
@@ -27,6 +30,6 @@ interface DevConstants {
         private const val url_11 = "https://www.rtp.pt/play/p5093/perdidos"
         private const val url_12 = "https://sicradical.pt/programas/cabaret-da-coxa/episodios"
 
-        val url : String? = url_7
+        val url : String? = null
     }
 }
