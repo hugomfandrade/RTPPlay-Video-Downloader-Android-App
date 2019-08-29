@@ -235,6 +235,13 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
         binding.inputUriEditText.clearFocus()
 
+        doDownload(binding.inputUriEditText.text.toString())
+    }
+
+    private var parsingDialog : ParsingDialog? = null
+
+    private fun doDownload(url: String) {
+
         if (!PermissionUtils.hasGrantedPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             PermissionDialog.Builder.instance(this)
                     .setOnPermissionDialog(object : PermissionDialog.OnPermissionListener {
@@ -251,15 +258,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     })
                     .create()
                     .show()
+            return
         }
-        else {
-            doDownload(binding.inputUriEditText.text.toString())
-        }
-    }
-
-    private var parsingDialog : ParsingDialog? = null
-
-    private fun doDownload(url: String) {
 
         val isParsing : Boolean = parsingDialog?.isShowing() ?: false
 
