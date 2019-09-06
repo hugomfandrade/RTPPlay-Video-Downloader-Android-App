@@ -38,7 +38,7 @@ class ImageHolder(private val mImageView: ImageView?,
             }
             DownloadImageAsyncTask(filesDir)
                     .setOnFinishedListener(object : DownloadImageAsyncTask.OnFinishedListener {
-                        override fun onFinished(filePath: String) {
+                        override fun onFinished(filePath: String?) {
                             displayImage(filePath)
                         }
                     })
@@ -181,7 +181,7 @@ class ImageHolder(private val mImageView: ImageView?,
             return null
         }
 
-        override fun onPostExecute(path: String) {
+        override fun onPostExecute(path: String?) {
             mListener?.onFinished(path)
         }
 
@@ -191,7 +191,7 @@ class ImageHolder(private val mImageView: ImageView?,
         }
 
         interface OnFinishedListener {
-            fun onFinished(filePath: String)
+            fun onFinished(filePath: String?)
         }
     }
 
