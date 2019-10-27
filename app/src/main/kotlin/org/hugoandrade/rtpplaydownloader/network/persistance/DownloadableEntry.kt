@@ -4,10 +4,6 @@ import org.hugoandrade.rtpplaydownloader.network.DownloadableItemState
 
 class DownloadableEntry() {
 
-    @Suppress("PrivatePropertyName")
-    private val TAG : String = javaClass.simpleName
-
-
     object Entry {
 
         val TABLE_NAME = "DownloadableItemEntry"

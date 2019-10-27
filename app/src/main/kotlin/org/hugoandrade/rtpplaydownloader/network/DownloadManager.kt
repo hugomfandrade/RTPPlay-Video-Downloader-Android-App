@@ -5,6 +5,7 @@ import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
 import android.content.Context
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
@@ -46,8 +47,30 @@ class DownloadManager  {
 
             override fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
                 if (!DevConstants.enablePersistence) return
-                mViewOps.get()?.populateDownloadableItemsRecyclerView(
-                        DownloadableEntryParser.formatCollection(downloadableEntries, mViewOps.get(), downloadExecutors))
+                Log.e(TAG, "onGetAllDownloadableEntries::" + downloadableEntries.size)
+
+                val items : List<DownloadableItem> = DownloadableEntryParser.formatCollection(downloadableEntries)
+                Log.e(TAG, "onGetAllDownloadableEntries::" + items.size)
+
+                val actions : ArrayList<DownloadableItemAction> = ArrayList()
+
+                items.forEach{item ->
+                    run {
+
+                        val url = item.url ?: "unknown"
+                        val task : DownloaderTaskBase = FileIdentifier.findHost(url) ?: EmptyDownloaderTask()
+                        val action = DownloadableItemAction(item, task, downloadExecutors)
+                        item.addDownloadStateChangeListener(object : DownloadableItemStateChangeListener {
+                            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+
+                                mDatabaseModel.updateDownloadableEntry(downloadableItem)
+                            }
+                        })
+                        actions.add(action)
+                    }
+                }
+                Log.e(TAG, "onGetAllDownloadableEntries::" + actions.size)
+                mViewOps.get()?.populateDownloadableItemsRecyclerView(actions)
             }
 
             override fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
@@ -234,9 +257,14 @@ class DownloadManager  {
         return true
     }
 
-    fun download(task: DownloaderTaskBase) : DownloadableItem  {
-        val downloadableItem = DownloadableItem(task, mViewOps.get(), downloadExecutors)
-        downloadableItem.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
+    fun download(task: DownloaderTaskBase) : DownloadableItemAction  {
+        val item = DownloadableItem(
+                task.url,
+                task.videoFileName,
+                task.thumbnailPath)
+
+        val downloadableItemAction = DownloadableItemAction(item, task, downloadExecutors)
+        item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
 
                 if (!DevConstants.enablePersistence) return
@@ -248,8 +276,8 @@ class DownloadManager  {
                 }
             }
         })
-        downloadableItem.startDownload()
-        return downloadableItem
+        downloadableItemAction.startDownload()
+        return downloadableItemAction
     }
 
     fun retrieveItemsFromDB() {

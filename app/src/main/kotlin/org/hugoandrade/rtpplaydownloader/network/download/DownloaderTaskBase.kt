@@ -16,10 +16,6 @@ abstract class DownloaderTaskBase {
 
     val TAG : String = javaClass.simpleName
 
-    companion object {
-        const val DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS : Long = 1000 // 1second
-    }
-
     var url: String? = null
     var videoFile: String? = null
     var videoFileName: String? = null
@@ -82,8 +78,7 @@ abstract class DownloaderTaskBase {
                         return
                     }
                 }
-                mDownloaderTaskListener.onProgress(1024F, 3000)
-                mDownloaderTaskListener.onProgress(progress.toFloat() / size.toFloat())
+
                 mDownloaderTaskListener.onProgress(progress, size)
                 progress += 8
                 Thread.sleep(1000)
@@ -120,8 +115,6 @@ abstract class DownloaderTaskBase {
             if (inputStream != null) {
                 var len = inputStream.read(buffer)
                 var progress = len.toLong()
-                var oldTimestamp = System.currentTimeMillis()
-                var oldProgress = len.toLong()
                 while (len > 0) {
 
                     if (tryToCancelIfNeeded(fos, inputStream, f)) {
@@ -136,8 +129,6 @@ abstract class DownloaderTaskBase {
                             // do cancelling while paused
                             return
                         }
-                        oldTimestamp = System.currentTimeMillis()
-                        oldProgress = len.toLong()
                     }
 
                     fos.write(buffer, 0, len)
@@ -149,16 +140,6 @@ abstract class DownloaderTaskBase {
                         return
                     }
 
-                    val tmpTimestamp: Long = System.currentTimeMillis()
-                    if ((tmpTimestamp - oldTimestamp) >= DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS) {
-                        val downloadingSpeedPerSecond : Float = MediaUtils.calculateDownloadingSpeed(oldTimestamp, tmpTimestamp, oldProgress, progress)
-                        val remainingTimeInMillis: Long = MediaUtils.calculateRemainingDownloadTime(oldTimestamp, tmpTimestamp, oldProgress, progress, size)
-                        mDownloaderTaskListener.onProgress(downloadingSpeedPerSecond, remainingTimeInMillis)
-                        oldTimestamp = tmpTimestamp
-                        oldProgress = progress
-                    }
-
-                    mDownloaderTaskListener.onProgress(progress.toFloat() / size.toFloat())
                     mDownloaderTaskListener.onProgress(progress, size)
                 }
             }

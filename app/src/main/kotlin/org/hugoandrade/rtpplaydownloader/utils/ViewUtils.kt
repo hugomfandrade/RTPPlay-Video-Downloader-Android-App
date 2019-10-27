@@ -338,7 +338,6 @@ private constructor() {
         }
 
         fun setHeightDpAnim(context: Context, view: View, heightInDPs: Int) {
-            //setHeightDp(context, view, heightInDPs);
             setHeightDpAnim(context, view, heightInDPs, 500)
         }
 

@@ -23,7 +23,7 @@ class DownloadItemsAdapter :
     private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
 
-    private val downloadableItemList: ArrayList<DownloadableItem> = ArrayList()
+    private val downloadableItemList: ArrayList<DownloadableItemAction> = ArrayList()
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -31,6 +31,8 @@ class DownloadItemsAdapter :
         synchronized(recyclerViewLock) {
             this.recyclerView = recyclerView
         }
+
+        startRefreshTimer()
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
@@ -39,6 +41,8 @@ class DownloadItemsAdapter :
         synchronized(recyclerViewLock) {
             this.recyclerView = null
         }
+
+        stopRefreshTimer()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -49,7 +53,8 @@ class DownloadItemsAdapter :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         // holder.binding.setPost(downloadableItemList[position])
-        val downloadableItem: DownloadableItem = downloadableItemList[position]
+        val downloadableItemAction: DownloadableItemAction = downloadableItemList[position]
+        val downloadableItem: DownloadableItem = downloadableItemList[position].item
 
         if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
             (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
@@ -101,7 +106,7 @@ class DownloadItemsAdapter :
         }
 
         val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItemState.Downloading || downloadableItem.state == DownloadableItemState.Start
-        val isDownloading : Boolean = downloadableItem.isDownloading()
+        val isDownloading : Boolean = downloadableItemAction.isDownloading()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
         holder.binding.pauseDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
@@ -109,7 +114,7 @@ class DownloadItemsAdapter :
         holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
     }
 
-    fun get(index: Int): DownloadableItem {
+    fun get(index: Int): DownloadableItemAction {
         return downloadableItemList[index]
     }
 
@@ -123,16 +128,16 @@ class DownloadItemsAdapter :
         }
     }
 
-    fun addAll(downloadableItems: List<DownloadableItem>) {
+    fun addAll(downloadableItems: List<DownloadableItemAction>) {
         synchronized(downloadableItemList) {
             downloadableItems.forEach(action = {add(it)})
         }
     }
 
-    fun add(downloadableItem: DownloadableItem) {
+    fun add(downloadableItem: DownloadableItemAction) {
         synchronized(downloadableItemList) {
             if (!downloadableItemList.contains(downloadableItem)) {
-                downloadableItem.addDownloadStateChangeListener(this)
+                downloadableItem.item.addDownloadStateChangeListener(this)
                 downloadableItemList.add(0, downloadableItem)
                 notifyItemInserted(0)
                 notifyItemRangeChanged(0, itemCount)
@@ -140,8 +145,8 @@ class DownloadItemsAdapter :
         }
     }
 
-    fun remove(downloadableItem: DownloadableItem) {
-        downloadableItem.removeDownloadStateChangeListener(this)
+    fun remove(downloadableItem: DownloadableItemAction) {
+        downloadableItem.item.removeDownloadStateChangeListener(this)
         synchronized(downloadableItemList) {
             if (downloadableItemList.contains(downloadableItem)) {
                 val index: Int = downloadableItemList.indexOf(downloadableItem)
@@ -154,9 +159,10 @@ class DownloadItemsAdapter :
 
     override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
         synchronized(downloadableItemList) {
-            if (downloadableItemList.contains(downloadableItem)) {
-                val index: Int = downloadableItemList.indexOf(downloadableItem)
-                internalNotifyItemChanged(index)
+            downloadableItemList.forEachIndexed { index, item ->
+                if (item.item == downloadableItem) {
+                    internalNotifyItemChanged(index)
+                }
             }
         }
     }
@@ -205,6 +211,42 @@ class DownloadItemsAdapter :
         }
     }
 
+    /**
+     * Refresh Timer Support
+     */
+
+    companion object {
+        const val REFRESH_WINDOW : Long = 1000
+    }
+    private val refreshTimerLock = Object()
+    private var refreshTimer : Timer? = null
+
+    private fun startRefreshTimer() {
+        synchronized(refreshTimerLock) {
+            refreshTimer?.cancel()
+            refreshTimer = Timer("Refresh-Timer")
+            refreshTimer?.scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    downloadableItemList.forEach { item ->
+                        run {
+                            if (item.item.state == DownloadableItemState.Start ||
+                                item.item.state == DownloadableItemState.Downloading ) {
+                                item.item.fireDownloadStateChange()
+                            }
+                        }
+                    }
+                }
+            }, REFRESH_WINDOW, REFRESH_WINDOW)
+        }
+    }
+
+    private fun stopRefreshTimer() {
+        synchronized(refreshTimerLock) {
+            refreshTimer?.cancel()
+            refreshTimer = null
+        }
+    }
+
     inner class ViewHolder(val binding: DownloadItemBinding) :
             RecyclerView.ViewHolder(binding.root),
             View.OnClickListener {
@@ -218,7 +260,7 @@ class DownloadItemsAdapter :
         }
 
         override fun onClick(v: View?) {
-            val item : DownloadableItem
+            val item : DownloadableItemAction
             synchronized(downloadableItemList) {
                 item = downloadableItemList[adapterPosition]
             }

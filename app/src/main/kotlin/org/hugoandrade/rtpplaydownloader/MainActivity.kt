@@ -6,7 +6,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -140,7 +139,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     if (downloadableItem.isDownloading()) {
                         downloadableItem.cancel()
                     }
-                    mDownloadManager.archive(downloadableItem)
+                    mDownloadManager.archive(downloadableItem.item)
                     mDownloadItemsAdapter.remove(downloadableItem)
                     binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
                 }
@@ -154,7 +153,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadManager.retrieveItemsFromDB()
     }
 
-    override fun populateDownloadableItemsRecyclerView(downloadableItems: List<DownloadableItem>) {
+    override fun populateDownloadableItemsRecyclerView(downloadableItems: List<DownloadableItemAction>) {
 
         runOnUiThread {
             mDownloadItemsAdapter.clear()
@@ -379,8 +378,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     }
 
     private fun startDownload(task: DownloaderTaskBase) {
-        val item : DownloadableItem = mDownloadManager.download(task)
-        item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
+        val action : DownloadableItemAction = mDownloadManager.download(task)
+        action.item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
                 // listen for end of download and show message
                 if (downloadableItem.state == DownloadableItemState.End) {
@@ -392,13 +391,13 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     downloadableItem.removeDownloadStateChangeListener(this)
 
                     // upload history
-                    VersionUtils.uploadHistory(getActivityContext(), downloadableItem)
+                    VersionUtils.uploadHistory(getActivityContext(), action)
                 }
             }
 
         })
         runOnUiThread {
-            mDownloadItemsAdapter.add(item)
+            mDownloadItemsAdapter.add(action)
             binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }

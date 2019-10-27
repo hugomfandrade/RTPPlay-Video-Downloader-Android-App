@@ -15,7 +15,7 @@ interface DevConstants {
         const val nDownloadThreads: Int = 5
 
         const val enablePauseResume = false
-        const val enablePersistence = false
+        const val enablePersistence = true
 
         private const val url_1 = "https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe"
         private const val url_2 = "https://www.rtp.pt/play/p5407/barao-negro"
@@ -30,6 +30,6 @@ interface DevConstants {
         private const val url_11 = "https://www.rtp.pt/play/p5093/perdidos"
         private const val url_12 = "https://sicradical.pt/programas/cabaret-da-coxa/episodios"
 
-        val url : String? = null
+        val url : String? = url_7
     }
 }

@@ -10,6 +10,7 @@ import com.google.gson.JsonObject
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceJsonTable
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.net.MalformedURLException
@@ -136,7 +137,7 @@ private constructor() {
         private const val appTableHistoryUrl: String =  "Url"
         private const val appTableHistoryUrlTaskID: String =  "UrlTaskID"
 
-        fun uploadHistory(context : Context, downloadableItem: DownloadableItem): ListenableFutureImpl<String> {
+        fun uploadHistory(context : Context, downloadableItem: DownloadableItemAction): ListenableFutureImpl<String> {
 
             val uploadHistoryFuture : ListenableFutureImpl<String> = ListenableFutureImpl()
 

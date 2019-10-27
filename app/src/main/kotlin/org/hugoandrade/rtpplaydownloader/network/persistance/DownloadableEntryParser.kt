@@ -2,13 +2,12 @@ package org.hugoandrade.rtpplaydownloader.network.persistance
 
 import android.content.ContentValues
 import android.database.Cursor
-import org.hugoandrade.rtpplaydownloader.network.DownloadManagerViewOps
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemState
-import org.hugoandrade.rtpplaydownloader.network.persistance.DownloadableEntry.*
-import java.util.concurrent.ExecutorService
+import org.hugoandrade.rtpplaydownloader.network.persistance.DownloadableEntry.Entry
 
 class DownloadableEntryParser
+
 /**
  * Ensure this class is only used as a utility.
  */
@@ -45,21 +44,17 @@ private constructor() {
                     downloadableItem.isArchived)
         }
 
-        fun formatCollection(downloadableEntries: List<DownloadableEntry>,
-                             viewOps : DownloadManagerViewOps?,
-                             downloadExecutors: ExecutorService): List<DownloadableItem> {
+        fun formatCollection(downloadableEntries: List<DownloadableEntry>): List<DownloadableItem> {
 
             val downloadableItems = ArrayList<DownloadableItem>()
 
             downloadableEntries.forEach {
-                downloadableEntry -> downloadableItems.add(formatSingleton(downloadableEntry, viewOps, downloadExecutors))
+                downloadableEntry -> downloadableItems.add(formatSingleton(downloadableEntry))
             }
             return downloadableItems
         }
 
-        fun formatSingleton(downloadableEntry: DownloadableEntry,
-                            viewOps : DownloadManagerViewOps?,
-                            downloadExecutors: ExecutorService): DownloadableItem {
+        fun formatSingleton(downloadableEntry: DownloadableEntry): DownloadableItem {
 
             return DownloadableItem(
                     downloadableEntry.id,
@@ -69,9 +64,7 @@ private constructor() {
                     downloadableEntry.filesize,
                     downloadableEntry.thumbnail,
                     downloadableEntry.state,
-                    downloadableEntry.isArchived,
-                    viewOps,
-                    downloadExecutors)
+                    downloadableEntry.isArchived)
         }
 
         fun format(downloadableEntry: DownloadableEntry): ContentValues {
