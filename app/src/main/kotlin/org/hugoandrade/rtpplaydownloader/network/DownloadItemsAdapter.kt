@@ -56,14 +56,14 @@ class DownloadItemsAdapter :
         val downloadableItemAction: DownloadableItemAction = downloadableItemList[position]
         val downloadableItem: DownloadableItem = downloadableItemList[position].item
 
-        if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
-            (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
+        if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.mediaFileName) {
+            (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.mediaFileName
         }
         if (!holder.binding.downloadItemTitleTextView.isSelected) {
             holder.binding.downloadItemTitleTextView.isSelected = true
         }
 
-        val thumbnailPath = downloadableItem.thumbnailPath
+        val thumbnailPath = downloadableItem.thumbnailUrl
         if (thumbnailPath == null) {
             holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
         }

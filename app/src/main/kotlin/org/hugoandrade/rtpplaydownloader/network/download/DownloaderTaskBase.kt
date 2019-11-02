@@ -17,9 +17,9 @@ abstract class DownloaderTaskBase {
     val TAG : String = javaClass.simpleName
 
     var url: String? = null
-    var videoFile: String? = null
-    var videoFileName: String? = null
-    var thumbnailPath: String? = null
+    var mediaUrl: String? = null
+    var mediaFileName: String? = null
+    var thumbnailUrl: String? = null
     var isDownloading : Boolean = false
 
     lateinit var mDownloaderTaskListener: DownloaderTaskListener
@@ -30,7 +30,7 @@ abstract class DownloaderTaskBase {
 
     abstract fun parseMediaFile(urlString: String): Boolean
 
-    abstract fun getVideoFileName(urlString: String, videoFile: String?): String
+    abstract fun getMediaFileName(urlString: String, videoFile: String?): String
 
     fun downloadMediaFileAsync(listener: DownloaderTaskListener) : Boolean {
         if (isDownloading) {
@@ -39,7 +39,7 @@ abstract class DownloaderTaskBase {
 
         isDownloading = true
 
-        object : Thread("Thread_download_media_file_" + videoFile) {
+        object : Thread("Thread_download_media_file_" + mediaUrl) {
             override fun run() {
 
                 downloadMediaFile(listener)
@@ -57,7 +57,7 @@ abstract class DownloaderTaskBase {
         mDownloaderTaskListener = listener
 
         if (DevConstants.simDownload) {
-            val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), videoFileName)
+            val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), mediaFileName)
             mDownloaderTaskListener.downloadStarted(f)
             var progress = 0L
             var size = 1024L
@@ -92,7 +92,7 @@ abstract class DownloaderTaskBase {
         var inputStream: InputStream? = null
 
         try {
-            u = URL(videoFile)
+            u = URL(mediaUrl)
             inputStream = u.openStream()
             val huc = u.openConnection() as HttpURLConnection //to know the size of video
             val size = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -102,7 +102,7 @@ abstract class DownloaderTaskBase {
             }
 
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            val f = File(storagePath, videoFileName)
+            val f = File(storagePath, mediaFileName)
             if (MediaUtils.doesMediaFileExist(f)) {
                 isDownloading = false
                 mDownloaderTaskListener.downloadFailed("file with same name already exists")

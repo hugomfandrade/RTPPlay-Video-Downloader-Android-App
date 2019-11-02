@@ -17,8 +17,6 @@ class DownloadableItemAction(val item : DownloadableItem,
 
     override fun startDownload() {
 
-        item.url = downloaderTask.url
-
         val downloading : Boolean = downloaderTask.isDownloading
 
         if (downloading) {

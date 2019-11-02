@@ -10,14 +10,14 @@ import java.net.URL
 
 class SICDownloaderTask : DownloaderTaskBase() {
 
-    override fun parseMediaFile(urlString: String): Boolean {
+    override fun parseMediaFile(url: String): Boolean {
 
-        url = urlString
-        videoFile = getVideoFile(urlString) ?: return false
-        videoFileName = MediaUtils.getUniqueFilenameAndLock(getVideoFileName(urlString, videoFile))
+        this.url = url
+        mediaUrl = getVideoFile(url) ?: return false
+        mediaFileName = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
 
         try {
-            URL(videoFile)
+            URL(mediaUrl)
         }
         catch (e: Exception) {
             e.printStackTrace()
@@ -91,7 +91,7 @@ class SICDownloaderTask : DownloaderTaskBase() {
         return null
     }
 
-    override fun getVideoFileName(urlString: String, videoFile: String?): String {
+    override fun getMediaFileName(urlString: String, videoFile: String?): String {
 
         try {
             val doc: Document?

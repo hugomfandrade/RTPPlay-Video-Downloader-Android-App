@@ -8,11 +8,24 @@ class FileIdentifier() {
 
     companion object {
 
-        fun findHost(urlString: String): DownloaderTaskBase? {
+        fun findHost(url: String): DownloaderTaskBase? {
             for (fileType: FileType in FileType.values()) {
-                if (fileType.downloaderTask.isValid(urlString)) {
+                if (fileType.downloaderTask.isValid(url)) {
                     when (fileType) {
                         FileType.RTPPlayMultiPart -> return RTPPlayDownloaderMultiPartTask()
+                        FileType.RTPPlay -> return RTPPlayDownloaderTask()
+                        FileType.SIC -> return SICDownloaderTask()
+                        FileType.SAPO -> return SAPODownloaderTask()
+                    }
+                }
+            }
+            return null
+        }
+
+        fun findHostForSingleTask(url: String): DownloaderTaskBase? {
+            for (fileType: FileType in FileType.values()) {
+                if (fileType.downloaderTask.isValid(url)) {
+                    when (fileType) {
                         FileType.RTPPlay -> return RTPPlayDownloaderTask()
                         FileType.SIC -> return SICDownloaderTask()
                         FileType.SAPO -> return SAPODownloaderTask()

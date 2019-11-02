@@ -30,7 +30,7 @@ private constructor() {
             if (filepath != null) {
 
                 // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-                // val file = File(storagePath, item.filename)
+                // val file = File(storagePath, item.mediaFileName)
                 // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
                 val file = File(filepath)
                 return file.exists()

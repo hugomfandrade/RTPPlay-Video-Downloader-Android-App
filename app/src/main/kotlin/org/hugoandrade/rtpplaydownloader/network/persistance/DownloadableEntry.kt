@@ -2,7 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.persistance
 
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemState
 
-class DownloadableEntry() {
+class DownloadableEntry {
 
     object Entry {
 
@@ -14,35 +14,35 @@ class DownloadableEntry() {
             val FILENAME = "FileName"
             val FILEPATH = "FilePath"
             val FILESIZE = "FileSize"
-            val THUMBNAIL = "Thumbnail"
+            val THUMBNAIL_URL = "Thumbnail"
             val STAGE = "Stage"
             val IS_ARCHIVED = "IsArchived"
         }
     }
 
     var id: String? = null
-    var urlString: String? = null
-    var filename: String? = null
-    var filepath: String? = null
+    var url: String
+    var mediaFileName: String
+    var mediaUrl: String? = null
     var filesize: Long? = null
-    var thumbnail: String? = null
+    var thumbnailUrl: String? = null
     var state: DownloadableItemState? = null
     var isArchived: Boolean? = null
 
     constructor(id: String?,
-                urlString: String?,
-                filename: String?,
+                url: String,
+                mediaFileName: String,
                 filepath: String?,
                 filesize: Long?,
-                thumbnail: String?,
+                thumbnailUrl: String?,
                 state: DownloadableItemState?,
-                isArchived: Boolean?) : this() {
+                isArchived: Boolean?) {
         this.id = id
-        this.urlString = urlString
-        this.filename = filename
-        this.filepath = filepath
+        this.url = url
+        this.mediaFileName = mediaFileName
+        this.mediaUrl = filepath
         this.filesize = filesize
-        this.thumbnail = thumbnail
+        this.thumbnailUrl = thumbnailUrl
         this.state = state
         this.isArchived = isArchived
     }

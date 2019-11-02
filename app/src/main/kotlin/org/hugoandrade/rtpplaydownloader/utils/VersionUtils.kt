@@ -9,7 +9,6 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceJsonTable
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
 import org.jsoup.Jsoup
 import java.io.IOException
@@ -147,7 +146,7 @@ private constructor() {
             }
 
             val insertObject = JsonObject()
-            insertObject.addProperty(appTableHistoryUrl, downloadableItem.downloaderTask.videoFile)
+            insertObject.addProperty(appTableHistoryUrl, downloadableItem.downloaderTask.mediaUrl)
             insertObject.addProperty(appTableHistoryUrlTaskID, downloadableItem.downloaderTask.TAG)
 
             try {

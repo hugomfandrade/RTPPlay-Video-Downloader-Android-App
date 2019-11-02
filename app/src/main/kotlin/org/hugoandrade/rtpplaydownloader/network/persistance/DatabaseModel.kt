@@ -175,9 +175,9 @@ abstract class DatabaseModel {
                             val d = DownloadableEntryParser.parse(cursor)
                             cursor.close()
 
-                            d.filename = downloadableEntry.filename
-                            d.filepath = downloadableEntry.filepath
-                            d.urlString = downloadableEntry.urlString
+                            d.mediaFileName = downloadableEntry.mediaFileName
+                            d.mediaUrl = downloadableEntry.mediaUrl
+                            d.url = downloadableEntry.url
                             d.state = downloadableEntry.state
                             d.isArchived = downloadableEntry.isArchived
 
@@ -255,7 +255,7 @@ abstract class DatabaseModel {
                     " " + DownloadableEntry.Entry.Cols.FILENAME + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.FILEPATH + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.FILESIZE + " TEXT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.THUMBNAIL + " TEXT NULL, " +
+                    " " + DownloadableEntry.Entry.Cols.THUMBNAIL_URL + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.STAGE + " TEXT NULL, " +
                     " " + DownloadableEntry.Entry.Cols.IS_ARCHIVED + " INTEGER NULL " +
                     " );"

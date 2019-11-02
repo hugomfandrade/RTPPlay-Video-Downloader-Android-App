@@ -63,7 +63,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
             val parsingItemCount: Int = parsingItemList.size
             holder.binding.item = parsingItem
 
-            val thumbnailPath = parsingItem.task.thumbnailPath
+            val thumbnailPath = parsingItem.task.thumbnailUrl
             if (thumbnailPath == null) {
                 holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
             } else {

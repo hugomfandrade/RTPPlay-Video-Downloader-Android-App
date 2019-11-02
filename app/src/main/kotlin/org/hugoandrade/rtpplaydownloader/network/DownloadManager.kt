@@ -23,14 +23,17 @@ import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
-class DownloadManager  {
+class DownloadManager : IDownloadManager {
 
     /**
      * Debugging tag used by the Android logger.
      */
     @Suppress("PrivatePropertyName", "unused")
     private val TAG = javaClass.simpleName
+
+    private val downloadableItemList: java.util.ArrayList<DownloadableItemAction> = java.util.ArrayList()
 
     private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
@@ -39,29 +42,50 @@ class DownloadManager  {
 
     private lateinit var mDatabaseModel: DatabaseModel
 
-    fun onCreate(viewOps: DownloadManagerViewOps) {
+    override fun onCreate(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
 
         mDatabaseModel = object : DatabaseModel(){}
         mDatabaseModel.onCreate(object : PersistencePresenterOps {
 
+            override fun onInsertDownloadableEntry(downloadableEntry: DownloadableEntry) {
+                if (!DevConstants.enablePersistence) return
+
+                val item : DownloadableItem = DownloadableEntryParser.formatSingleton(downloadableEntry)
+
+                val filename = item.mediaFileName ?: return
+                val task = persistenceMap[filename] ?: return
+
+                val action = DownloadableItemAction(item, task, downloadExecutors)
+                item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
+                    override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+                        mDatabaseModel.updateDownloadableEntry(downloadableItem)
+                    }
+                })
+                action.startDownload()
+
+                downloadableItemList.add(action)
+                mViewOps.get()?.displayDownloadableItem(action)
+            }
+
             override fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
                 if (!DevConstants.enablePersistence) return
-                Log.e(TAG, "onGetAllDownloadableEntries::" + downloadableEntries.size)
 
-                val items : List<DownloadableItem> = DownloadableEntryParser.formatCollection(downloadableEntries)
-                Log.e(TAG, "onGetAllDownloadableEntries::" + items.size)
+                val items = DownloadableEntryParser.formatCollection(downloadableEntries)
 
                 val actions : ArrayList<DownloadableItemAction> = ArrayList()
 
                 items.forEach{item ->
                     run {
 
-                        val url = item.url ?: "unknown"
-                        val task : DownloaderTaskBase = FileIdentifier.findHost(url) ?: EmptyDownloaderTask()
+                        val url= item.url
+                        val task : DownloaderTaskBase = FileIdentifier.findHostForSingleTask(url) ?: EmptyDownloaderTask()
+                        task.parseMediaFile(url)
                         val action = DownloadableItemAction(item, task, downloadExecutors)
                         item.addDownloadStateChangeListener(object : DownloadableItemStateChangeListener {
+
                             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+                                if (!DevConstants.enablePersistence) return
 
                                 mDatabaseModel.updateDownloadableEntry(downloadableItem)
                             }
@@ -69,18 +93,23 @@ class DownloadManager  {
                         actions.add(action)
                     }
                 }
-                Log.e(TAG, "onGetAllDownloadableEntries::" + actions.size)
-                mViewOps.get()?.populateDownloadableItemsRecyclerView(actions)
+
+                downloadableItemList.addAll(actions)
+                mViewOps.get()?.displayDownloadableItems(actions)
             }
 
             override fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
                 if (!DevConstants.enablePersistence) return
-                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
+
+                downloadableItemList.clear()
+                mViewOps.get()?.displayDownloadableItems(ArrayList())
             }
 
             override fun onResetDatabase(wasSuccessfullyDeleted : Boolean){
                 if (!DevConstants.enablePersistence) return
-                mViewOps.get()?.populateDownloadableItemsRecyclerView(ArrayList())
+
+                downloadableItemList.clear()
+                mViewOps.get()?.displayDownloadableItems(ArrayList())
             }
 
             override fun getActivityContext(): Context? {
@@ -93,19 +122,21 @@ class DownloadManager  {
         })
     }
 
-    fun onConfigurationChanged(viewOps: DownloadManagerViewOps) {
+    override fun onConfigurationChanged(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
+
+        mViewOps.get()?.displayDownloadableItems(downloadableItemList)
     }
 
-    fun onDestroy() {
+    override fun onDestroy() {
         parsingExecutors.shutdownNow()
         downloadExecutors.shutdownNow()
         mDatabaseModel.onDestroy()
     }
 
-    fun parseUrl(urlString: String) : ParseFuture {
+    override fun parseUrl(url: String) : ParseFuture {
 
-        val future = ParseFuture(urlString)
+        val future = ParseFuture(url)
 
         parsingExecutors.execute(object : Runnable {
 
@@ -116,20 +147,20 @@ class DownloadManager  {
                     return
                 }
 
-                val isUrl : Boolean = NetworkUtils.isValidURL(urlString)
+                val isUrl : Boolean = NetworkUtils.isValidURL(url)
 
                 if (!isUrl) {
                     future.failed("is not a valid website")
                     return
                 }
 
-                val downloaderTask: DownloaderTaskBase? = FileIdentifier.findHost(urlString)
-                val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(urlString)
+                val downloaderTask: DownloaderTaskBase? = FileIdentifier.findHost(url)
+                val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(url)
 
                 if (downloaderTask == null && paginationTask != null) {
 
                     try {
-                        val f : ArrayList<DownloaderTaskBase>? = parsePagination(urlString, paginationTask).get()
+                        val f : ArrayList<DownloaderTaskBase>? = parsePagination(url, paginationTask).get()
                         if (f != null) {
                             future.success(ParsingData(f, paginationTask))
                         }
@@ -149,7 +180,7 @@ class DownloadManager  {
                     return
                 }
 
-                val parsing : Boolean = downloaderTask.parseMediaFile(urlString)
+                val parsing : Boolean = downloaderTask.parseMediaFile(url)
 
                 if (!parsing) {
                     future.failed("could not find filetype")
@@ -157,7 +188,7 @@ class DownloadManager  {
                 }
 
                 val isPaginationUrlTheSameOfTheOriginalUrl : Boolean =
-                        isPaginationUrlTheSameOfTheOriginalUrl(urlString, downloaderTask, paginationTask)
+                        isPaginationUrlTheSameOfTheOriginalUrl(url, downloaderTask, paginationTask)
 
                 paginationTask?.setPaginationComplete(isPaginationUrlTheSameOfTheOriginalUrl)
 
@@ -173,132 +204,9 @@ class DownloadManager  {
         return future
     }
 
-    private fun isPaginationUrlTheSameOfTheOriginalUrl(urlString: String,
-                                                       downloaderTask: DownloaderTaskBase,
-                                                       paginationTask: PaginationParserTaskBase?): Boolean {
+    override fun parsePagination(url: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
 
-        if (paginationTask == null) {
-            return false
-        }
-
-        val paginationUrls : ArrayList<String> = paginationTask.parsePagination(urlString)
-
-        if (paginationUrls.size == 0) {
-            return false
-        }
-
-        val tasks : ArrayList<DownloaderTaskBase> = if (downloaderTask is DownloaderMultiPartTaskBase) {
-            downloaderTask.tasks
-        }
-        else {
-            arrayListOf(downloaderTask)
-        }
-
-        if (paginationUrls.size != 1) {
-            return false
-        }
-
-        val paginationVideoFileNames : ArrayList<String> = ArrayList()
-        val videoFileNames : ArrayList<String> = ArrayList()
-        tasks.forEach(action = { task ->
-            val videoFile = task.videoFile ?: return false
-            videoFileNames.add(videoFile)
-        })
-
-        paginationUrls.forEach(action = { p ->
-
-            if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
-                return false
-            }
-
-            val isUrl : Boolean = NetworkUtils.isValidURL(p)
-
-            if (!isUrl) {
-                return false
-            }
-
-            val paginationDownloaderTask: DownloaderTaskBase = FileIdentifier.findHost(p) ?: return false
-
-            val parsing : Boolean = paginationDownloaderTask.parseMediaFile(p)
-
-            if (!parsing) {
-                return false
-            }
-
-            if (paginationDownloaderTask is DownloaderMultiPartTaskBase) {
-                paginationDownloaderTask.tasks.forEach { t ->
-                    val paginationVideoFileName = t.videoFile ?: return false
-                    paginationVideoFileNames.add(paginationVideoFileName)
-                }
-            }
-            else {
-                val paginationVideoFileName = paginationDownloaderTask.videoFile ?: return false
-                paginationVideoFileNames.add(paginationVideoFileName)
-            }
-        })
-
-        return areEqual(videoFileNames, paginationVideoFileNames)
-    }
-
-    private fun areEqual(array0: ArrayList<String>, array1: ArrayList<String>): Boolean {
-        if (array0.size != array1.size) {
-            return false
-        }
-
-        array0.forEach { item0 ->
-            var contains = false
-            array1.forEach { item1 ->
-                if (item0 == item1) contains = true
-            }
-            if (!contains) {
-                return false
-            }
-        }
-        return true
-    }
-
-    fun download(task: DownloaderTaskBase) : DownloadableItemAction  {
-        val item = DownloadableItem(
-                task.url,
-                task.videoFileName,
-                task.thumbnailPath)
-
-        val downloadableItemAction = DownloadableItemAction(item, task, downloadExecutors)
-        item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
-            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-
-                if (!DevConstants.enablePersistence) return
-                if (downloadableItem.state == DownloadableItemState.Start) {
-                    mDatabaseModel.insertDownloadableEntry(downloadableItem)
-                }
-                else {
-                    mDatabaseModel.updateDownloadableEntry(downloadableItem)
-                }
-            }
-        })
-        downloadableItemAction.startDownload()
-        return downloadableItemAction
-    }
-
-    fun retrieveItemsFromDB() {
-        if (!DevConstants.enablePersistence) return
-        mDatabaseModel.retrieveAllDownloadableEntries()
-    }
-
-    fun emptyDB() {
-        if (!DevConstants.enablePersistence) return
-        mDatabaseModel.deleteAllDownloadableEntries()
-    }
-
-    fun archive(downloadableItem: DownloadableItem) {
-        if (!DevConstants.enablePersistence) return
-        downloadableItem.isArchived = true
-        mDatabaseModel.updateDownloadableEntry(downloadableItem)
-    }
-
-    fun parsePagination(urlString: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
-
-        val future = PaginationParseFuture(urlString, paginationTask)
+        val future = PaginationParseFuture(url, paginationTask)
 
         parsingExecutors.execute(object : Runnable {
 
@@ -309,7 +217,7 @@ class DownloadManager  {
                     return
                 }
 
-                val paginationUrls = paginationTask.parsePagination(urlString)
+                val paginationUrls = paginationTask.parsePagination(url)
                 val paginationUrlsProcessed = ArrayList<String>()
                 val paginationDownloadTasks = TreeMap<Double, DownloaderTaskBase>()
 
@@ -326,7 +234,7 @@ class DownloadManager  {
 
                             for (task : DownloaderTaskBase in result.tasks) {
                                 val i : Double = uniqueIndex(paginationUrls, paginationUrl, result.tasks, task)
-                                // Log.e(TAG, "pagination :: " + task.videoFileName + "::" + i)
+                                // Log.e(TAG, "pagination :: " + task.mediaFileName + "::" + i)
                                 // unique index
                                 paginationDownloadTasks[i] = task
                             }
@@ -367,8 +275,8 @@ class DownloadManager  {
         return future
     }
 
-    fun parseMore(urlString : String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
-        val future = PaginationParseFuture(urlString, paginationTask)
+    override fun parseMore(url : String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
+        val future = PaginationParseFuture(url, paginationTask)
 
         parsingExecutors.execute(object : Runnable {
 
@@ -396,7 +304,7 @@ class DownloadManager  {
 
                             for (task : DownloaderTaskBase in result.tasks) {
                                 val i : Double = uniqueIndex(paginationUrls, paginationUrl, result.tasks, task)
-                                // Log.e(TAG, "pagination :: " + task.videoFileName + "::" + i)
+                                // Log.e(TAG, "pagination :: " + task.mediaFileName + "::" + i)
                                 // unique index
                                 paginationDownloadTasks[i] = task
                             }
@@ -435,5 +343,128 @@ class DownloadManager  {
         })
 
         return future
+    }
+
+    private fun isPaginationUrlTheSameOfTheOriginalUrl(url: String,
+                                                       downloaderTask: DownloaderTaskBase,
+                                                       paginationTask: PaginationParserTaskBase?): Boolean {
+
+        if (paginationTask == null) {
+            return false
+        }
+
+        val paginationUrls : ArrayList<String> = paginationTask.parsePagination(url)
+
+        if (paginationUrls.size == 0) {
+            return false
+        }
+
+        val tasks : ArrayList<DownloaderTaskBase> = if (downloaderTask is DownloaderMultiPartTaskBase) {
+            downloaderTask.tasks
+        }
+        else {
+            arrayListOf(downloaderTask)
+        }
+
+        if (paginationUrls.size != 1) {
+            return false
+        }
+
+        val paginationVideoFileNames : ArrayList<String> = ArrayList()
+        val videoFileNames : ArrayList<String> = ArrayList()
+        tasks.forEach(action = { task ->
+            val videoFile = task.mediaUrl ?: return false
+            videoFileNames.add(videoFile)
+        })
+
+        paginationUrls.forEach(action = { p ->
+
+            if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                return false
+            }
+
+            val isUrl : Boolean = NetworkUtils.isValidURL(p)
+
+            if (!isUrl) {
+                return false
+            }
+
+            val paginationDownloaderTask: DownloaderTaskBase = FileIdentifier.findHost(p) ?: return false
+
+            val parsing : Boolean = paginationDownloaderTask.parseMediaFile(p)
+
+            if (!parsing) {
+                return false
+            }
+
+            if (paginationDownloaderTask is DownloaderMultiPartTaskBase) {
+                paginationDownloaderTask.tasks.forEach { t ->
+                    val paginationVideoFileName = t.mediaUrl ?: return false
+                    paginationVideoFileNames.add(paginationVideoFileName)
+                }
+            }
+            else {
+                val paginationVideoFileName = paginationDownloaderTask.mediaUrl ?: return false
+                paginationVideoFileNames.add(paginationVideoFileName)
+            }
+        })
+
+        return areEqual(videoFileNames, paginationVideoFileNames)
+    }
+
+    private fun areEqual(array0: ArrayList<String>, array1: ArrayList<String>): Boolean {
+        if (array0.size != array1.size) {
+            return false
+        }
+
+        array0.forEach { item0 ->
+            var contains = false
+            array1.forEach { item1 ->
+                if (item0 == item1) contains = true
+            }
+            if (!contains) {
+                return false
+            }
+        }
+        return true
+    }
+
+    override fun download(task: DownloaderTaskBase)  {
+        val url = task.url?: return
+        val mediaFileName = task.mediaFileName?: return
+        val thumbnailUrl = task.thumbnailUrl
+
+        val item = DownloadableItem(url, mediaFileName, thumbnailUrl)
+
+        if (!DevConstants.enablePersistence) {
+            val action = DownloadableItemAction(item, task, downloadExecutors)
+            action.startDownload()
+
+            downloadableItemList.add(action)
+            mViewOps.get()?.displayDownloadableItem(action)
+            return
+        }
+
+        persistenceMap[item.mediaFileName] = task
+
+        mDatabaseModel.insertDownloadableEntry(item)
+    }
+
+    private val persistenceMap : HashMap<String, DownloaderTaskBase> = HashMap()
+
+    override fun retrieveItemsFromDB() {
+        if (!DevConstants.enablePersistence) return
+        mDatabaseModel.retrieveAllDownloadableEntries()
+    }
+
+    override fun emptyDB() {
+        if (!DevConstants.enablePersistence) return
+        mDatabaseModel.deleteAllDownloadableEntries()
+    }
+
+    override fun archive(downloadableItem: DownloadableItem) {
+        if (!DevConstants.enablePersistence) return
+        downloadableItem.isArchived = true
+        mDatabaseModel.updateDownloadableEntry(downloadableItem)
     }
 }

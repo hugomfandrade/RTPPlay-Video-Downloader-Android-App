@@ -153,12 +153,21 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadManager.retrieveItemsFromDB()
     }
 
-    override fun populateDownloadableItemsRecyclerView(downloadableItems: List<DownloadableItemAction>) {
+    override fun displayDownloadableItems(actions: List<DownloadableItemAction>) {
 
         runOnUiThread {
-            mDownloadItemsAdapter.clear()
-            mDownloadItemsAdapter.addAll(downloadableItems)
+            mDownloadItemsAdapter.addAll(actions)
             mDownloadItemsAdapter.notifyDataSetChanged()
+            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+        }
+    }
+
+    override fun displayDownloadableItem(action: DownloadableItemAction) {
+
+        setupUploadHistory(action)
+
+        runOnUiThread {
+            mDownloadItemsAdapter.add(action)
             binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }
@@ -307,7 +316,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
                     override fun onDownload(tasks : ArrayList<DownloaderTaskBase>) {
                         tasks.forEach(action = { task ->
-                            val filename: String? = task.videoFileName
+                            val filename: String? = task.mediaFileName
                             if (filename != null) {
                                 FilenameLockerAdapter.instance.putUnremovable(filename)
                             }
@@ -378,28 +387,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     }
 
     private fun startDownload(task: DownloaderTaskBase) {
-        val action : DownloadableItemAction = mDownloadManager.download(task)
-        action.item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
-            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-                // listen for end of download and show message
-                if (downloadableItem.state == DownloadableItemState.End) {
-                    runOnUiThread {
-                        val message = getString(R.string.finished_downloading) + " " + downloadableItem.filename
-                        Log.e(TAG, message)
-                        ViewUtils.showSnackBar(binding.root, message)
-                    }
-                    downloadableItem.removeDownloadStateChangeListener(this)
-
-                    // upload history
-                    VersionUtils.uploadHistory(getActivityContext(), action)
-                }
-            }
-
-        })
-        runOnUiThread {
-            mDownloadItemsAdapter.add(action)
-            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
-        }
+        mDownloadManager.download(task)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,
@@ -420,5 +408,37 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         }
                     }
                 })
+    }
+
+    private val uploadHistoryMap : HashMap<String, DownloadableItemAction> = HashMap()
+
+    private val uploadHistoryListener = object : DownloadableItemStateChangeListener {
+
+        override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+            // listen for end of download and show message
+            if (downloadableItem.state == DownloadableItemState.End) {
+                runOnUiThread {
+                    val message = getString(R.string.finished_downloading) + " " + downloadableItem.mediaFileName
+                    Log.e(TAG, message)
+                    ViewUtils.showSnackBar(binding.root, message)
+                }
+                downloadableItem.removeDownloadStateChangeListener(this)
+
+                // upload history
+
+                val id = downloadableItem.id?: return
+                val action = uploadHistoryMap[id]?: return
+
+                VersionUtils.uploadHistory(getActivityContext(), action)
+            }
+        }
+    }
+
+    private fun setupUploadHistory(action: DownloadableItemAction) {
+
+        val id = action.item.id
+        if (id != null) uploadHistoryMap[id] = action
+
+        action.item.addDownloadStateChangeListener(uploadHistoryListener)
     }
 }

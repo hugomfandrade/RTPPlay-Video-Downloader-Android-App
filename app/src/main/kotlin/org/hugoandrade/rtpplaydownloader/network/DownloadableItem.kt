@@ -13,9 +13,9 @@ class DownloadableItem :
     private val TAG : String = javaClass.simpleName
 
     var id: String? = null
-    var url: String? = null // url
-    var filename: String? // name
-    var thumbnailPath: String? // url
+    val url: String // url
+    val mediaFileName: String // name
+    val thumbnailUrl: String? // url
     var state: DownloadableItemState = DownloadableItemState.Start
     var isArchived : Boolean = false
 
@@ -29,29 +29,29 @@ class DownloadableItem :
     var remainingTime : Long = 0 // In Millis
 
     constructor(id: String?,
-                url: String?,
-                filename: String?,
+                url: String,
+                mediaFileName: String,
                 filepath: String?,
                 filesize: Long?,
-                thumbnailPath: String?,
+                thumbnailUrl: String?,
                 state: DownloadableItemState?,
                 isArchived: Boolean?) {
 
         this.id = id
         this.url = url
-        this.filename = filename
+        this.mediaFileName = mediaFileName
         this.filepath = filepath
         this.fileSize = filesize?: 0L
-        this.thumbnailPath = thumbnailPath
+        this.thumbnailUrl = thumbnailUrl
         this.state = state ?: DownloadableItemState.Start
         this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
         this.isArchived = isArchived ?: false
     }
 
-    constructor(url: String?,
-                filename: String?,
-                thumbnailPath: String?) :
-        this(null, url, filename, null, 0, thumbnailPath, null, false)
+    constructor(url: String,
+                mediaFileName: String,
+                thumbnailUrl: String?) :
+        this(null, url, mediaFileName, null, 0, thumbnailUrl, null, false)
 
     companion object {
         const val DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS : Long = 1000 // 1second
@@ -87,7 +87,6 @@ class DownloadableItem :
 
     override fun downloadStarted(f: File) {
         this.filepath = f.absolutePath
-        this.filename = f.name
         this.state = DownloadableItemState.Start
 
         this.progressSize = 0L
@@ -100,7 +99,6 @@ class DownloadableItem :
 
     override fun downloadFinished(f: File) {
         this.filepath = f.absolutePath
-        this.filename = f.name
         this.state = DownloadableItemState.End
 
         Log.e(TAG, "finished downloading to " + f.absolutePath)

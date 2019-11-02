@@ -8,7 +8,7 @@ import java.net.SocketTimeoutException
 
 class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
 
-    override fun getVideoFileName(urlString: String, videoFile: String?): String {
+    override fun getMediaFileName(urlString: String, videoFile: String?): String {
         // do nothing
         return null.toString()
     }
@@ -40,13 +40,13 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
 
             if (task.isValid(url.urlString) && task.parseMediaFile(url.urlString)) {
                 val part = url.suffix
-                val originalFilename = task.getVideoFileName(url.urlString, task.videoFile)
+                val originalFilename = task.getMediaFileName(url.urlString, task.mediaUrl)
 
                 if (part != null) {
                     val lastDot = originalFilename.lastIndexOf(".")
                     val preFilename = originalFilename.substring(0, lastDot)
                     val extFilename = originalFilename.substring(lastDot, originalFilename.length)
-                    task.videoFileName = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
+                    task.mediaFileName = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
                 }
                 tasks.add(task)
             }

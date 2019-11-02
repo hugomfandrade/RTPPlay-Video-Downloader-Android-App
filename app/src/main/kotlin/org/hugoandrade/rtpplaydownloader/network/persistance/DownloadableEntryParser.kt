@@ -24,10 +24,10 @@ private constructor() {
             return DownloadableEntry(
                     cursor.getString(cursor.getColumnIndex(Entry.Cols._ID)),
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.URL)),
-                    cursor.getString(cursor.getColumnIndex(Entry.Cols.FILEPATH)),
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.FILENAME)),
+                    cursor.getString(cursor.getColumnIndex(Entry.Cols.FILEPATH)),
                     cursor.getLong(cursor.getColumnIndex(Entry.Cols.FILESIZE)),
-                    cursor.getString(cursor.getColumnIndex(Entry.Cols.THUMBNAIL)),
+                    cursor.getString(cursor.getColumnIndex(Entry.Cols.THUMBNAIL_URL)),
                     DownloadableItemState.values()[cursor.getInt(cursor.getColumnIndex(Entry.Cols.STAGE))],
                     cursor.getInt(cursor.getColumnIndex(Entry.Cols.IS_ARCHIVED)) == 1)
         }
@@ -36,10 +36,10 @@ private constructor() {
             return DownloadableEntry(
                     downloadableItem.id,
                     downloadableItem.url,
-                    downloadableItem.filename,
+                    downloadableItem.mediaFileName,
                     downloadableItem.filepath,
                     downloadableItem.fileSize,
-                    downloadableItem.thumbnailPath,
+                    downloadableItem.thumbnailUrl,
                     downloadableItem.state,
                     downloadableItem.isArchived)
         }
@@ -58,11 +58,11 @@ private constructor() {
 
             return DownloadableItem(
                     downloadableEntry.id,
-                    downloadableEntry.urlString,
-                    downloadableEntry.filename,
-                    downloadableEntry.filepath,
+                    downloadableEntry.url,
+                    downloadableEntry.mediaFileName,
+                    downloadableEntry.mediaUrl,
                     downloadableEntry.filesize,
-                    downloadableEntry.thumbnail,
+                    downloadableEntry.thumbnailUrl,
                     downloadableEntry.state,
                     downloadableEntry.isArchived)
         }
@@ -70,11 +70,11 @@ private constructor() {
         fun format(downloadableEntry: DownloadableEntry): ContentValues {
             val values = ContentValues()
             values.put(Entry.Cols._ID, downloadableEntry.id)
-            values.put(Entry.Cols.URL, downloadableEntry.urlString)
-            values.put(Entry.Cols.FILEPATH, downloadableEntry.filepath)
-            values.put(Entry.Cols.FILENAME, downloadableEntry.filename)
+            values.put(Entry.Cols.URL, downloadableEntry.url)
+            values.put(Entry.Cols.FILEPATH, downloadableEntry.mediaUrl)
+            values.put(Entry.Cols.FILENAME, downloadableEntry.mediaFileName)
             values.put(Entry.Cols.FILESIZE, downloadableEntry.filesize)
-            values.put(Entry.Cols.THUMBNAIL, downloadableEntry.thumbnail)
+            values.put(Entry.Cols.THUMBNAIL_URL, downloadableEntry.thumbnailUrl)
             values.put(Entry.Cols.STAGE, downloadableEntry.state?.ordinal)
             values.put(Entry.Cols.IS_ARCHIVED, downloadableEntry.isArchived)
             return values

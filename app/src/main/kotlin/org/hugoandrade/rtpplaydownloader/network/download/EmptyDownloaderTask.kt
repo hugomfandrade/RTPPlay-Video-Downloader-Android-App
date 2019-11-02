@@ -2,7 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 class EmptyDownloaderTask : DownloaderTaskBase() {
 
-    override fun getVideoFileName(urlString: String, videoFile: String?): String {
+    override fun getMediaFileName(urlString: String, videoFile: String?): String {
 
         return null.toString()
     }
