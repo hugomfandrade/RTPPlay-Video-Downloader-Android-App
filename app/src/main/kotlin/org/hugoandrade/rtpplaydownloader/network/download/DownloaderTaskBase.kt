@@ -18,8 +18,8 @@ abstract class DownloaderTaskBase {
 
     var url: String? = null
     var mediaUrl: String? = null
-    var mediaFileName: String? = null
     var thumbnailUrl: String? = null
+    var filename: String? = null
     var isDownloading : Boolean = false
 
     lateinit var mDownloaderTaskListener: DownloaderTaskListener
@@ -57,7 +57,7 @@ abstract class DownloaderTaskBase {
         mDownloaderTaskListener = listener
 
         if (DevConstants.simDownload) {
-            val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), mediaFileName)
+            val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename)
             mDownloaderTaskListener.downloadStarted(f)
             var progress = 0L
             var size = 1024L
@@ -92,6 +92,7 @@ abstract class DownloaderTaskBase {
         var inputStream: InputStream? = null
 
         try {
+            System.err.println("DOWNLOADING = " + mediaUrl)
             u = URL(mediaUrl)
             inputStream = u.openStream()
             val huc = u.openConnection() as HttpURLConnection //to know the size of video
@@ -102,7 +103,7 @@ abstract class DownloaderTaskBase {
             }
 
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            val f = File(storagePath, mediaFileName)
+            val f = File(storagePath, filename)
             if (MediaUtils.doesMediaFileExist(f)) {
                 isDownloading = false
                 mDownloaderTaskListener.downloadFailed("file with same name already exists")

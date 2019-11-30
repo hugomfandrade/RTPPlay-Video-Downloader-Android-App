@@ -46,7 +46,7 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
                     val lastDot = originalFilename.lastIndexOf(".")
                     val preFilename = originalFilename.substring(0, lastDot)
                     val extFilename = originalFilename.substring(lastDot, originalFilename.length)
-                    task.mediaFileName = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
+                    task.filename = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
                 }
                 tasks.add(task)
             }

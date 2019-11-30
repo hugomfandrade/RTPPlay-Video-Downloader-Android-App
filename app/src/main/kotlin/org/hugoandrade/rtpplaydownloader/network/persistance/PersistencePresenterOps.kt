@@ -1,30 +1,31 @@
 package org.hugoandrade.rtpplaydownloader.network.persistance
 
 import org.hugoandrade.rtpplaydownloader.common.ContextView
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 
 interface PersistencePresenterOps : ContextView {
 
-    fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+    fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
         //No-op
     }
 
-    fun onInsertDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    fun onDownloadableItemInserted(downloadableItem: DownloadableItem?) {
         //No-op
     }
 
-    fun onDeleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+    fun onDownloadableItemsDeleted(downloadableItems: List<DownloadableItem>) {
         //No-op
     }
 
-    fun onDeleteDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    fun onDownloadableItemDeleted(downloadableItem: DownloadableItem?) {
         //No-op
     }
 
-    fun onUpdateDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    fun onDownloadableItemUpdated(downloadableItem: DownloadableItem?) {
         //No-op
     }
 
-    fun onResetDatabase(wasSuccessfullyDeleted: Boolean) {
+    fun onDatabaseReset(wasSuccessfullyDeleted: Boolean) {
         //No-op
     }
 }

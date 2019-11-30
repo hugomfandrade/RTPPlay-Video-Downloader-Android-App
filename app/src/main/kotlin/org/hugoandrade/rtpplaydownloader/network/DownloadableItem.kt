@@ -3,61 +3,39 @@ package org.hugoandrade.rtpplaydownloader.network
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.utils.ListenerSet
 import java.io.File
 
-class DownloadableItem :
-        DownloaderTaskListener,
-        DownloadableItemStateChangeSupport {
+class DownloadableItem(var id: Int,// url
+                       val url: String,
+                       val mediaUrl: String?,// name
+                       val thumbnailUrl: String?,
+                       val filename: String?,// local
+                       var filepath: String?,
+                       var filesize: Long?,// url
+                       var state: DownloadableItemState?,
+                       var isArchived: Boolean?) :
+
+        DownloaderTaskListener {
 
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
-
-    var id: String? = null
-    val url: String // url
-    val mediaFileName: String // name
-    val thumbnailUrl: String? // url
-    var state: DownloadableItemState = DownloadableItemState.Start
-    var isArchived : Boolean = false
-
-    var filepath: String? = null // local
-    var fileSize : Long = 0
-    var progress : Float = 0f
-    var progressSize : Long = 0
-
-    // run time
-    var downloadingSpeed : Float = 0f // Per Second
-    var remainingTime : Long = 0 // In Millis
-
-    constructor(id: String?,
-                url: String,
-                mediaFileName: String,
-                filepath: String?,
-                filesize: Long?,
-                thumbnailUrl: String?,
-                state: DownloadableItemState?,
-                isArchived: Boolean?) {
-
-        this.id = id
-        this.url = url
-        this.mediaFileName = mediaFileName
-        this.filepath = filepath
-        this.fileSize = filesize?: 0L
-        this.thumbnailUrl = thumbnailUrl
-        this.state = state ?: DownloadableItemState.Start
-        this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
-        this.isArchived = isArchived ?: false
-    }
-
-    constructor(url: String,
-                mediaFileName: String,
-                thumbnailUrl: String?) :
-        this(null, url, mediaFileName, null, 0, thumbnailUrl, null, false)
 
     companion object {
         const val DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS : Long = 1000 // 1second
     }
 
-    private val listenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
+    // run time
+    var downloadingSpeed : Float = 0f // Per Second
+    var remainingTime : Long = 0 // In Millis
+    var progress : Float = 0f
+    var progressSize : Long = 0
+
+    constructor(url: String,
+                mediaUrl: String,
+                thumbnailUrl: String?,
+                filename: String) :
+            this(-1, url, mediaUrl, thumbnailUrl, filename, null, 0, null, false)
 
     private var oldTimestamp = System.currentTimeMillis()
     private var oldDownloadSize: Long = 0L
@@ -66,7 +44,7 @@ class DownloadableItem :
         this.state = DownloadableItemState.Downloading
 
         this.progressSize = downloadedSize
-        this.fileSize = totalSize
+        this.filesize = totalSize
 
         this.progress = downloadedSize.toFloat() / totalSize.toFloat()
 
@@ -113,66 +91,45 @@ class DownloadableItem :
         Log.e(TAG, message)
     }
 
-    /**
-     * Downloadable Item Stage Change Support
-     */
-    @Volatile
-    private var isFiring = false
+    private val listenerSet : ListenerSet<DownloadableItemState.ChangeListener>  = ListenerSet()
 
-    private val tmpAddListenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
-    private val tmpRemoveListenerSet : HashSet<DownloadableItemStateChangeListener>  = HashSet()
-
-    override fun addDownloadStateChangeListener(downloadableItemStateChangeListener: DownloadableItemStateChangeListener) {
-        if (isFiring) {
-            synchronized(tmpAddListenerSet) {
-                tmpAddListenerSet.add(downloadableItemStateChangeListener)
-            }
-        }
-        else {
-            synchronized(listenerSet) {
-                listenerSet.add(downloadableItemStateChangeListener)
-            }
-        }
+    fun addDownloadStateChangeListener(listener: DownloadableItemState.ChangeListener) {
+        listenerSet.addListener(listener)
     }
 
-    override fun removeDownloadStateChangeListener(downloadableItemStateChangeListener: DownloadableItemStateChangeListener) {
-        if (isFiring) {
-            synchronized(tmpRemoveListenerSet) {
-                tmpRemoveListenerSet.remove(downloadableItemStateChangeListener)
-            }
-        }
-        else {
-            synchronized(listenerSet) {
-                listenerSet.remove(downloadableItemStateChangeListener)
-            }
-        }
+    fun removeDownloadStateChangeListener(listener: DownloadableItemState.ChangeListener) {
+        listenerSet.removeListener(listener)
     }
 
     internal fun fireDownloadStateChange() {
-        isFiring = true
-        synchronized(listenerSet) {
-            listenerSet.forEach(action = { it.onDownloadStateChange(this@DownloadableItem) })
-        }
-        isFiring = false
-        addTmpListeners()
-        removeTmpListeners()
+        while (listenerSet.isLocked){}
+        listenerSet.lock()
+        listenerSet.get().forEach(action = { it.onDownloadStateChange(this@DownloadableItem) })
+        listenerSet.release()
     }
 
-    private fun addTmpListeners() {
-        synchronized(tmpAddListenerSet) {
-            synchronized(listenerSet) {
-                tmpAddListenerSet.forEach(action = { listenerSet.add(it) })
-                tmpAddListenerSet.clear()
-            }
-        }
+    init {
+        this.filesize = filesize?: 0L
+        this.state = state ?: DownloadableItemState.Start
+        this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
+        this.isArchived = isArchived ?: false
     }
 
-    private fun removeTmpListeners() {
-        synchronized(tmpRemoveListenerSet) {
-            synchronized(listenerSet) {
-                tmpRemoveListenerSet.forEach(action = { listenerSet.remove(it) })
-                tmpRemoveListenerSet.clear()
-            }
+
+    object Entry {
+
+        val TABLE_NAME = "DownloadableItem"
+
+        object Cols {
+            val _ID = "_id"
+            val URL = "Url"
+            val MEDIA_URL = "MediaUrl"
+            val THUMBNAIL_URL = "Thumbnail"
+            val FILENAME = "FileName"
+            val FILEPATH = "FilePath"
+            val FILESIZE = "FileSize"
+            val STAGE = "Stage"
+            val IS_ARCHIVED = "IsArchived"
         }
     }
 }

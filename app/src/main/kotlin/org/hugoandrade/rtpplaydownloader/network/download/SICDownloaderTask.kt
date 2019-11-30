@@ -14,7 +14,7 @@ class SICDownloaderTask : DownloaderTaskBase() {
 
         this.url = url
         mediaUrl = getVideoFile(url) ?: return false
-        mediaFileName = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
 
         try {
             URL(mediaUrl)

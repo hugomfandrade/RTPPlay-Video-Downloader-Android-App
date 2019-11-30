@@ -14,7 +14,7 @@ class SAPODownloaderTask : DownloaderTaskBase() {
 
         url = urlString
         mediaUrl = getVideoFile(urlString) ?: return false
-        mediaFileName = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(urlString, mediaUrl))
+        filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(urlString, mediaUrl))
 
         try {
             URL(mediaUrl)

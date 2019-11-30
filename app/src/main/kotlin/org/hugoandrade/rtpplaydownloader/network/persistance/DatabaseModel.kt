@@ -39,16 +39,16 @@ abstract class DatabaseModel {
         persistenceExecutors.shutdownNow()
     }
 
-    fun retrieveAllDownloadableEntries() {
+    fun retrieveAllDownloadableItems() {
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
-            val downloadableItems = ArrayList<DownloadableEntry>()
+            val downloadableItems = ArrayList<DownloadableItem>()
 
-            val cursor = database?.query(DownloadableEntry.Entry.TABLE_NAME,
+            val cursor = database?.query(DownloadableItem.Entry.TABLE_NAME,
                     null,
-                    DownloadableEntry.Entry.Cols.IS_ARCHIVED + " = ?",
+                    DownloadableItem.Entry.Cols.IS_ARCHIVED + " = ?",
                     arrayOf("0"),
                     null,
                     null,
@@ -57,86 +57,81 @@ abstract class DatabaseModel {
             if (cursor != null) {
                 cursor.moveToFirst()
                 while (!cursor.isAfterLast) {
-                    downloadableItems.add(DownloadableEntryParser.parse(cursor))
+                    downloadableItems.add(DownloadableItemParser.parse(cursor))
                     cursor.moveToNext()
                 }
                 // make sure to close the cursor
                 cursor.close()
             }
 
-            mPresenterOps.get()?.onGetAllDownloadableEntries(downloadableItems)
+            mPresenterOps.get()?.onDownloadableItemsRetrieved(downloadableItems)
         }
     }
 
-    fun insertDownloadableEntry(downloadableItem: DownloadableItem) {
+    fun insertDownloadableItem(downloadableItem: DownloadableItem) {
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
-            val c = database?.query(DownloadableEntry.Entry.TABLE_NAME, null, null, null, null, null, null)
-            var d : DownloadableEntry? = null
+            var d : DownloadableItem? = null
 
-            if (c != null) {
-                c.close()
+            // Create a new map of values, where column names are the keys
+            val values = DownloadableItemParser.format(downloadableItem)
+            values.remove(DownloadableItem.Entry.Cols._ID)
 
-                // Create a new map of values, where column names are the keys
-                val values = DownloadableEntryParser.format(DownloadableEntryParser.parse(downloadableItem))
-                values.remove(DownloadableEntry.Entry.Cols._ID)
+            // Insert the new row, returning the primary key value of the new row
+            val newRowId = database?.insert(DownloadableItem.Entry.TABLE_NAME, null, values)
 
-                // Insert the new row, returning the primary key value of the new row
-                val newRowId = database?.insert(DownloadableEntry.Entry.TABLE_NAME, null, values)
+            val cursor = database?.query(DownloadableItem.Entry.TABLE_NAME, null,
+                    DownloadableItem.Entry.Cols._ID + " = ?", arrayOf(newRowId.toString()), null, null, null)
 
-                val cursor = database?.query(DownloadableEntry.Entry.TABLE_NAME, null,
-                        DownloadableEntry.Entry.Cols._ID + " = ?", arrayOf(newRowId.toString()), null, null, null)
-
-                if (cursor != null) {
-                    cursor.moveToFirst()
-                    while (!cursor.isAfterLast) {
-                        val downloadableEntry = DownloadableEntryParser.parse(cursor)
-                        downloadableItem.id = downloadableEntry.id
-                        cursor.close()
-                        d = downloadableEntry
-                        break
-                    }
-                    // make sure to close the cursor
-
+            if (cursor != null) {
+                cursor.moveToFirst()
+                while (!cursor.isAfterLast) {
+                    val downloadableEntry = DownloadableItemParser.parse(cursor)
+                    downloadableItem.id = downloadableEntry.id
                     cursor.close()
+                    d = downloadableEntry
+                    break
                 }
+                // make sure to close the cursor
+
+                cursor.close()
             }
 
-            d?.let { mPresenterOps.get()?.onInsertDownloadableEntry(it) }
+            mPresenterOps.get()?.onDownloadableItemInserted(d)
         }
     }
 
-    fun deleteAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
+    fun deleteAllDownloadableItems(downloadableItems: List<DownloadableItem>) {
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
-            val deletedDownloadableEntries = ArrayList<DownloadableEntry>()
+            val deletedDownloadableEntries = ArrayList<DownloadableItem>()
 
             for (deletedDownloadableEntry in deletedDownloadableEntries) {
                 val nRowsAffected = database?.delete(
-                        DownloadableEntry.Entry.TABLE_NAME,
-                        DownloadableEntry.Entry.Cols._ID + " = ?",
-                        arrayOf(deletedDownloadableEntry.id))
+                        DownloadableItem.Entry.TABLE_NAME,
+                        DownloadableItem.Entry.Cols._ID + " = ?",
+                        arrayOf(deletedDownloadableEntry.id.toString()))
 
                 if (nRowsAffected != 0)
                     deletedDownloadableEntries.add(deletedDownloadableEntry)
             }
 
-            mPresenterOps.get()?.onDeleteAllDownloadableEntries(deletedDownloadableEntries)
+            mPresenterOps.get()?.onDownloadableItemsDeleted(deletedDownloadableEntries)
         }
     }
 
-    fun deleteAllDownloadableEntries() {
+    fun deleteAllDownloadableItem() {
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
-            database?.delete(DownloadableEntry.Entry.TABLE_NAME, null, null)
+            database?.delete(DownloadableItem.Entry.TABLE_NAME, null, null)
 
-            mPresenterOps.get()?.onResetDatabase(true)
+            mPresenterOps.get()?.onDatabaseReset(true)
         }
     }
 
@@ -145,76 +140,41 @@ abstract class DatabaseModel {
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
-            // Create a new map of values, where column names are the keys
-            val downloadableEntry: DownloadableEntry = DownloadableEntryParser.parse(downloadableItem)
-            val values = DownloadableEntryParser.format(downloadableEntry)
-            var ret : DownloadableEntry? = null
+            var ret : DownloadableItem? = null
 
-            if (downloadableEntry.id == null) {
-                ret = downloadableEntry
-            }
-            else {
+            if (downloadableItem.id != -1) {
+                val ids : Array<String> = arrayOf(downloadableItem.id.toString())
 
-                val nRowsAffected = database?.update(
-                        DownloadableEntry.Entry.TABLE_NAME, values,
-                        DownloadableEntry.Entry.Cols._ID + " = ?",
-                        arrayOf(downloadableEntry.id))
+                val rowsAffected = database?.update(
+                        DownloadableItem.Entry.TABLE_NAME,
+                        DownloadableItemParser.format(downloadableItem),
+                        DownloadableItem.Entry.Cols._ID + " = ?", ids)
 
-                if (nRowsAffected != 0) {
-                    ret = downloadableEntry
-                } else {
-                    val cursor = database?.query(DownloadableEntry.Entry.TABLE_NAME,
-                            null,
-                            DownloadableEntry.Entry.Cols._ID + " = ?",
-                            arrayOf(downloadableEntry.id),
-                            null, null, null)
-
-                    if (cursor != null) {
-                        cursor.moveToFirst()
-                        if (!cursor.isAfterLast) {
-                            val d = DownloadableEntryParser.parse(cursor)
-                            cursor.close()
-
-                            d.mediaFileName = downloadableEntry.mediaFileName
-                            d.mediaUrl = downloadableEntry.mediaUrl
-                            d.url = downloadableEntry.url
-                            d.state = downloadableEntry.state
-                            d.isArchived = downloadableEntry.isArchived
-
-                            val rowsAffected = database?.update(
-                                    DownloadableEntry.Entry.TABLE_NAME,
-                                    DownloadableEntryParser.format(d),
-                                    DownloadableEntry.Entry.Cols._ID + " = ?",
-                                    arrayOf(d.id))
-
-                            if (rowsAffected != 0) {
-                                ret = downloadableEntry
-                            }
-                        }
-                    }
+                if (rowsAffected != 0) {
+                    ret = downloadableItem
                 }
             }
 
-            ret?.let { mPresenterOps.get()?.onUpdateDownloadableEntry(it) }
+            mPresenterOps.get()?.onDownloadableItemUpdated(ret)
         }
     }
 
-    fun deleteDownloadableEntry(downloadableEntry: DownloadableEntry) {
+    fun deleteDownloadableItem(downloadableItem: DownloadableItem) {
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             val nRowsAffected = database?.delete(
-                    DownloadableEntry.Entry.TABLE_NAME,
-                    DownloadableEntry.Entry.Cols._ID + " = ?",
-                    arrayOf(downloadableEntry.id))
+                    DownloadableItem.Entry.TABLE_NAME,
+                    DownloadableItem.Entry.Cols._ID + " = ?",
+                    arrayOf(downloadableItem.id.toString()))
 
-            var ret : DownloadableEntry? = null
+            var ret : DownloadableItem? = null
             if (nRowsAffected != 0) {
-                ret = downloadableEntry
+                ret = downloadableItem
             }
 
-            ret?.let { mPresenterOps.get()?.onDeleteDownloadableEntry(it) }
+            mPresenterOps.get()?.onDownloadableItemDeleted(ret)
         }
     }
 
@@ -227,17 +187,17 @@ abstract class DatabaseModel {
             SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
         override fun onCreate(db: SQLiteDatabase) {
-            db.execSQL(CREATE_DB_TABLE_PASSWORD_ENTRY)
+            db.execSQL(CREATE_DB_TABLE_DOWNLOADABLE_ENTRY)
         }
 
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-            db.execSQL("DROP TABLE IF EXISTS " + DownloadableEntry.Entry.TABLE_NAME)
+            db.execSQL("DROP TABLE IF EXISTS " + DownloadableItem.Entry.TABLE_NAME)
             onCreate(db)
         }
 
         override fun onDowngrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
             if (db != null) {
-                db.execSQL("DROP TABLE IF EXISTS " + DownloadableEntry.Entry.TABLE_NAME)
+                db.execSQL("DROP TABLE IF EXISTS " + DownloadableItem.Entry.TABLE_NAME)
                 onCreate(db)
             }
         }
@@ -247,17 +207,18 @@ abstract class DatabaseModel {
             private val TAG = DatabaseHelper::class.java.simpleName
 
             private val DATABASE_NAME = "RTPPlayDownloadAppDB"
-            private val DATABASE_VERSION = 1
+            private val DATABASE_VERSION = 2
 
-            private val CREATE_DB_TABLE_PASSWORD_ENTRY = " CREATE TABLE " + DownloadableEntry.Entry.TABLE_NAME + " (" +
-                    " " + DownloadableEntry.Entry.Cols._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    " " + DownloadableEntry.Entry.Cols.URL + " TEXT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.FILENAME + " TEXT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.FILEPATH + " TEXT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.FILESIZE + " TEXT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.THUMBNAIL_URL + " TEXT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.STAGE + " TEXT NULL, " +
-                    " " + DownloadableEntry.Entry.Cols.IS_ARCHIVED + " INTEGER NULL " +
+            private val CREATE_DB_TABLE_DOWNLOADABLE_ENTRY = " CREATE TABLE " + DownloadableItem.Entry.TABLE_NAME + " (" +
+                    " " + DownloadableItem.Entry.Cols._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    " " + DownloadableItem.Entry.Cols.URL + " TEXT NULL, " +
+                    " " + DownloadableItem.Entry.Cols.MEDIA_URL + " TEXT NULL, " +
+                    " " + DownloadableItem.Entry.Cols.THUMBNAIL_URL + " TEXT NULL, " +
+                    " " + DownloadableItem.Entry.Cols.FILENAME + " TEXT NULL, " +
+                    " " + DownloadableItem.Entry.Cols.FILEPATH + " TEXT NULL, " +
+                    " " + DownloadableItem.Entry.Cols.FILESIZE + " TEXT NULL, " +
+                    " " + DownloadableItem.Entry.Cols.STAGE + " TEXT NULL, " +
+                    " " + DownloadableItem.Entry.Cols.IS_ARCHIVED + " INTEGER NULL " +
                     " );"
         }
     }

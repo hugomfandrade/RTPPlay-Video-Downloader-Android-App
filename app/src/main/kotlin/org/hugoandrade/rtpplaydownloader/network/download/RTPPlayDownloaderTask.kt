@@ -15,7 +15,7 @@ open class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
         url = urlString
         mediaUrl = getVideoFile(urlString) ?: return false
-        mediaFileName = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(urlString, mediaUrl))
+        filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(urlString, mediaUrl))
         thumbnailUrl = getThumbnailPath(urlString)
 
         try {

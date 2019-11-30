@@ -316,7 +316,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
                     override fun onDownload(tasks : ArrayList<DownloaderTaskBase>) {
                         tasks.forEach(action = { task ->
-                            val filename: String? = task.mediaFileName
+                            val filename: String? = task.filename
                             if (filename != null) {
                                 FilenameLockerAdapter.instance.putUnremovable(filename)
                             }
@@ -410,15 +410,15 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 })
     }
 
-    private val uploadHistoryMap : HashMap<String, DownloadableItemAction> = HashMap()
+    private val uploadHistoryMap : HashMap<Int, DownloadableItemAction> = HashMap()
 
-    private val uploadHistoryListener = object : DownloadableItemStateChangeListener {
+    private val uploadHistoryListener = object : DownloadableItemState.ChangeListener {
 
         override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
             // listen for end of download and show message
             if (downloadableItem.state == DownloadableItemState.End) {
                 runOnUiThread {
-                    val message = getString(R.string.finished_downloading) + " " + downloadableItem.mediaFileName
+                    val message = getString(R.string.finished_downloading) + " " + downloadableItem.filename
                     Log.e(TAG, message)
                     ViewUtils.showSnackBar(binding.root, message)
                 }
@@ -437,7 +437,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     private fun setupUploadHistory(action: DownloadableItemAction) {
 
         val id = action.item.id
-        if (id != null) uploadHistoryMap[id] = action
+        if (id != -1) uploadHistoryMap[id] = action
 
         action.item.addDownloadStateChangeListener(uploadHistoryListener)
     }
