@@ -137,10 +137,16 @@ class DownloadItemsAdapter :
     fun add(downloadableItem: DownloadableItemAction) {
         synchronized(downloadableItemList) {
             if (!downloadableItemList.contains(downloadableItem)) {
+                var pos = 0
+                while(pos < downloadableItemList.size &&
+                        Integer.parseInt(downloadableItem.item.id) <
+                        Integer.parseInt(downloadableItemList[pos].item.id)) {
+                    pos++
+                }
                 downloadableItem.item.addDownloadStateChangeListener(this)
-                downloadableItemList.add(0, downloadableItem)
-                notifyItemInserted(0)
-                notifyItemRangeChanged(0, itemCount)
+                downloadableItemList.add(pos, downloadableItem)
+                notifyItemInserted(pos)
+                notifyItemRangeChanged(pos, itemCount)
             }
         }
     }

@@ -65,13 +65,14 @@ class DownloadManager : IDownloadManager {
                 action.startDownload()
 
                 downloadableItemList.add(action)
+                downloadableItemList.sortedWith(compareBy { it.item.id } )
                 mViewOps.get()?.displayDownloadableItem(action)
             }
 
             override fun onGetAllDownloadableEntries(downloadableEntries: List<DownloadableEntry>) {
                 if (!DevConstants.enablePersistence) return
 
-                val items = DownloadableEntryParser.formatCollection(downloadableEntries)
+                val items : List<DownloadableItem> = DownloadableEntryParser.formatCollection(downloadableEntries)
 
                 val actions : ArrayList<DownloadableItemAction> = ArrayList()
 
@@ -80,7 +81,11 @@ class DownloadManager : IDownloadManager {
 
                         val url= item.url
                         val task : DownloaderTaskBase = FileIdentifier.findHostForSingleTask(url) ?: EmptyDownloaderTask()
-                        task.parseMediaFile(url)
+                        task.url = item.url
+                        task.mediaUrl = item.filepath
+                        task.thumbnailUrl = item.thumbnailUrl
+                        task.mediaFileName = item.mediaFileName
+                        task.isDownloading = false
                         val action = DownloadableItemAction(item, task, downloadExecutors)
                         item.addDownloadStateChangeListener(object : DownloadableItemStateChangeListener {
 
@@ -95,6 +100,7 @@ class DownloadManager : IDownloadManager {
                 }
 
                 downloadableItemList.addAll(actions)
+                downloadableItemList.sortedWith(compareBy { it.item.id } )
                 mViewOps.get()?.displayDownloadableItems(actions)
             }
 
@@ -441,6 +447,7 @@ class DownloadManager : IDownloadManager {
             action.startDownload()
 
             downloadableItemList.add(action)
+            downloadableItemList.sortedWith(compareBy { it.item.id } )
             mViewOps.get()?.displayDownloadableItem(action)
             return
         }
