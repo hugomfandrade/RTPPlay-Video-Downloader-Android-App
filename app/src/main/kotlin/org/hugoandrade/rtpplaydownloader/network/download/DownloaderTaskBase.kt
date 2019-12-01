@@ -28,9 +28,9 @@ abstract class DownloaderTaskBase {
 
     abstract fun isValid(urlString: String) : Boolean
 
-    abstract fun parseMediaFile(urlString: String): Boolean
+    abstract fun parseMediaFile(url: String): Boolean
 
-    abstract fun getMediaFileName(urlString: String, videoFile: String?): String
+    abstract fun getMediaFileName(url: String, videoFile: String?): String
 
     fun downloadMediaFileAsync(listener: DownloaderTaskListener) : Boolean {
         if (isDownloading) {

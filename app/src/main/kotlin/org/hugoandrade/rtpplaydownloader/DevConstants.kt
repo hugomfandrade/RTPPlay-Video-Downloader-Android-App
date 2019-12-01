@@ -16,6 +16,7 @@ interface DevConstants {
 
         const val enablePauseResume = false
         const val enablePersistence = true
+        const val enableSwipe = true
 
         private const val url_1 = "https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe"
         private const val url_2 = "https://www.rtp.pt/play/p5407/barao-negro"
@@ -29,7 +30,8 @@ interface DevConstants {
         private const val url_10 = "https://www.rtp.pt/play/p5986/a-revolucao-silenciosa"
         private const val url_11 = "https://www.rtp.pt/play/p5093/perdidos"
         private const val url_12 = "https://sicradical.pt/programas/cabaret-da-coxa/episodios"
+        private const val url_13 = "https://sicradical.pt/programas/irritacoes/Videos/2019-11-29-Irritacoes---Programa-de-29-de-novembro"
 
-        val url : String? = url_7
+        val url : String? = url_13
     }
 }

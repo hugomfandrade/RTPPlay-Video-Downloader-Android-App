@@ -57,9 +57,7 @@ class DownloadItemsAdapter :
         val downloadableItem: DownloadableItem = downloadableItemList[position].item
 
         if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
-            (holder.binding.downloadItemTitleTextView as TextView).text =
-                    // downloadableItem.id.toString() + ": " +
-                    downloadableItem.filename
+            (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
         }
         if (!holder.binding.downloadItemTitleTextView.isSelected) {
             holder.binding.downloadItemTitleTextView.isSelected = true
@@ -86,7 +84,8 @@ class DownloadItemsAdapter :
             downloadableItem.state == DownloadableItemState.Downloading -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
-                holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
+                holder.binding.downloadProgressTextView.text =
+                        Math.round(downloadableItem.progress * 100f).toString() + "%"
                 holder.binding.downloadProgressTextView.text =
                         MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
                         MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)

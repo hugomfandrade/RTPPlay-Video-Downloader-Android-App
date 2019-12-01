@@ -60,18 +60,17 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         initializeUI()
 
-        val devUrl: String? = DevConstants.url
-        if (devUrl != null) {
-            binding.inputUriEditText.setText(devUrl)
-            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-        }
-        else {
-            ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-        }
+        if (oldDownloadManager == null ) { // is first
+            val devUrl: String? = DevConstants.url
+            if (devUrl != null) {
+                binding.inputUriEditText.setText(devUrl)
+                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+            } else {
+                ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
+            }
 
-        extractActionSendIntentAndUpdateUI(intent)
-
-        populateDownloadItemsRecyclerView()
+            extractActionSendIntentAndUpdateUI(intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -122,7 +121,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
-        if (DevConstants.enablePersistence) {
+        if (DevConstants.enableSwipe) {
             ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
                     0,
                     ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
@@ -149,10 +148,6 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
     }
 
-    private fun populateDownloadItemsRecyclerView() {
-        mDownloadManager.retrieveItemsFromDB()
-    }
-
     override fun displayDownloadableItems(actions: List<DownloadableItemAction>) {
 
         runOnUiThread {
@@ -164,7 +159,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     override fun displayDownloadableItem(action: DownloadableItemAction) {
 
-        setupUploadHistory(action)
+        uploadHistoryMap[action.item.id] = action
+
+        action.item.addDownloadStateChangeListener(changeListener)
 
         runOnUiThread {
             mDownloadItemsAdapter.add(action)
@@ -410,9 +407,11 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 })
     }
 
-    private val uploadHistoryMap : HashMap<Int, DownloadableItemAction> = HashMap()
+    private fun setupDownloadableItemListener(action: DownloadableItemAction) {
 
-    private val uploadHistoryListener = object : DownloadableItemState.ChangeListener {
+    }
+
+    private val changeListener = object : DownloadableItemState.ChangeListener {
 
         override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
             // listen for end of download and show message
@@ -425,20 +424,12 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 downloadableItem.removeDownloadStateChangeListener(this)
 
                 // upload history
-
-                val id = downloadableItem.id?: return
-                val action = uploadHistoryMap[id]?: return
+                val action = uploadHistoryMap[downloadableItem.id]?: return
 
                 VersionUtils.uploadHistory(getActivityContext(), action)
             }
         }
     }
 
-    private fun setupUploadHistory(action: DownloadableItemAction) {
-
-        val id = action.item.id
-        if (id != -1) uploadHistoryMap[id] = action
-
-        action.item.addDownloadStateChangeListener(uploadHistoryListener)
-    }
+    private val uploadHistoryMap : HashMap<Int, DownloadableItemAction> = HashMap()
 }

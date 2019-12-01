@@ -11,12 +11,12 @@ import java.net.URL
 
 open class RTPPlayDownloaderTask : DownloaderTaskBase() {
 
-    override fun parseMediaFile(urlString: String): Boolean {
+    override fun parseMediaFile(url: String): Boolean {
 
-        url = urlString
-        mediaUrl = getVideoFile(urlString) ?: return false
-        filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(urlString, mediaUrl))
-        thumbnailUrl = getThumbnailPath(urlString)
+        this.url = url
+        this.mediaUrl = getVideoFile(url) ?: return false
+        this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        this.thumbnailUrl = getThumbnailPath(url)
 
         try {
             URL(mediaUrl)

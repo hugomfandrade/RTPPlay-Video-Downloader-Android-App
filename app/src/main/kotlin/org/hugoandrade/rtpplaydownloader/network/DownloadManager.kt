@@ -31,7 +31,7 @@ class DownloadManager : IDownloadManager {
     @Suppress("PrivatePropertyName", "unused")
     private val TAG = javaClass.simpleName
 
-    private val downloadableItemList: java.util.ArrayList<DownloadableItemAction> = java.util.ArrayList()
+    private val downloadableItems: ArrayList<DownloadableItemAction> = ArrayList()
 
     private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
@@ -64,8 +64,8 @@ class DownloadManager : IDownloadManager {
                 })
                 action.startDownload()
 
-                downloadableItemList.add(action)
-                downloadableItemList.sortedWith(compareBy { it.item.id } )
+                downloadableItems.add(action)
+                downloadableItems.sortedWith(compareBy { it.item.id } )
                 mViewOps.get()?.displayDownloadableItem(action)
             }
 
@@ -97,22 +97,22 @@ class DownloadManager : IDownloadManager {
                     }
                 }
 
-                downloadableItemList.addAll(actions)
-                downloadableItemList.sortedWith(compareBy { it.item.id } )
+                this@DownloadManager.downloadableItems.addAll(actions)
+                this@DownloadManager.downloadableItems.sortedWith(compareBy { it.item.id } )
                 mViewOps.get()?.displayDownloadableItems(actions)
             }
 
             override fun onDownloadableItemsDeleted(downloadableItems: List<DownloadableItem>) {
                 if (!DevConstants.enablePersistence) return
 
-                downloadableItemList.clear()
+                this@DownloadManager.downloadableItems.clear()
                 mViewOps.get()?.displayDownloadableItems(ArrayList())
             }
 
             override fun onDatabaseReset(wasSuccessfullyDeleted : Boolean){
                 if (!DevConstants.enablePersistence) return
 
-                downloadableItemList.clear()
+                downloadableItems.clear()
                 mViewOps.get()?.displayDownloadableItems(ArrayList())
             }
 
@@ -124,12 +124,14 @@ class DownloadManager : IDownloadManager {
                 return mViewOps.get()?.getApplicationContext()
             }
         })
+
+        retrieveItemsFromDB()
     }
 
     override fun onConfigurationChanged(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
 
-        mViewOps.get()?.displayDownloadableItems(downloadableItemList)
+        mViewOps.get()?.displayDownloadableItems(downloadableItems)
     }
 
     override fun onDestroy() {
@@ -450,8 +452,8 @@ class DownloadManager : IDownloadManager {
             val action = DownloadableItemAction(item, task, downloadExecutors)
             action.startDownload()
 
-            downloadableItemList.add(action)
-            downloadableItemList.sortedWith(compareBy { it.item.id } )
+            downloadableItems.add(action)
+            downloadableItems.sortedWith(compareBy { it.item.id } )
 
             mViewOps.get()?.displayDownloadableItem(action)
         }
