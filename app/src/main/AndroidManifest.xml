@@ -19,6 +19,12 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
+        <service
+            android:name=".network.DownloadService"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.FOREGROUND_SERVICE" />
+
         <activity android:name=".MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTask">

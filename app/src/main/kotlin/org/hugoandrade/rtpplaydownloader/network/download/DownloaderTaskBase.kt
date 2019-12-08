@@ -50,9 +50,11 @@ abstract class DownloaderTaskBase {
         return true
     }
 
+    @Synchronized
     open fun downloadMediaFile(listener: DownloaderTaskListener) {
 
         isDownloading = true
+        doCanceling = false
 
         mDownloaderTaskListener = listener
 
@@ -60,7 +62,7 @@ abstract class DownloaderTaskBase {
             val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename)
             mDownloaderTaskListener.downloadStarted(f)
             var progress = 0L
-            var size = 1024L
+            val size = 1024L
             while (progress < size) {
                 if (doCanceling) {
                     mDownloaderTaskListener.downloadFailed("Downloading was cancelled")
@@ -92,7 +94,6 @@ abstract class DownloaderTaskBase {
         var inputStream: InputStream? = null
 
         try {
-            System.err.println("DOWNLOADING = " + mediaUrl)
             u = URL(mediaUrl)
             inputStream = u.openStream()
             val huc = u.openConnection() as HttpURLConnection //to know the size of video

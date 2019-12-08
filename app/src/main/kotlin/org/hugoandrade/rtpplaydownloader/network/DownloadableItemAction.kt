@@ -7,8 +7,7 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 
 class DownloadableItemAction(val item : DownloadableItem,
-                             internal val downloaderTask: DownloaderTaskBase,
-                             private val downloadExecutors: ExecutorService) :
+                             internal val downloaderTask: DownloaderTaskBase) :
 
         IDownloadableItemAction,
         DownloaderTaskListener {
@@ -32,10 +31,6 @@ class DownloadableItemAction(val item : DownloadableItem,
             item.state = DownloadableItemState.Downloading
 
             item.fireDownloadStateChange()
-
-            downloadExecutors.execute {
-                downloaderTask.downloadMediaFile(this@DownloadableItemAction)
-            }
         }
     }
 
@@ -56,18 +51,20 @@ class DownloadableItemAction(val item : DownloadableItem,
     }
 
     override fun refresh() {
-        if (downloaderTask.isDownloading) {
-            cancel()
-        }
-        MediaUtils.deleteMediaFileIfExist(item)
-        startDownload()
+        actionListener.forEach { l -> l.onRefresh(this)}
     }
 
-    private var actionListener: DownloadableItemActionListener? = null
+    private val actionListener: HashSet<DownloadableItemActionListener> = HashSet()
+
+    fun addActionListener(listener: DownloadableItemActionListener) {
+        if (!actionListener.contains(listener)) {
+            actionListener.add(listener)
+        }
+    }
 
     override fun play() {
         if (!downloaderTask.isDownloading && item.state == DownloadableItemState.End) {
-            actionListener?.onPlay(this)
+            actionListener.forEach { l -> l.onPlay(this)}
         }
     }
 

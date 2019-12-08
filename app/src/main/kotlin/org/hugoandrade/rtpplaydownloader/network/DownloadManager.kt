@@ -1,9 +1,16 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.net.Uri
+import android.os.IBinder
+import android.support.v4.content.ContextCompat
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
-import android.content.Context
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
@@ -12,10 +19,12 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
-import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.network.persistance.DatabaseModel
 import org.hugoandrade.rtpplaydownloader.network.persistance.PersistencePresenterOps
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.ExecutionException
@@ -23,8 +32,8 @@ import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class DownloadManager : IDownloadManager {
 
+class DownloadManager : IDownloadManager {
     /**
      * Debugging tag used by the Android logger.
      */
@@ -36,12 +45,15 @@ class DownloadManager : IDownloadManager {
     private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
     private val parsingExecutors = Executors.newFixedThreadPool(DevConstants.nParsingThreads)
-    private val downloadExecutors = Executors.newFixedThreadPool(DevConstants.nDownloadThreads)
 
     private lateinit var mDatabaseModel: DatabaseModel
 
+    private var downloadService: DownloadService.DownloadServiceBinder? = null
+
     override fun onCreate(viewOps: DownloadManagerViewOps) {
         mViewOps = WeakReference(viewOps)
+
+        startService()
 
         mDatabaseModel = object : DatabaseModel(){}
         mDatabaseModel.onCreate(object : PersistencePresenterOps {
@@ -56,13 +68,15 @@ class DownloadManager : IDownloadManager {
                 val filename = downloadableItem.filename ?: return
                 val task = persistenceMap[filename] ?: return
 
-                val action = DownloadableItemAction(downloadableItem, task, downloadExecutors)
+                val action = DownloadableItemAction(downloadableItem, task)
+                action.addActionListener(actionListener)
                 downloadableItem.addDownloadStateChangeListener(object :DownloadableItemState.ChangeListener {
                     override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
                         mDatabaseModel.updateDownloadableEntry(downloadableItem)
                     }
                 })
-                action.startDownload()
+
+                downloadService?.startDownload(action)
 
                 downloadableItems.add(action)
                 downloadableItems.sortedWith(compareBy { it.item.id } )
@@ -84,7 +98,8 @@ class DownloadManager : IDownloadManager {
                         task.thumbnailUrl = item.thumbnailUrl
                         task.filename = item.filename
                         task.isDownloading = false
-                        val action = DownloadableItemAction(item, task, downloadExecutors)
+                        val action = DownloadableItemAction(item, task)
+                        action.addActionListener(actionListener)
                         item.addDownloadStateChangeListener(object : DownloadableItemState.ChangeListener {
 
                             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
@@ -94,12 +109,25 @@ class DownloadManager : IDownloadManager {
                             }
                         })
                         actions.add(action)
+
+                        var isPresent = false
+                        for (i in this@DownloadManager.downloadableItems.size - 1 downTo 0) {
+                            if (this@DownloadManager.downloadableItems[i].item.id == action.item.id) {
+                                isPresent = true
+                                break
+                            }
+                        }
+
+                        if (!isPresent) {
+                            this@DownloadManager.downloadableItems.add(action)
+                            this@DownloadManager.downloadableItems.sortedWith(compareBy { it.item.id } )
+                            mViewOps.get()?.displayDownloadableItem(action)
+                        }
                     }
                 }
 
-                this@DownloadManager.downloadableItems.addAll(actions)
                 this@DownloadManager.downloadableItems.sortedWith(compareBy { it.item.id } )
-                mViewOps.get()?.displayDownloadableItems(actions)
+                mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
             }
 
             override fun onDownloadableItemsDeleted(downloadableItems: List<DownloadableItem>) {
@@ -136,8 +164,52 @@ class DownloadManager : IDownloadManager {
 
     override fun onDestroy() {
         parsingExecutors.shutdownNow()
-        downloadExecutors.shutdownNow()
         mDatabaseModel.onDestroy()
+
+        stopService()
+    }
+
+    private fun startService() {
+        val context = mViewOps.get()?.getApplicationContext() ?: return
+
+        val serviceIntent = Intent(context, DownloadService::class.java)
+        ContextCompat.startForegroundService(context, serviceIntent)
+        context.bindService(serviceIntent, mConnection, 0)
+    }
+
+    private fun stopService() {
+        val context = mViewOps.get()?.getApplicationContext() ?: return
+        context.unbindService(mConnection)
+    }
+
+    private val mConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            downloadService = (service as DownloadService.DownloadServiceBinder)
+
+            val downloadService = this@DownloadManager.downloadService
+            val activeItemActions : ArrayList<DownloadableItemAction> =  downloadService?.getItemActions()?:return
+
+            for (itemAction in activeItemActions) {
+                for (i in downloadableItems.size - 1 downTo 0) {
+                    if (downloadableItems[i].item.id == itemAction.item.id) {
+                        downloadableItems.removeAt(i)
+                        downloadableItems.add(itemAction)
+                        break
+                    }
+                }
+
+                if (!downloadableItems.contains(itemAction)) {
+                    downloadableItems.add(itemAction)
+                }
+            }
+            downloadableItems.sortedWith(compareBy { it.item.id } )
+
+            mViewOps.get()?.displayDownloadableItems(downloadableItems)
+        }
+
+        override fun onServiceDisconnected(className: ComponentName) {
+            downloadService = null
+        }
     }
 
     override fun parseUrl(url: String) : ParseFuture {
@@ -449,8 +521,9 @@ class DownloadManager : IDownloadManager {
             mDatabaseModel.insertDownloadableItem(item)
         }
         else {
-            val action = DownloadableItemAction(item, task, downloadExecutors)
-            action.startDownload()
+            val action = DownloadableItemAction(item, task)
+            action.addActionListener(actionListener)
+            downloadService?.startDownload(action)
 
             downloadableItems.add(action)
             downloadableItems.sortedWith(compareBy { it.item.id } )
@@ -475,5 +548,28 @@ class DownloadManager : IDownloadManager {
         if (!DevConstants.enablePersistence) return
         downloadableItem.isArchived = true
         mDatabaseModel.updateDownloadableEntry(downloadableItem)
+    }
+
+    private val actionListener: DownloadableItemActionListener = object : DownloadableItemActionListener {
+        override fun onPlay(action: DownloadableItemAction) {
+            try {
+                val filepath = action.item.filepath
+                if (MediaUtils.doesMediaFileExist(action.item)) {
+                    mViewOps.get()?.getApplicationContext()?.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+                                    .setDataAndType(Uri.parse(filepath), "video/mp4"))
+                } else {
+                    ViewUtils.showToast(
+                            mViewOps.get()?.getActivityContext(),
+                            mViewOps.get()?.getActivityContext()?.getString(R.string.file_not_found))
+                }
+            }catch (ignored : Exception) {}
+        }
+
+        override fun onRefresh(action: DownloadableItemAction) {
+            action.cancel()
+            MediaUtils.deleteMediaFileIfExist(action.item)
+            downloadService?.startDownload(action)
+        }
     }
 }

@@ -170,16 +170,21 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     }
 
     private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {
+        if (intent == null) return
 
-        if (intent != null && checkNotNull(intent.action?.equals(Intent.ACTION_SEND))) {
-            val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)
-            binding.inputUriEditText.setText(url)
-            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+        val action: String = intent.action?: return
 
-            ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-            binding.inputUriEditText.clearFocus()
-            doDownload(binding.inputUriEditText.text.toString())
-        }
+        if (action == Intent.ACTION_SEND) return
+        if (!intent.hasExtra(Intent.EXTRA_TEXT)) return
+
+        val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)?: return
+
+        binding.inputUriEditText.setText(url)
+        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+
+        ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
+        binding.inputUriEditText.clearFocus()
+        doDownload(binding.inputUriEditText.text.toString())
     }
 
     private fun toggleClearTextButton() {
