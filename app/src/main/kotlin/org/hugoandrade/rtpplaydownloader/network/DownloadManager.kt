@@ -119,6 +119,9 @@ class DownloadManager : IDownloadManager {
                         }
 
                         if (!isPresent) {
+                            if (action.item.state == DownloadableItemState.Downloading) {
+                                action.item.state = DownloadableItemState.Failed
+                            }
                             this@DownloadManager.downloadableItems.add(action)
                             this@DownloadManager.downloadableItems.sortedWith(compareBy { it.item.id } )
                             mViewOps.get()?.displayDownloadableItem(action)
