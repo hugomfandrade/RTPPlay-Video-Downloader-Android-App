@@ -149,6 +149,7 @@ class DownloadItemsAdapter :
                 downloadableItemList.add(pos, downloadableItem)
                 notifyItemInserted(pos)
                 notifyItemRangeChanged(pos, itemCount)
+                recyclerView?.scrollToPosition(0)
             }
         }
     }

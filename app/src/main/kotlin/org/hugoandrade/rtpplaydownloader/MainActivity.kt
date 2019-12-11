@@ -153,6 +153,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         runOnUiThread {
             mDownloadItemsAdapter.addAll(actions)
             mDownloadItemsAdapter.notifyDataSetChanged()
+            mDownloadItemsRecyclerView.scrollToPosition(0)
             binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }
@@ -174,7 +175,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         val action: String = intent.action?: return
 
-        if (action == Intent.ACTION_SEND) return
+        if (action != Intent.ACTION_SEND) return
         if (!intent.hasExtra(Intent.EXTRA_TEXT)) return
 
         val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)?: return
