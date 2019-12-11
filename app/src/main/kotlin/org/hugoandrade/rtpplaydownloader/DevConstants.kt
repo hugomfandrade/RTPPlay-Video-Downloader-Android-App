@@ -32,6 +32,6 @@ interface DevConstants {
         private const val url_12 = "https://sicradical.pt/programas/cabaret-da-coxa/episodios"
         private const val url_13 = "https://sicradical.pt/programas/irritacoes/Videos/2019-11-29-Irritacoes---Programa-de-29-de-novembro"
 
-        val url : String? = url_13
+        val url : String? = null
     }
 }
