@@ -1,13 +1,11 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
-import java.util.concurrent.ExecutorService
 
 class DownloadableItemAction(val item : DownloadableItem,
-                             internal val downloaderTask: DownloaderTaskBase) :
+                             internal val downloadTask: DownloaderTask) :
 
         IDownloadableItemAction,
         DownloaderTaskListener {
@@ -16,7 +14,7 @@ class DownloadableItemAction(val item : DownloadableItem,
 
     override fun startDownload() {
 
-        val downloading : Boolean = downloaderTask.isDownloading
+        val downloading : Boolean = downloadTask.isDownloading
 
         if (downloading) {
             item.state = DownloadableItemState.Failed
@@ -35,18 +33,18 @@ class DownloadableItemAction(val item : DownloadableItem,
     }
 
     override fun cancel() {
-        downloaderTask.cancel()
+        downloadTask.cancel()
         item.state = DownloadableItemState.Failed
         item.fireDownloadStateChange()
     }
 
     override fun resume() {
-        downloaderTask.resume()
+        downloadTask.resume()
         item.fireDownloadStateChange()
     }
 
     override fun pause() {
-        downloaderTask.pause()
+        downloadTask.pause()
         item.fireDownloadStateChange()
     }
 
@@ -63,13 +61,13 @@ class DownloadableItemAction(val item : DownloadableItem,
     }
 
     override fun play() {
-        if (!downloaderTask.isDownloading && item.state == DownloadableItemState.End) {
+        if (!downloadTask.isDownloading && item.state == DownloadableItemState.End) {
             actionListener.forEach { l -> l.onPlay(this)}
         }
     }
 
     fun isDownloading(): Boolean {
-        return downloaderTask.isDownloading
+        return downloadTask.isDownloading
     }
 
     override fun onProgress(downloadedSize: Long, totalSize : Long) {

@@ -63,7 +63,7 @@ class DownloadService : Service() {
 
         if (intent.hasExtra(DELETE_KEY)) {
             downloadMap.values.forEach{
-                a -> a.downloaderTask.cancel()
+                a -> a.downloadTask.cancel()
             }
         }
 
@@ -168,7 +168,7 @@ class DownloadService : Service() {
         })
 
         downloadExecutors.execute {
-            downloadableItemAction.downloaderTask.downloadMediaFile(downloadableItemAction)
+            downloadableItemAction.downloadTask.downloadMediaFile()
             downloadMap.remove(downloadableItemAction.item.id)
 
             updateNotification()

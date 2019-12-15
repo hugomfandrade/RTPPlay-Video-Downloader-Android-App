@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.download
+package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
@@ -8,13 +8,13 @@ import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class SAPODownloaderTask : DownloaderTaskBase() {
+class SAPOParsingTask : ParsingTaskBase() {
 
-    override fun parseMediaFile(urlString: String): Boolean {
+    override fun parseMediaFile(url: String): Boolean {
 
-        url = urlString
-        mediaUrl = getVideoFile(urlString) ?: return false
-        filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(urlString, mediaUrl))
+        this.url = url
+        mediaUrl = getVideoFile(url) ?: return false
+        filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
 
         try {
             URL(mediaUrl)
@@ -96,15 +96,15 @@ class SAPODownloaderTask : DownloaderTaskBase() {
         return null
     }
 
-    override fun getMediaFileName(urlString: String, videoFile: String?): String {
+    override fun getMediaFileName(url: String, videoFile: String?): String {
 
         try {
             val doc: Document?
 
             try {
-                doc = Jsoup.connect(urlString).timeout(10000).get()
+                doc = Jsoup.connect(url).timeout(10000).get()
             } catch (ignored: SocketTimeoutException) {
-                return videoFile ?: urlString
+                return videoFile ?: url
             }
 
 
@@ -122,6 +122,6 @@ class SAPODownloaderTask : DownloaderTaskBase() {
             e.printStackTrace()
         }
 
-        return videoFile?:urlString
+        return videoFile?:url
     }
 }

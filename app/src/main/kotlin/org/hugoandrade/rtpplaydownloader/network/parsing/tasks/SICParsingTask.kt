@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.download
+package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
@@ -9,7 +9,7 @@ import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class SICDownloaderTask : DownloaderTaskBase() {
+class SICParsingTask : ParsingTaskBase() {
 
     override fun parseMediaFile(url: String): Boolean {
 
@@ -93,15 +93,15 @@ class SICDownloaderTask : DownloaderTaskBase() {
         return null
     }
 
-    override fun getMediaFileName(urlString: String, videoFile: String?): String {
+    override fun getMediaFileName(url: String, videoFile: String?): String {
 
         try {
             val doc: Document?
 
             try {
-                doc = Jsoup.connect(urlString).timeout(10000).get()
+                doc = Jsoup.connect(url).timeout(10000).get()
             } catch (ignored: SocketTimeoutException) {
-                return videoFile ?: urlString
+                return videoFile ?: url
             }
 
             val videoElements = doc?.getElementsByTag("video")
@@ -141,7 +141,7 @@ class SICDownloaderTask : DownloaderTaskBase() {
             e.printStackTrace()
         }
 
-        return videoFile?:urlString
+        return videoFile?:url
     }
 
     private fun getThumbnailPath(urlString: String): String? {

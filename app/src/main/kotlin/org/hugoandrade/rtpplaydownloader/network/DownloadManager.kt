@@ -10,10 +10,10 @@ import android.support.v4.content.ContextCompat
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderMultiPartTaskBase
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
-import org.hugoandrade.rtpplaydownloader.network.download.EmptyDownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.FileIdentifier
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
@@ -30,7 +30,6 @@ import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 
 class DownloadManager : IDownloadManager {
@@ -65,10 +64,11 @@ class DownloadManager : IDownloadManager {
                     return
                 }
 
+                val mediaUrl = downloadableItem.mediaUrl ?: return
                 val filename = downloadableItem.filename ?: return
-                val task = persistenceMap[filename] ?: return
 
-                val action = DownloadableItemAction(downloadableItem, task)
+                val downloaderTask = DownloaderTask(mediaUrl, filename, downloadableItem)
+                val action = DownloadableItemAction(downloadableItem, downloaderTask)
                 action.addActionListener(actionListener)
                 downloadableItem.addDownloadStateChangeListener(object :DownloadableItemState.ChangeListener {
                     override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
@@ -91,15 +91,6 @@ class DownloadManager : IDownloadManager {
                 downloadableItems.forEach{ item ->
                     run {
 
-                        val url= item.url
-                        val task : DownloaderTaskBase = FileIdentifier.findHostForSingleTask(url) ?: EmptyDownloaderTask()
-                        task.url = item.url
-                        task.mediaUrl = item.mediaUrl
-                        task.thumbnailUrl = item.thumbnailUrl
-                        task.filename = item.filename
-                        task.isDownloading = false
-                        val action = DownloadableItemAction(item, task)
-                        action.addActionListener(actionListener)
                         item.addDownloadStateChangeListener(object : DownloadableItemState.ChangeListener {
 
                             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
@@ -108,6 +99,10 @@ class DownloadManager : IDownloadManager {
                                 mDatabaseModel.updateDownloadableEntry(downloadableItem)
                             }
                         })
+
+                        val task = DownloaderTask(item.mediaUrl?:"", item.filename?:"", item)
+                        val action = DownloadableItemAction(item, task)
+                        action.addActionListener(actionListener)
                         actions.add(action)
 
                         var isPresent = false
@@ -235,13 +230,13 @@ class DownloadManager : IDownloadManager {
                     return
                 }
 
-                val downloaderTask: DownloaderTaskBase? = FileIdentifier.findHost(url)
+                val parsingTask: ParsingTaskBase? = ParsingIdentifier.findHost(url)
                 val paginationTask : PaginationParserTaskBase? = PaginationIdentifier.findHost(url)
 
-                if (downloaderTask == null && paginationTask != null) {
+                if (parsingTask == null && paginationTask != null) {
 
                     try {
-                        val f : ArrayList<DownloaderTaskBase>? = parsePagination(url, paginationTask).get()
+                        val f : ArrayList<ParsingTaskBase>? = parsePagination(url, paginationTask).get()
                         if (f != null) {
                             future.success(ParsingData(f, paginationTask))
                         }
@@ -256,12 +251,12 @@ class DownloadManager : IDownloadManager {
                     return
                 }
 
-                if (downloaderTask == null) {
+                if (parsingTask == null) {
                     future.failed("is not a valid website")
                     return
                 }
 
-                val parsing : Boolean = downloaderTask.parseMediaFile(url)
+                val parsing : Boolean = parsingTask.parseMediaFile(url)
 
                 if (!parsing) {
                     future.failed("could not find filetype")
@@ -269,15 +264,15 @@ class DownloadManager : IDownloadManager {
                 }
 
                 val isPaginationUrlTheSameOfTheOriginalUrl : Boolean =
-                        isPaginationUrlTheSameOfTheOriginalUrl(url, downloaderTask, paginationTask)
+                        isPaginationUrlTheSameOfTheOriginalUrl(url, parsingTask, paginationTask)
 
                 paginationTask?.setPaginationComplete(isPaginationUrlTheSameOfTheOriginalUrl)
 
-                if (downloaderTask is DownloaderMultiPartTaskBase) {
-                    future.success(ParsingData(downloaderTask.tasks, paginationTask))
+                if (parsingTask is ParsingMultiPartTaskBase) {
+                    future.success(ParsingData(parsingTask.tasks, paginationTask))
                 }
                 else {
-                    future.success(ParsingData(downloaderTask, paginationTask))
+                    future.success(ParsingData(parsingTask, paginationTask))
                 }
             }
         })
@@ -300,7 +295,7 @@ class DownloadManager : IDownloadManager {
 
                 val paginationUrls = paginationTask.parsePagination(url)
                 val paginationUrlsProcessed = ArrayList<String>()
-                val paginationDownloadTasks = TreeMap<Double, DownloaderTaskBase>()
+                val paginationDownloadTasks = TreeMap<Double, ParsingTaskBase>()
 
                 if (paginationUrls.size == 0) {
                     future.success(ArrayList(paginationDownloadTasks.values))
@@ -313,7 +308,7 @@ class DownloadManager : IDownloadManager {
 
                         override fun onSuccess(result: ParsingData) {
 
-                            for (task : DownloaderTaskBase in result.tasks) {
+                            for (task : ParsingTaskBase in result.tasks) {
                                 val i : Double = uniqueIndex(paginationUrls, paginationUrl, result.tasks, task)
                                 // Log.e(TAG, "pagination :: " + task.mediaFileName + "::" + i)
                                 // unique index
@@ -329,8 +324,8 @@ class DownloadManager : IDownloadManager {
 
                         private fun uniqueIndex(paginationUrls: ArrayList<String>,
                                                 paginationUrl: String,
-                                                tasks: ArrayList<DownloaderTaskBase>,
-                                                task: DownloaderTaskBase): Double {
+                                                tasks: ArrayList<ParsingTaskBase>,
+                                                task: ParsingTaskBase): Double {
                             return paginationUrls.indexOf(paginationUrl) + ((tasks.indexOf(task) + 1) * 0.1 / tasks.size)
                         }
 
@@ -370,7 +365,7 @@ class DownloadManager : IDownloadManager {
 
                 val paginationUrls = paginationTask.parseMore()
                 val paginationUrlsProcessed = ArrayList<String>()
-                val paginationDownloadTasks = TreeMap<Double, DownloaderTaskBase>()
+                val paginationDownloadTasks = TreeMap<Double, ParsingTaskBase>()
 
                 if (paginationUrls.size == 0) {
                     future.success(ArrayList(paginationDownloadTasks.values))
@@ -383,7 +378,7 @@ class DownloadManager : IDownloadManager {
 
                         override fun onSuccess(result: ParsingData) {
 
-                            for (task : DownloaderTaskBase in result.tasks) {
+                            for (task : ParsingTaskBase in result.tasks) {
                                 val i : Double = uniqueIndex(paginationUrls, paginationUrl, result.tasks, task)
                                 // Log.e(TAG, "pagination :: " + task.mediaFileName + "::" + i)
                                 // unique index
@@ -394,8 +389,8 @@ class DownloadManager : IDownloadManager {
 
                         private fun uniqueIndex(paginationUrls: ArrayList<String>,
                                                 paginationUrl: String,
-                                                tasks: ArrayList<DownloaderTaskBase>,
-                                                task: DownloaderTaskBase): Double {
+                                                tasks: ArrayList<ParsingTaskBase>,
+                                                task: ParsingTaskBase): Double {
                             return paginationUrls.indexOf(paginationUrl) + ((tasks.indexOf(task) + 1) * 0.1 / tasks.size)
                         }
 
@@ -427,7 +422,7 @@ class DownloadManager : IDownloadManager {
     }
 
     private fun isPaginationUrlTheSameOfTheOriginalUrl(url: String,
-                                                       downloaderTask: DownloaderTaskBase,
+                                                       parsingTask: ParsingTaskBase,
                                                        paginationTask: PaginationParserTaskBase?): Boolean {
 
         if (paginationTask == null) {
@@ -440,11 +435,11 @@ class DownloadManager : IDownloadManager {
             return false
         }
 
-        val tasks : ArrayList<DownloaderTaskBase> = if (downloaderTask is DownloaderMultiPartTaskBase) {
-            downloaderTask.tasks
+        val tasks : ArrayList<ParsingTaskBase> = if (parsingTask is ParsingMultiPartTaskBase) {
+            parsingTask.tasks
         }
         else {
-            arrayListOf(downloaderTask)
+            arrayListOf(parsingTask)
         }
 
         if (paginationUrls.size != 1) {
@@ -470,22 +465,22 @@ class DownloadManager : IDownloadManager {
                 return false
             }
 
-            val paginationDownloaderTask: DownloaderTaskBase = FileIdentifier.findHost(p) ?: return false
+            val paginationParsingTask: ParsingTaskBase = ParsingIdentifier.findHost(p) ?: return false
 
-            val parsing : Boolean = paginationDownloaderTask.parseMediaFile(p)
+            val parsing : Boolean = paginationParsingTask.parseMediaFile(p)
 
             if (!parsing) {
                 return false
             }
 
-            if (paginationDownloaderTask is DownloaderMultiPartTaskBase) {
-                paginationDownloaderTask.tasks.forEach { t ->
+            if (paginationParsingTask is ParsingMultiPartTaskBase) {
+                paginationParsingTask.tasks.forEach { t ->
                     val paginationVideoFileName = t.mediaUrl ?: return false
                     paginationVideoFileNames.add(paginationVideoFileName)
                 }
             }
             else {
-                val paginationVideoFileName = paginationDownloaderTask.mediaUrl ?: return false
+                val paginationVideoFileName = paginationParsingTask.mediaUrl ?: return false
                 paginationVideoFileNames.add(paginationVideoFileName)
             }
         })
@@ -510,7 +505,7 @@ class DownloadManager : IDownloadManager {
         return true
     }
 
-    override fun download(task: DownloaderTaskBase)  {
+    override fun download(task: ParsingTaskBase)  {
         val url = task.url?: return
         val mediaUrl = task.mediaUrl?: return
         val filename = task.filename?: return
@@ -519,12 +514,11 @@ class DownloadManager : IDownloadManager {
         val item = DownloadableItem(url, mediaUrl, thumbnailUrl, filename)
 
         if (DevConstants.enablePersistence) {
-            persistenceMap[filename] = task
-
             mDatabaseModel.insertDownloadableItem(item)
         }
         else {
-            val action = DownloadableItemAction(item, task)
+            val downloadTask = DownloaderTask(mediaUrl, filename, item)
+            val action = DownloadableItemAction(item, downloadTask)
             action.addActionListener(actionListener)
             downloadService?.startDownload(action)
 
@@ -534,8 +528,6 @@ class DownloadManager : IDownloadManager {
             mViewOps.get()?.displayDownloadableItem(action)
         }
     }
-
-    private val persistenceMap : HashMap<String, DownloaderTaskBase> = HashMap()
 
     override fun retrieveItemsFromDB() {
         if (!DevConstants.enablePersistence) return

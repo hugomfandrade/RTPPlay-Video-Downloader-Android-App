@@ -12,60 +12,36 @@ import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
 
-abstract class DownloaderTaskBase {
+open class DownloaderTask(private val mediaUrl : String,
+                          private val dirPath : String,
+                          private val filename : String,
+                          private val listener : DownloaderTaskListener) {
 
     val TAG : String = javaClass.simpleName
 
-    var url: String? = null
-    var mediaUrl: String? = null
-    var thumbnailUrl: String? = null
-    var filename: String? = null
-    var isDownloading : Boolean = false
+    constructor(mediaUrl : String,
+                filename : String,
+                listener : DownloaderTaskListener) :
+        this(mediaUrl, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename, listener)
 
-    lateinit var mDownloaderTaskListener: DownloaderTaskListener
+    var isDownloading : Boolean = false
 
     var doCanceling: Boolean = false
 
-    abstract fun isValid(urlString: String) : Boolean
-
-    abstract fun parseMediaFile(url: String): Boolean
-
-    abstract fun getMediaFileName(url: String, videoFile: String?): String
-
-    fun downloadMediaFileAsync(listener: DownloaderTaskListener) : Boolean {
-        if (isDownloading) {
-            return false
-        }
-
-        isDownloading = true
-
-        object : Thread("Thread_download_media_file_" + mediaUrl) {
-            override fun run() {
-
-                downloadMediaFile(listener)
-                isDownloading = false
-            }
-        }.start()
-
-        return true
-    }
-
     @Synchronized
-    open fun downloadMediaFile(listener: DownloaderTaskListener) {
+    open fun downloadMediaFile() {
 
         isDownloading = true
         doCanceling = false
 
-        mDownloaderTaskListener = listener
-
         if (DevConstants.simDownload) {
-            val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename)
-            mDownloaderTaskListener.downloadStarted(f)
+            val f = File(dirPath, filename)
+            listener.downloadStarted(f)
             var progress = 0L
             val size = 1024L
             while (progress < size) {
                 if (doCanceling) {
-                    mDownloaderTaskListener.downloadFailed("Downloading was cancelled")
+                    listener.downloadFailed("Downloading was cancelled")
                     isDownloading = false
                     doCanceling = false
                     return
@@ -74,18 +50,18 @@ abstract class DownloaderTaskBase {
                     // paused
 
                     if (doCanceling) {
-                        mDownloaderTaskListener.downloadFailed("Downloading was cancelled")
+                        listener.downloadFailed("Downloading was cancelled")
                         isDownloading = false
                         doCanceling = false
                         return
                     }
                 }
 
-                mDownloaderTaskListener.onProgress(progress, size)
+                listener.onProgress(progress, size)
                 progress += 8
                 Thread.sleep(1000)
             }
-            mDownloaderTaskListener.downloadFinished(f)
+            listener.downloadFinished(f)
             isDownloading = false
             return
         }
@@ -107,10 +83,10 @@ abstract class DownloaderTaskBase {
             val f = File(storagePath, filename)
             if (MediaUtils.doesMediaFileExist(f)) {
                 isDownloading = false
-                mDownloaderTaskListener.downloadFailed("file with same name already exists")
+                listener.downloadFailed("file with same name already exists")
                 return
             }
-            mDownloaderTaskListener.downloadStarted(f)
+            listener.downloadStarted(f)
 
             val fos = FileOutputStream(f)
             val buffer = ByteArray(1024)
@@ -142,19 +118,19 @@ abstract class DownloaderTaskBase {
                         return
                     }
 
-                    mDownloaderTaskListener.onProgress(progress, size)
+                    listener.onProgress(progress, size)
                 }
             }
-            mDownloaderTaskListener.downloadFinished(f)
+            listener.downloadFinished(f)
 
             fos.close()
 
         } catch (mue: MalformedURLException) {
             mue.printStackTrace()
-            mDownloaderTaskListener.downloadFailed("Internal error while downloading")
+            listener.downloadFailed("Internal error while downloading")
         } catch (ioe: IOException) {
             ioe.printStackTrace()
-            mDownloaderTaskListener.downloadFailed("Internal error while downloading")
+            listener.downloadFailed("Internal error while downloading")
         } finally {
             try {
                 inputStream?.close()
@@ -188,7 +164,7 @@ abstract class DownloaderTaskBase {
             }
             f.delete()
 
-            mDownloaderTaskListener.downloadFailed("Downloading was aborted")
+            listener.downloadFailed("Downloading was cancelled")
             isDownloading = false
             doCanceling = false
             return true

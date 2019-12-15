@@ -133,6 +133,7 @@ private constructor() {
         }
 
         private const val appTableHistoryName: String =  "RTPPlayAppDownloadHistory"
+        private const val appTableHistoryOriginalUrl: String =  "OriginalUrl"
         private const val appTableHistoryUrl: String =  "Url"
         private const val appTableHistoryUrlTaskID: String =  "UrlTaskID"
 
@@ -146,8 +147,8 @@ private constructor() {
             }
 
             val insertObject = JsonObject()
-            insertObject.addProperty(appTableHistoryUrl, downloadableItem.downloaderTask.mediaUrl)
-            insertObject.addProperty(appTableHistoryUrlTaskID, downloadableItem.downloaderTask.TAG)
+            insertObject.addProperty(appTableHistoryOriginalUrl, downloadableItem.item.url)
+            insertObject.addProperty(appTableHistoryUrl, downloadableItem.item.mediaUrl)
 
             try {
                 val mClient = MobileServiceClient(

@@ -75,31 +75,31 @@ class DownloadItemsAdapter :
                     .execute()
         }
 
-        when {
-            downloadableItem.state == DownloadableItemState.Start -> {
+        when (downloadableItem.state) {
+            DownloadableItemState.Start -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = ""
             }
-            downloadableItem.state == DownloadableItemState.Downloading -> {
+            DownloadableItemState.Downloading -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text =
                         Math.round(downloadableItem.progress * 100f).toString() + "%"
                 holder.binding.downloadProgressTextView.text =
                         MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
-                        MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
+                                MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
                 holder.binding.downloadProgressTextView.text =
                         MediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
-                        MediaUtils.humanReadableTime(downloadableItem.remainingTime)
+                                MediaUtils.humanReadableTime(downloadableItem.remainingTime)
             }
-            downloadableItem.state == DownloadableItemState.End -> {
+            DownloadableItemState.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text = "100%"
                 holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
             }
-            downloadableItem.state == DownloadableItemState.Failed -> {
+            DownloadableItemState.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = "did not download"
@@ -110,9 +110,9 @@ class DownloadItemsAdapter :
         val isDownloading : Boolean = downloadableItemAction.isDownloading()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
+        holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
         holder.binding.pauseDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
         holder.binding.resumeDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
-        holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
     }
 
     fun get(index: Int): DownloadableItemAction {

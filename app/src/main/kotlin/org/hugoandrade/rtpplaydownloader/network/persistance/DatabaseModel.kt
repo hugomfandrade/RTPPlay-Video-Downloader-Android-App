@@ -204,21 +204,21 @@ abstract class DatabaseModel {
 
         companion object {
 
-            private val TAG = DatabaseHelper::class.java.simpleName
-
-            private val DATABASE_NAME = "RTPPlayDownloadAppDB"
-            private val DATABASE_VERSION = 2
+            private const val DATABASE_NAME = "RTPPlayDownloadAppDB"
+            private const val DATABASE_VERSION = 3
 
             private val CREATE_DB_TABLE_DOWNLOADABLE_ENTRY = " CREATE TABLE " + DownloadableItem.Entry.TABLE_NAME + " (" +
-                    " " + DownloadableItem.Entry.Cols._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    " " + DownloadableItem.Entry.Cols.URL + " TEXT NULL, " +
-                    " " + DownloadableItem.Entry.Cols.MEDIA_URL + " TEXT NULL, " +
-                    " " + DownloadableItem.Entry.Cols.THUMBNAIL_URL + " TEXT NULL, " +
-                    " " + DownloadableItem.Entry.Cols.FILENAME + " TEXT NULL, " +
-                    " " + DownloadableItem.Entry.Cols.FILEPATH + " TEXT NULL, " +
-                    " " + DownloadableItem.Entry.Cols.FILESIZE + " TEXT NULL, " +
-                    " " + DownloadableItem.Entry.Cols.STAGE + " TEXT NULL, " +
-                    " " + DownloadableItem.Entry.Cols.IS_ARCHIVED + " INTEGER NULL " +
+                    " " + DownloadableItem.Entry.Cols._ID + " INTEGER PRIMARY KEY AUTOINCREMENT" + ", " +
+                    " " + DownloadableItem.Entry.Cols.URL + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.MEDIA_URL + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.THUMBNAIL_URL + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.FILENAME + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.FILEPATH + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.FILESIZE + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.STAGE + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.IS_ARCHIVED + " INTEGER NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.DOWNLOAD_MESSAGE + " TEXT NULL" + ", " +
+                    " " + DownloadableItem.Entry.Cols.DOWNLOAD_TASK + " TEXT NULL" +
                     " );"
         }
     }

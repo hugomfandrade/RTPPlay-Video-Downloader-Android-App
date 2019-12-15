@@ -30,6 +30,8 @@ class DownloadableItem(var id: Int,// url
     var remainingTime : Long = 0 // In Millis
     var progress : Float = 0f
     var progressSize : Long = 0
+    private var oldTimestamp = System.currentTimeMillis()
+    private var oldDownloadSize: Long = 0L
 
     constructor(url: String,
                 mediaUrl: String,
@@ -37,8 +39,6 @@ class DownloadableItem(var id: Int,// url
                 filename: String) :
             this(-1, url, mediaUrl, thumbnailUrl, filename, null, 0, null, false)
 
-    private var oldTimestamp = System.currentTimeMillis()
-    private var oldDownloadSize: Long = 0L
 
     override fun onProgress(downloadedSize: Long, totalSize : Long) {
         this.state = DownloadableItemState.Downloading
@@ -130,6 +130,8 @@ class DownloadableItem(var id: Int,// url
             val FILESIZE = "FileSize"
             val STAGE = "Stage"
             val IS_ARCHIVED = "IsArchived"
+            val DOWNLOAD_MESSAGE = "DownloadMessage"
+            val DOWNLOAD_TASK = "DownloadTask"
         }
     }
 }

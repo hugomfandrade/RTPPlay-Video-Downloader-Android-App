@@ -11,7 +11,7 @@ import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import kotlin.collections.ArrayList
 
 class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
@@ -93,7 +93,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         return parsingItemList.size + if (showLoadMore || showProgressBar) 1 else 0
     }
 
-    fun add(task: DownloaderTaskBase) {
+    fun add(task: ParsingTaskBase) {
         synchronized(parsingItemList) {
             for (parsingItem in parsingItemList) {
                 if (parsingItem.task == task) {
@@ -104,7 +104,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun addAndNotify(task: DownloaderTaskBase) {
+    fun addAndNotify(task: ParsingTaskBase) {
         synchronized(parsingItemList) {
             for (parsingItem in parsingItemList) {
                 if (parsingItem.task == task) {
@@ -117,7 +117,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun remove(task: DownloaderTaskBase) {
+    fun remove(task: ParsingTaskBase) {
         synchronized(parsingItemList) {
             for ((index, parsingItem) in parsingItemList.withIndex()) {
                 if (parsingItem.task == task) {
@@ -136,7 +136,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun addAllAndNotify(tasks: ArrayList<DownloaderTaskBase>) {
+    fun addAllAndNotify(tasks: ArrayList<ParsingTaskBase>) {
         synchronized(parsingItemList) {
             val prevItemCount: Int = itemCount
             tasks.forEach(action = { task ->
@@ -157,7 +157,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun addAll(tasks: ArrayList<DownloaderTaskBase>) {
+    fun addAll(tasks: ArrayList<ParsingTaskBase>) {
         synchronized(parsingItemList) {
             tasks.forEach(action = { task ->
                 var alreadyInList = false
@@ -174,9 +174,9 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun getSelectedTasks(): ArrayList<DownloaderTaskBase> {
+    fun getSelectedTasks(): ArrayList<ParsingTaskBase> {
         synchronized(parsingItemList) {
-            val tasks : ArrayList<DownloaderTaskBase> = ArrayList()
+            val tasks : ArrayList<ParsingTaskBase> = ArrayList()
             for (parsingItem in parsingItemList) {
                 if (parsingItem.isSelected.get()) {
                     tasks.add(parsingItem.task)

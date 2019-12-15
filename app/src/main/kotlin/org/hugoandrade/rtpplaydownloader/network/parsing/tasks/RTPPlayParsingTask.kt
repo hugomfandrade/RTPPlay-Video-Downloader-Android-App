@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.download
+package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
@@ -9,7 +9,7 @@ import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
-open class RTPPlayDownloaderTask : DownloaderTaskBase() {
+open class RTPPlayParsingTask : ParsingTaskBase() {
 
     override fun parseMediaFile(url: String): Boolean {
 
