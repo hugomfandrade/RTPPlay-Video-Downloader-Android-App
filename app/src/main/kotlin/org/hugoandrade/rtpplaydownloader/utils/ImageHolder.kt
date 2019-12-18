@@ -140,7 +140,7 @@ class ImageHolder(private val mDir: File) {
         private val mImageViewCacheMap: ConcurrentHashMap<Int, String> = ConcurrentHashMap()
         private val imageLoaderExecutors = Executors.newFixedThreadPool(DevConstants.nImageLoadingThreads)
 
-        fun displayImage(dir: File?, url: String?, imageView: ImageView) {
+        fun displayImage(dir: File?, url: String?, imageView: ImageView) : Boolean {
             if (dir != null && url != null) {
                 val imageViewRef: WeakReference<ImageView> = WeakReference(imageView)
 
@@ -153,7 +153,8 @@ class ImageHolder(private val mDir: File) {
 
                 if (bitmap != null) {
 
-                    displayImage(imageViewRef, url, bitmap)
+                    return displayImage(imageViewRef, url, bitmap)
+
                 }
                 else {
 
@@ -163,11 +164,12 @@ class ImageHolder(private val mDir: File) {
                     }
                 }
             }
+            return false
         }
 
         private fun displayImage(ref: WeakReference<ImageView>,
                                  url: String,
-                                 bitmap: Bitmap?) {
+                                 bitmap: Bitmap?) : Boolean {
 
 
             if (bitmap != null) {
@@ -189,9 +191,11 @@ class ImageHolder(private val mDir: File) {
                                 imageView.setImageBitmap(bitmap)
                             }
                         }
+                        return true
                     }
                 }
             }
+            return false
         }
     }
 }

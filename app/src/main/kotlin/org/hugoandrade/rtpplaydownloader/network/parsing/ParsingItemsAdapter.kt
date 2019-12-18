@@ -11,6 +11,7 @@ import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import kotlin.collections.ArrayList
 
@@ -68,8 +69,10 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
             val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
             val thumbnailUrl : String? = parsingItem.task.thumbnailUrl
 
-            holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-            org.hugoandrade.rtpplaydownloader.utils.ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.parsingItemMediaImageView)
+
+            if (!ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.parsingItemMediaImageView)) {
+                holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+            }
 
             holder.binding.selectedCheckBox.visibility = if (parsingItemCount > 1) View.VISIBLE else View.GONE
         }

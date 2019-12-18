@@ -12,6 +12,7 @@ import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import java.util.*
 
@@ -68,8 +69,9 @@ class DownloadItemsAdapter :
         val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
-        holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-        org.hugoandrade.rtpplaydownloader.utils.ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.downloadItemMediaImageView)
+        if (!ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.downloadItemMediaImageView)) {
+            holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+        }
         /*
         org.hugoandrade.rtpplaydownloader.utils.ImageHolder.Builder()
                 .withDefault(R.drawable.media_file_icon)
