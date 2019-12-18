@@ -34,6 +34,7 @@
     <string name="unable_to_parse_pagination" >Não foi possível obter do link a paginação de ficheiros de multimédia</string>
     <string name="finished_downloading" >Download completo do </string>
     <string name="file_not_found" >Ficheiro não encontrado</string>
+    <string name="did_not_download">download falhado</string>
 
 
 </resources>

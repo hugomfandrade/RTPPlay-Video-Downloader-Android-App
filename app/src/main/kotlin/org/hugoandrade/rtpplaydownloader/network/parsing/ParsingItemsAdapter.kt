@@ -8,10 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import java.io.File
 import kotlin.collections.ArrayList
 
 class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
@@ -63,16 +63,13 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
             val parsingItemCount: Int = parsingItemList.size
             holder.binding.item = parsingItem
 
-            val thumbnailPath = parsingItem.task.thumbnailUrl
-            if (thumbnailPath == null) {
-                holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-            } else {
-                // holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-                ImageHolder.Builder.instance(holder.binding.parsingItemMediaImageView)
-                        .setFileUrl(thumbnailPath)
-                        .setDefaultImageResource(R.drawable.media_file_icon)
-                        .execute()
-            }
+            // THUMBNAIL
+
+            val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
+            val thumbnailUrl : String? = parsingItem.task.thumbnailUrl
+
+            holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+            org.hugoandrade.rtpplaydownloader.utils.ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.parsingItemMediaImageView)
 
             holder.binding.selectedCheckBox.visibility = if (parsingItemCount > 1) View.VISIBLE else View.GONE
         }

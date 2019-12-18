@@ -25,5 +25,6 @@
     <string name="unable_to_parse_pagination" >Unable to parse pagination from URL</string>
     <string name="finished_downloading" >Finished downloading</string>
     <string name="file_not_found" >File not found</string>
+    <string name="did_not_download">did not download</string>
 
 </resources>

@@ -10,9 +10,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import java.io.File
 import java.util.*
 
 class DownloadItemsAdapter :
@@ -52,9 +52,9 @@ class DownloadItemsAdapter :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        // holder.binding.setPost(downloadableItemList[position])
+
         val downloadableItemAction: DownloadableItemAction = downloadableItemList[position]
-        val downloadableItem: DownloadableItem = downloadableItemList[position].item
+        val downloadableItem: DownloadableItem = downloadableItemAction.item
 
         if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
             (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
@@ -63,17 +63,19 @@ class DownloadItemsAdapter :
             holder.binding.downloadItemTitleTextView.isSelected = true
         }
 
-        val thumbnailPath = downloadableItem.thumbnailUrl
-        if (thumbnailPath == null) {
-            holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-        }
-        else {
-            // holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-            ImageHolder.Builder.instance(holder.binding.downloadItemMediaImageView)
-                    .setFileUrl(thumbnailPath)
-                    .setDefaultImageResource(R.drawable.media_file_icon)
-                    .execute()
-        }
+        // THUMBNAIL
+
+        val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
+        val thumbnailUrl : String? = downloadableItem.thumbnailUrl
+
+        holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
+        org.hugoandrade.rtpplaydownloader.utils.ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.downloadItemMediaImageView)
+        /*
+        org.hugoandrade.rtpplaydownloader.utils.ImageHolder.Builder()
+                .withDefault(R.drawable.media_file_icon)
+                .toDir(dir)
+                .download(thumbnailUrl)
+                .displayTo(holder.binding.downloadItemMediaImageView)*/
 
         when (downloadableItem.state) {
             DownloadableItemState.Start -> {
@@ -102,7 +104,7 @@ class DownloadItemsAdapter :
             DownloadableItemState.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
-                holder.binding.downloadProgressTextView.text = "did not download"
+                holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
             }
         }
 
