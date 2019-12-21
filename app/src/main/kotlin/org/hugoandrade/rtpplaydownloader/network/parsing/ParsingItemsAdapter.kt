@@ -69,22 +69,19 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
             val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
             val thumbnailUrl : String? = parsingItem.task.thumbnailUrl
 
-
-            if (!ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.parsingItemMediaImageView)) {
-                holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-            }
+            ImageHolder.Builder()
+                    .withDefault(R.drawable.media_file_icon)
+                    .download(thumbnailUrl)
+                    .toDir(dir)
+                    .displayIn(holder.binding.parsingItemMediaImageView)
 
             holder.binding.selectedCheckBox.visibility = if (parsingItemCount > 1) View.VISIBLE else View.GONE
         }
 
         if (holder.bindingLoading != null) {
 
-            holder.bindingLoading.loadMoreButton.visibility = if (showLoadMore)
-                View.VISIBLE else
-                View.GONE
-            holder.bindingLoading.progressBarView.visibility = if (showProgressBar)
-                View.VISIBLE else
-                View.GONE
+            holder.bindingLoading.loadMoreButton.visibility = if (showLoadMore) View.VISIBLE else View.GONE
+            holder.bindingLoading.progressBarView.visibility = if (showProgressBar) View.VISIBLE else View.GONE
         }
 
     }

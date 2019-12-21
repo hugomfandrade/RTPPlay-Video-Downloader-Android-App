@@ -69,15 +69,11 @@ class DownloadItemsAdapter :
         val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
-        if (!ImageHolder.displayImage(dir, thumbnailUrl, holder.binding.downloadItemMediaImageView)) {
-            holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-        }
-        /*
-        org.hugoandrade.rtpplaydownloader.utils.ImageHolder.Builder()
+        ImageHolder.Builder()
                 .withDefault(R.drawable.media_file_icon)
-                .toDir(dir)
                 .download(thumbnailUrl)
-                .displayTo(holder.binding.downloadItemMediaImageView)*/
+                .toDir(dir)
+                .displayIn(holder.binding.downloadItemMediaImageView)
 
         when (downloadableItem.state) {
             DownloadableItemState.Start -> {

@@ -17,6 +17,32 @@ import org.hugoandrade.rtpplaydownloader.DevConstants
 
 class ImageHolder(private val mDir: File) {
 
+    class Builder {
+
+        private var dir: File? = null
+        private var defaultResID: Int? = null
+        private var thumbnailUrl: String? = null
+
+        fun withDefault(resID: Int): Builder {
+            this.defaultResID = resID
+            return this
+        }
+
+        fun toDir(dir: File?): Builder {
+            this.dir = dir
+            return this
+        }
+
+        fun download(thumbnailUrl: String?): Builder {
+            this.thumbnailUrl = thumbnailUrl
+            return this
+        }
+
+        fun displayIn(imageView: ImageView) {
+            displayImage(dir, thumbnailUrl, imageView, defaultResID)
+        }
+    }
+
     fun loadFromCache(imageURL: String): Bitmap? {
 
         val cacheFile = getImageUriIfExists(mDir, imageURL) ?: return null
@@ -137,14 +163,11 @@ class ImageHolder(private val mDir: File) {
             }
         }
 
-        private val mImageViewCacheMap: ConcurrentHashMap<Int, String> = ConcurrentHashMap()
+        private val imageViewCacheMap: ConcurrentHashMap<Int, String> = ConcurrentHashMap()
         private val imageLoaderExecutors = Executors.newFixedThreadPool(DevConstants.nImageLoadingThreads)
 
-        fun displayImage(dir: File?, url: String?, imageView: ImageView) : Boolean {
+        fun displayImage(dir: File?, url: String?, imageView: ImageView, defaultResID : Int?) {
             if (dir != null && url != null) {
-                val imageViewRef: WeakReference<ImageView> = WeakReference(imageView)
-
-                mImageViewCacheMap[imageView.hashCode()] = url
 
                 val imageHolder = ImageHolder(dir)
 
@@ -152,11 +175,14 @@ class ImageHolder(private val mDir: File) {
                 val bitmap = imageHolder.loadFromCache(url)
 
                 if (bitmap != null) {
-
-                    return displayImage(imageViewRef, url, bitmap)
-
+                    imageView.post {
+                        imageView.setImageBitmap(bitmap)
+                    }
                 }
                 else {
+                    val imageViewRef: WeakReference<ImageView> = WeakReference(imageView)
+
+                    imageViewCacheMap[imageView.hashCode()] = url
 
                     imageLoaderExecutors.submit {
                         // get bitmap
@@ -164,38 +190,30 @@ class ImageHolder(private val mDir: File) {
                     }
                 }
             }
-            return false
+            if (defaultResID != null) {
+                imageView.setImageResource(defaultResID)
+            }
         }
 
-        private fun displayImage(ref: WeakReference<ImageView>,
-                                 url: String,
-                                 bitmap: Bitmap?) : Boolean {
+        private fun displayImage(ref: WeakReference<ImageView>, url: String, bitmap: Bitmap?) {
 
 
             if (bitmap != null) {
 
-                val imageView : ImageView? = ref.get()
+                val refImageView : ImageView? = ref.get()
 
-                if (imageView != null) {
+                if (refImageView != null) {
 
                     // get current search item
-                    val item: String? = mImageViewCacheMap[imageView.hashCode()]
+                    val mapUrl: String? = imageViewCacheMap[refImageView.hashCode()]
 
-                    if (item != null && url == item) {
-                        imageView.post {
-
-                            // get current search item
-                            val refUrl = mImageViewCacheMap[imageView.hashCode()]
-
-                            if (refUrl != null && url == refUrl) {
-                                imageView.setImageBitmap(bitmap)
-                            }
+                    if (mapUrl != null && url == mapUrl) {
+                        refImageView.post {
+                            refImageView.setImageBitmap(bitmap)
                         }
-                        return true
                     }
                 }
             }
-            return false
         }
     }
 }
