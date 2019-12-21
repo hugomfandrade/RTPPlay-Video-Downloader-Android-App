@@ -10,23 +10,23 @@ import android.support.v4.content.ContextCompat
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.MainActivity
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.collections.LinkedHashMap
 import kotlin.collections.set
-import kotlin.math.roundToInt
-
+import kotlin.math.max
 
 class DownloadService : Service() {
 
     companion object  {
-        val CHANNEL_ID = "DownloadServiceChannel"
-        val CHANNEL_NAME = "Download Service Channel"
+        const val CHANNEL_ID = "DownloadServiceChannel"
+        const val CHANNEL_NAME = "Download Service Channel"
 
-        val DELETE_KEY = "DeleteKey"
-        val DELETE_VALUE = 50
+        const val DELETE_KEY = "DeleteKey"
+        const val DELETE_VALUE = 50
 
-        val NOTIFICATION_ID = 1
+        const val NOTIFICATION_ID = 1
     }
 
     private val downloadExecutors = Executors.newFixedThreadPool(DevConstants.nDownloadThreads)
@@ -65,6 +65,9 @@ class DownloadService : Service() {
             downloadMap.values.forEach{
                 a -> a.downloadTask.cancel()
             }
+            downloadMap.clear()
+            updateTimer.cancel()
+            stopForeground(true)
         }
 
         return START_NOT_STICKY
@@ -74,7 +77,7 @@ class DownloadService : Service() {
     private fun setForeground() {
         createNotificationChannel()
 
-        startForeground(NOTIFICATION_ID, createNotification("", 0))
+        startForeground(NOTIFICATION_ID, createNotification("", "",0, 1))
 
         updateTimer.cancel()
         updateTimer = Timer()
@@ -87,7 +90,7 @@ class DownloadService : Service() {
 
     private var updateTimer : Timer = Timer()
 
-    private fun createNotification(text: String, progress: Int): Notification {
+    private fun createNotification(title: String, text: String, progress: Int, max: Int): Notification {
 
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this,
@@ -106,13 +109,13 @@ class DownloadService : Service() {
         val pStopSelf = PendingIntent.getService(this, 0, stopSelf, PendingIntent.FLAG_CANCEL_CURRENT)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(getString(R.string.app_name))
+                .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
                 .setDeleteIntent(deletePendingIntent)
                 .addAction(R.mipmap.ic_launcher, getString(R.string.cancel), pStopSelf)
-                .setProgress(100, progress, false)
+                .setProgress(max, progress, false)
                 .build()
     }
 
@@ -125,18 +128,34 @@ class DownloadService : Service() {
         else {
 
             var longestRemainingTime = 0L
-            var progress = 0
+            var progress = 0L
+            var maxProgress = 0L
             for (action in actions) {
                 if (longestRemainingTime < action.item.remainingTime) {
                     longestRemainingTime = action.item.remainingTime
-                    progress = (action.item.progress * 100f).roundToInt()
+                    val filesize = action.item.filesize
+
+                    if (filesize != null) {
+                        progress += action.item.progressSize
+                        maxProgress += filesize
+                    }
                 }
             }
 
-            val text = actions[0].item.filename +
-                    if (actions.size == 1) "" else " and " + (actions.size - 1) + "other videos"
+            val title = actions[0].item.filename +
+                    if (actions.size == 1)
+                        "" else
+                        (" " + getString(R.string.and) + " ") + (actions.size - 1) + " " +
+                                (if (actions.size == 2)
+                                    getString(R.string.other_video) else
+                                    getString(R.string.other_videos))
+            val text = MediaUtils.humanReadableTime(longestRemainingTime) + " " + getString(R.string.remaining_time)
 
-            val notification : Notification = createNotification(text, progress)
+            val notification : Notification = createNotification(
+                    title,
+                    if (text.startsWith("0s")) "" else text,
+                    ((progress * 100L) / max(maxProgress, 1L)).toInt(),
+                    100)
 
             val manager = ContextCompat.getSystemService(applicationContext, NotificationManager::class.java)
             manager?.notify(NOTIFICATION_ID, notification)
@@ -146,12 +165,15 @@ class DownloadService : Service() {
     private val downloadMap : LinkedHashMap<Int, DownloadableItemAction> = LinkedHashMap()
 
     private fun start(downloadableItemAction: DownloadableItemAction) {
+        val itemID: Int = downloadableItemAction.item.id
+
         if (downloadMap.containsKey(downloadableItemAction.item.id)) return
 
         if (downloadMap.isEmpty()) {
             setForeground()
         }
-        downloadMap[downloadableItemAction.item.id] = downloadableItemAction
+
+        downloadMap[itemID] = downloadableItemAction
 
         updateNotification()
 
@@ -159,8 +181,20 @@ class DownloadService : Service() {
 
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
                 if (downloadableItem.state == DownloadableItemState.End ||
-                    downloadableItem.state == DownloadableItemState.Failed) {
+                        downloadableItem.state == DownloadableItemState.Failed) {
                     downloadMap.remove(downloadableItem.id)
+
+                    updateNotification()
+
+                    downloadableItemAction.item.removeDownloadStateChangeListener(this)
+                }
+                else if (downloadableItem.state == DownloadableItemState.Start) {
+
+                    if (downloadMap.isEmpty()) {
+                        setForeground()
+                    }
+
+                    downloadMap[itemID] = downloadableItemAction
 
                     updateNotification()
                 }
@@ -169,9 +203,6 @@ class DownloadService : Service() {
 
         downloadExecutors.execute {
             downloadableItemAction.downloadTask.downloadMediaFile()
-            downloadMap.remove(downloadableItemAction.item.id)
-
-            updateNotification()
         }
     }
 

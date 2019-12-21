@@ -36,5 +36,11 @@
     <string name="file_not_found" >Ficheiro não encontrado</string>
     <string name="did_not_download">download falhado</string>
 
+    <!-- NOTIFICATION -->
+    <string name="and">e</string>
+    <string name="other_video">outro vídeo</string>
+    <string name="other_videos">outro vídeos</string>
+    <string name="remaining_time">restantes</string>
+
 
 </resources>

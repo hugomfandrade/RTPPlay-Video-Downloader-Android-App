@@ -27,4 +27,10 @@
     <string name="file_not_found" >File not found</string>
     <string name="did_not_download">did not download</string>
 
+    <!-- NOTIFICATION -->
+    <string name="and">and</string>
+    <string name="other_video">other video</string>
+    <string name="other_videos">other videos</string>
+    <string name="remaining_time">remaining</string>
+
 </resources>

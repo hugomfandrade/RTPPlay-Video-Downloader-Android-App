@@ -244,7 +244,7 @@ class DownloadManager : IDownloadManager {
                             future.failed("is not a valid website")
                         }
                     }
-                    catch (e : ExecutionException) {
+                    catch (e : Exception) {
                         future.failed("is not a valid website")
                     }
 

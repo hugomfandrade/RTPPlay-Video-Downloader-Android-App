@@ -28,8 +28,11 @@ open class DownloaderTask(private val mediaUrl : String,
 
     var doCanceling: Boolean = false
 
-    @Synchronized
     open fun downloadMediaFile() {
+
+        if (isDownloading) {
+            return
+        }
 
         isDownloading = true
         doCanceling = false
