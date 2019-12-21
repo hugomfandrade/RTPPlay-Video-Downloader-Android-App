@@ -175,9 +175,8 @@ class ImageHolder(private val mDir: File) {
                 val bitmap = imageHolder.loadFromCache(url)
 
                 if (bitmap != null) {
-                    imageView.post {
-                        imageView.setImageBitmap(bitmap)
-                    }
+                    imageView.setImageBitmap(bitmap)
+                    return
                 }
                 else {
                     val imageViewRef: WeakReference<ImageView> = WeakReference(imageView)
