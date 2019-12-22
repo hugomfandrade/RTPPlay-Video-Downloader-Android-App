@@ -25,12 +25,16 @@
     <string name="unable_to_parse_pagination" >Unable to parse pagination from URL</string>
     <string name="finished_downloading" >Finished downloading</string>
     <string name="file_not_found" >File not found</string>
-    <string name="did_not_download">did not download</string>
 
     <!-- NOTIFICATION -->
     <string name="and">and</string>
     <string name="other_video">other video</string>
     <string name="other_videos">other videos</string>
     <string name="remaining_time">remaining</string>
+
+    <!-- DOWNLOAD -->
+    <string name="did_not_download">did not download</string>
+    <string name="url_no_longer_exists">URL no longer exists</string>
+    <string name="download_cancelled">cancelled</string>
 
 </resources>

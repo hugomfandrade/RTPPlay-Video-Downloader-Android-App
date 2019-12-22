@@ -8,8 +8,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.lang.Exception
 import java.net.HttpURLConnection
-import java.net.MalformedURLException
 import java.net.URL
 
 open class DownloaderTask(private val mediaUrl : String,
@@ -73,7 +73,13 @@ open class DownloaderTask(private val mediaUrl : String,
         var inputStream: InputStream? = null
 
         try {
-            u = URL(mediaUrl)
+            try {
+                u = URL(mediaUrl)
+            }
+            catch (e: Exception) {
+                listener.downloadFailed("URL no longer exists")
+                return
+            }
             inputStream = u.openStream()
             val huc = u.openConnection() as HttpURLConnection //to know the size of video
             val size = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -128,9 +134,6 @@ open class DownloaderTask(private val mediaUrl : String,
 
             fos.close()
 
-        } catch (mue: MalformedURLException) {
-            mue.printStackTrace()
-            listener.downloadFailed("Internal error while downloading")
         } catch (ioe: IOException) {
             ioe.printStackTrace()
             listener.downloadFailed("Internal error while downloading")
@@ -167,7 +170,7 @@ open class DownloaderTask(private val mediaUrl : String,
             }
             f.delete()
 
-            listener.downloadFailed("Downloading was cancelled")
+            listener.downloadFailed("cancelled")
             isDownloading = false
             doCanceling = false
             return true

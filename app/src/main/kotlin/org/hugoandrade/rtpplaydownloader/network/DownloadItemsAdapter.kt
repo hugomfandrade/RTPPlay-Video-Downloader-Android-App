@@ -102,7 +102,26 @@ class DownloadItemsAdapter :
             DownloadableItemState.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
-                holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
+
+                val message = downloadableItem.downloadMessage
+                val context = holder.binding.downloadProgressTextView.context
+
+                if (context != null && message != null) {
+                    when (message) {
+                        context.getString(R.string.url_no_longer_exists) -> {
+                            holder.binding.downloadProgressTextView.setText(R.string.url_no_longer_exists)
+                        }
+                        context.getString(R.string.download_cancelled) -> {
+                            holder.binding.downloadProgressTextView.setText(R.string.download_cancelled)
+                        }
+                        else -> {
+                            holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
+                        }
+                    }
+                }
+                else {
+                    holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
+                }
             }
         }
 

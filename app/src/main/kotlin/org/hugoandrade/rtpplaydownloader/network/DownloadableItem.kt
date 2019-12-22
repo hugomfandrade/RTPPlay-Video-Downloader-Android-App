@@ -14,7 +14,9 @@ class DownloadableItem(var id: Int,// url
                        var filepath: String?,
                        var filesize: Long?,// url
                        var state: DownloadableItemState?,
-                       var isArchived: Boolean?) :
+                       var isArchived: Boolean?,
+                       var downloadTask: String?,
+                       var downloadMessage: String?) :
 
         DownloaderTaskListener {
 
@@ -37,7 +39,7 @@ class DownloadableItem(var id: Int,// url
                 mediaUrl: String,
                 thumbnailUrl: String?,
                 filename: String) :
-            this(-1, url, mediaUrl, thumbnailUrl, filename, null, 0, null, false)
+            this(-1, url, mediaUrl, thumbnailUrl, filename, null, 0, null, false, null, null)
 
 
     override fun onProgress(downloadedSize: Long, totalSize : Long) {
@@ -66,6 +68,7 @@ class DownloadableItem(var id: Int,// url
     override fun downloadStarted(f: File) {
         this.filepath = f.absolutePath
         this.state = DownloadableItemState.Start
+        this.downloadMessage = null
 
         this.progressSize = 0L
         this.oldTimestamp = System.currentTimeMillis()
@@ -78,6 +81,7 @@ class DownloadableItem(var id: Int,// url
     override fun downloadFinished(f: File) {
         this.filepath = f.absolutePath
         this.state = DownloadableItemState.End
+        this.downloadMessage = null
 
         Log.e(TAG, "finished downloading to " + f.absolutePath)
         fireDownloadStateChange()
@@ -85,6 +89,7 @@ class DownloadableItem(var id: Int,// url
 
     override fun downloadFailed(message: String?) {
         this.state = DownloadableItemState.Failed
+        this.downloadMessage = message
 
         fireDownloadStateChange()
         val message = "failed to download $filepath because of $message"
@@ -118,20 +123,20 @@ class DownloadableItem(var id: Int,// url
 
     object Entry {
 
-        val TABLE_NAME = "DownloadableItem"
+        const val TABLE_NAME = "DownloadableItem"
 
         object Cols {
-            val _ID = "_id"
-            val URL = "Url"
-            val MEDIA_URL = "MediaUrl"
-            val THUMBNAIL_URL = "Thumbnail"
-            val FILENAME = "FileName"
-            val FILEPATH = "FilePath"
-            val FILESIZE = "FileSize"
-            val STAGE = "Stage"
-            val IS_ARCHIVED = "IsArchived"
-            val DOWNLOAD_MESSAGE = "DownloadMessage"
-            val DOWNLOAD_TASK = "DownloadTask"
+            const val _ID = "_id"
+            const val URL = "Url"
+            const val MEDIA_URL = "MediaUrl"
+            const val THUMBNAIL_URL = "Thumbnail"
+            const val FILENAME = "FileName"
+            const val FILEPATH = "FilePath"
+            const val FILESIZE = "FileSize"
+            const val STAGE = "Stage"
+            const val IS_ARCHIVED = "IsArchived"
+            const val DOWNLOAD_MESSAGE = "DownloadMessage"
+            const val DOWNLOAD_TASK = "DownloadTask"
         }
     }
 }

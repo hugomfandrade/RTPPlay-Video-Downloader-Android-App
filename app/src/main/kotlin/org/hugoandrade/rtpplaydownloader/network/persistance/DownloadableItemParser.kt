@@ -29,7 +29,9 @@ private constructor() {
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.FILEPATH)),
                     cursor.getLong(cursor.getColumnIndex(Entry.Cols.FILESIZE)),
                     DownloadableItemState.values()[cursor.getInt(cursor.getColumnIndex(Entry.Cols.STAGE))],
-                    cursor.getInt(cursor.getColumnIndex(Entry.Cols.IS_ARCHIVED)) == 1)
+                    cursor.getInt(cursor.getColumnIndex(Entry.Cols.IS_ARCHIVED)) == 1,
+                    cursor.getString(cursor.getColumnIndex(Entry.Cols.DOWNLOAD_TASK)),
+                    cursor.getString(cursor.getColumnIndex(Entry.Cols.DOWNLOAD_MESSAGE)))
         }
 
         fun format(downloadableItem: DownloadableItem): ContentValues {
@@ -43,6 +45,8 @@ private constructor() {
             values.put(Entry.Cols.FILESIZE, downloadableItem.filesize)
             values.put(Entry.Cols.STAGE, downloadableItem.state?.ordinal)
             values.put(Entry.Cols.IS_ARCHIVED, downloadableItem.isArchived)
+            values.put(Entry.Cols.DOWNLOAD_TASK, downloadableItem.downloadTask)
+            values.put(Entry.Cols.DOWNLOAD_MESSAGE, downloadableItem.downloadMessage)
             return values
         }
     }

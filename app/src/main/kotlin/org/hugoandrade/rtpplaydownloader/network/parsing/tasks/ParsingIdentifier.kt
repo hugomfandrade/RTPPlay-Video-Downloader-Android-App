@@ -22,6 +22,14 @@ class ParsingIdentifier() {
             return null
         }
 
+        fun findType(task: ParsingTaskBase): FileType? {
+            if (task is RTPPlayParsingMultiPartTask) return FileType.RTPPlayMultiPart
+            if (task is RTPPlayParsingTask) return FileType.RTPPlay
+            if (task is SICParsingTask) return FileType.SIC
+            if (task is SAPOParsingTask) return FileType.SAPO
+            return null
+        }
+
     }
 
     enum class FileType(var parsingTask: ParsingTaskBase) {

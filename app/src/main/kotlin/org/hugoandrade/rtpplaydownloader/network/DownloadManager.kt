@@ -27,7 +27,6 @@ import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.lang.ref.WeakReference
 import java.util.*
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
@@ -512,6 +511,7 @@ class DownloadManager : IDownloadManager {
         val thumbnailUrl = task.thumbnailUrl
 
         val item = DownloadableItem(url, mediaUrl, thumbnailUrl, filename)
+        item.downloadTask = ParsingIdentifier.findType(task)?.name
 
         if (DevConstants.enablePersistence) {
             mDatabaseModel.insertDownloadableItem(item)
