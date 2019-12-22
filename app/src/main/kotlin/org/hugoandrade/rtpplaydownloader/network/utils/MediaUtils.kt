@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.utils
 
 import android.os.Environment
-import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import java.io.File
 import java.text.Normalizer
@@ -30,7 +29,7 @@ private constructor() {
             if (filepath != null) {
 
                 // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-                // val file = File(storagePath, item.filename)
+                // val file = File(storagePath, item.mediaFileName)
                 // val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
                 val file = File(filepath)
                 return file.exists()
@@ -118,6 +117,10 @@ private constructor() {
                 file.name
             else
                 internalGetUniqueFilenameAndLock(originalFile, index + 1)
+        }
+
+        fun humanReadableByteCount(bytes: Long?, si: Boolean): String {
+            return humanReadableByteCount(bytes ?: 0, si)
         }
 
         fun humanReadableByteCount(bytes: Long, si: Boolean): String {

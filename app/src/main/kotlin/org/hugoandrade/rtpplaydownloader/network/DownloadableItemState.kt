@@ -5,5 +5,9 @@ enum class DownloadableItemState {
     Downloading,
     End,
 
-    Failed
+    Failed;
+
+    interface ChangeListener {
+        fun onDownloadStateChange(downloadableItem: DownloadableItem)
+    }
 }

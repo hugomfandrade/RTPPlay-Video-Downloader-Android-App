@@ -8,10 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
+import java.io.File
 import kotlin.collections.ArrayList
 
 class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
@@ -63,28 +64,24 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
             val parsingItemCount: Int = parsingItemList.size
             holder.binding.item = parsingItem
 
-            val thumbnailPath = parsingItem.task.thumbnailPath
-            if (thumbnailPath == null) {
-                holder.binding.parsingItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-            } else {
-                // holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-                ImageHolder.Builder.instance(holder.binding.parsingItemMediaImageView)
-                        .setFileUrl(thumbnailPath)
-                        .setDefaultImageResource(R.drawable.media_file_icon)
-                        .execute()
-            }
+            // THUMBNAIL
+
+            val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
+            val thumbnailUrl : String? = parsingItem.task.thumbnailUrl
+
+            ImageHolder.Builder()
+                    .withDefault(R.drawable.media_file_icon)
+                    .download(thumbnailUrl)
+                    .toDir(dir)
+                    .displayIn(holder.binding.parsingItemMediaImageView)
 
             holder.binding.selectedCheckBox.visibility = if (parsingItemCount > 1) View.VISIBLE else View.GONE
         }
 
         if (holder.bindingLoading != null) {
 
-            holder.bindingLoading.loadMoreButton.visibility = if (showLoadMore)
-                View.VISIBLE else
-                View.GONE
-            holder.bindingLoading.progressBarView.visibility = if (showProgressBar)
-                View.VISIBLE else
-                View.GONE
+            holder.bindingLoading.loadMoreButton.visibility = if (showLoadMore) View.VISIBLE else View.GONE
+            holder.bindingLoading.progressBarView.visibility = if (showProgressBar) View.VISIBLE else View.GONE
         }
 
     }
@@ -93,7 +90,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         return parsingItemList.size + if (showLoadMore || showProgressBar) 1 else 0
     }
 
-    fun add(task: DownloaderTaskBase) {
+    fun add(task: ParsingTaskBase) {
         synchronized(parsingItemList) {
             for (parsingItem in parsingItemList) {
                 if (parsingItem.task == task) {
@@ -104,7 +101,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun addAndNotify(task: DownloaderTaskBase) {
+    fun addAndNotify(task: ParsingTaskBase) {
         synchronized(parsingItemList) {
             for (parsingItem in parsingItemList) {
                 if (parsingItem.task == task) {
@@ -117,7 +114,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun remove(task: DownloaderTaskBase) {
+    fun remove(task: ParsingTaskBase) {
         synchronized(parsingItemList) {
             for ((index, parsingItem) in parsingItemList.withIndex()) {
                 if (parsingItem.task == task) {
@@ -136,7 +133,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun addAllAndNotify(tasks: ArrayList<DownloaderTaskBase>) {
+    fun addAllAndNotify(tasks: ArrayList<ParsingTaskBase>) {
         synchronized(parsingItemList) {
             val prevItemCount: Int = itemCount
             tasks.forEach(action = { task ->
@@ -157,7 +154,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun addAll(tasks: ArrayList<DownloaderTaskBase>) {
+    fun addAll(tasks: ArrayList<ParsingTaskBase>) {
         synchronized(parsingItemList) {
             tasks.forEach(action = { task ->
                 var alreadyInList = false
@@ -174,9 +171,9 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    fun getSelectedTasks(): ArrayList<DownloaderTaskBase> {
+    fun getSelectedTasks(): ArrayList<ParsingTaskBase> {
         synchronized(parsingItemList) {
-            val tasks : ArrayList<DownloaderTaskBase> = ArrayList()
+            val tasks : ArrayList<ParsingTaskBase> = ArrayList()
             for (parsingItem in parsingItemList) {
                 if (parsingItem.isSelected.get()) {
                     tasks.add(parsingItem.task)

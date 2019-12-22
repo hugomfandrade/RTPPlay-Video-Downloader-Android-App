@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.download
+package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
@@ -9,17 +9,17 @@ import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
-open class RTPPlayDownloaderTask : DownloaderTaskBase() {
+open class RTPPlayParsingTask : ParsingTaskBase() {
 
-    override fun parseMediaFile(urlString: String): Boolean {
+    override fun parseMediaFile(url: String): Boolean {
 
-        url = urlString
-        videoFile = getVideoFile(urlString) ?: return false
-        videoFileName = MediaUtils.getUniqueFilenameAndLock(getVideoFileName(urlString, videoFile))
-        thumbnailPath = getThumbnailPath(urlString)
+        this.url = url
+        this.mediaUrl = getVideoFile(url) ?: return false
+        this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        this.thumbnailUrl = getThumbnailPath(url)
 
         try {
-            URL(videoFile)
+            URL(mediaUrl)
         }
         catch (e: Exception) {
             e.printStackTrace()
@@ -109,7 +109,7 @@ open class RTPPlayDownloaderTask : DownloaderTaskBase() {
         return null
     }
 
-    override fun getVideoFileName(urlString: String, videoFile: String?): String {
+    override fun getMediaFileName(urlString: String, videoFile: String?): String {
         try {
             val doc: Document?
 

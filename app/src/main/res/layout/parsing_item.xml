@@ -54,7 +54,7 @@
             app:layout_constraintBottom_toBottomOf="@id/parsing_item_media_image_view"
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="Hello"
-            android:text="@={item.task.videoFileName}" />
+            android:text="@={item.task.filename}" />
 
     </android.support.constraint.ConstraintLayout>
 </layout>

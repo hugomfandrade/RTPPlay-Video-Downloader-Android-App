@@ -8,62 +8,43 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.lang.Exception
 import java.net.HttpURLConnection
-import java.net.MalformedURLException
 import java.net.URL
 
-abstract class DownloaderTaskBase {
+open class DownloaderTask(private val mediaUrl : String,
+                          private val dirPath : String,
+                          private val filename : String,
+                          private val listener : DownloaderTaskListener) {
 
     val TAG : String = javaClass.simpleName
 
-    var url: String? = null
-    var videoFile: String? = null
-    var videoFileName: String? = null
-    var thumbnailPath: String? = null
-    var isDownloading : Boolean = false
+    constructor(mediaUrl : String,
+                filename : String,
+                listener : DownloaderTaskListener) :
+        this(mediaUrl, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename, listener)
 
-    lateinit var mDownloaderTaskListener: DownloaderTaskListener
+    var isDownloading : Boolean = false
 
     var doCanceling: Boolean = false
 
-    abstract fun isValid(urlString: String) : Boolean
+    open fun downloadMediaFile() {
 
-    abstract fun parseMediaFile(urlString: String): Boolean
-
-    abstract fun getVideoFileName(urlString: String, videoFile: String?): String
-
-    fun downloadMediaFileAsync(listener: DownloaderTaskListener) : Boolean {
         if (isDownloading) {
-            return false
+            return
         }
 
         isDownloading = true
-
-        object : Thread("Thread_download_media_file_" + videoFile) {
-            override fun run() {
-
-                downloadMediaFile(listener)
-                isDownloading = false
-            }
-        }.start()
-
-        return true
-    }
-
-    open fun downloadMediaFile(listener: DownloaderTaskListener) {
-
-        isDownloading = true
-
-        mDownloaderTaskListener = listener
+        doCanceling = false
 
         if (DevConstants.simDownload) {
-            val f = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), videoFileName)
-            mDownloaderTaskListener.downloadStarted(f)
+            val f = File(dirPath, filename)
+            listener.downloadStarted(f)
             var progress = 0L
-            var size = 1024L
+            val size = 1024L
             while (progress < size) {
                 if (doCanceling) {
-                    mDownloaderTaskListener.downloadFailed("Downloading was cancelled")
+                    listener.downloadFailed("Downloading was cancelled")
                     isDownloading = false
                     doCanceling = false
                     return
@@ -72,18 +53,18 @@ abstract class DownloaderTaskBase {
                     // paused
 
                     if (doCanceling) {
-                        mDownloaderTaskListener.downloadFailed("Downloading was cancelled")
+                        listener.downloadFailed("Downloading was cancelled")
                         isDownloading = false
                         doCanceling = false
                         return
                     }
                 }
 
-                mDownloaderTaskListener.onProgress(progress, size)
+                listener.onProgress(progress, size)
                 progress += 8
                 Thread.sleep(1000)
             }
-            mDownloaderTaskListener.downloadFinished(f)
+            listener.downloadFinished(f)
             isDownloading = false
             return
         }
@@ -92,7 +73,13 @@ abstract class DownloaderTaskBase {
         var inputStream: InputStream? = null
 
         try {
-            u = URL(videoFile)
+            try {
+                u = URL(mediaUrl)
+            }
+            catch (e: Exception) {
+                listener.downloadFailed("URL no longer exists")
+                return
+            }
             inputStream = u.openStream()
             val huc = u.openConnection() as HttpURLConnection //to know the size of video
             val size = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -102,13 +89,13 @@ abstract class DownloaderTaskBase {
             }
 
             val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            val f = File(storagePath, videoFileName)
+            val f = File(storagePath, filename)
             if (MediaUtils.doesMediaFileExist(f)) {
                 isDownloading = false
-                mDownloaderTaskListener.downloadFailed("file with same name already exists")
+                listener.downloadFailed("file with same name already exists")
                 return
             }
-            mDownloaderTaskListener.downloadStarted(f)
+            listener.downloadStarted(f)
 
             val fos = FileOutputStream(f)
             val buffer = ByteArray(1024)
@@ -140,19 +127,16 @@ abstract class DownloaderTaskBase {
                         return
                     }
 
-                    mDownloaderTaskListener.onProgress(progress, size)
+                    listener.onProgress(progress, size)
                 }
             }
-            mDownloaderTaskListener.downloadFinished(f)
+            listener.downloadFinished(f)
 
             fos.close()
 
-        } catch (mue: MalformedURLException) {
-            mue.printStackTrace()
-            mDownloaderTaskListener.downloadFailed("Internal error while downloading")
         } catch (ioe: IOException) {
             ioe.printStackTrace()
-            mDownloaderTaskListener.downloadFailed("Internal error while downloading")
+            listener.downloadFailed("Internal error while downloading")
         } finally {
             try {
                 inputStream?.close()
@@ -186,7 +170,7 @@ abstract class DownloaderTaskBase {
             }
             f.delete()
 
-            mDownloaderTaskListener.downloadFailed("Downloading was aborted")
+            listener.downloadFailed("cancelled")
             isDownloading = false
             doCanceling = false
             return true

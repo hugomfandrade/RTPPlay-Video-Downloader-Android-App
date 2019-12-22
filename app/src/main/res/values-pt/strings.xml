@@ -35,5 +35,15 @@
     <string name="finished_downloading" >Download completo do </string>
     <string name="file_not_found" >Ficheiro não encontrado</string>
 
+    <!-- NOTIFICATION -->
+    <string name="and">e</string>
+    <string name="other_video">outro vídeo</string>
+    <string name="other_videos">outro vídeos</string>
+    <string name="remaining_time">restantes</string>
+
+    <!-- DOWNLOAD -->
+    <string name="did_not_download">download falhado</string>
+    <string name="url_no_longer_exists">URL indisponível</string>
+    <string name="download_cancelled">cancelado</string>
 
 </resources>

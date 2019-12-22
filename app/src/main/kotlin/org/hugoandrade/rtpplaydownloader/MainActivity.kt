@@ -4,29 +4,30 @@ import android.Manifest
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.v7.widget.*
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
-import org.hugoandrade.rtpplaydownloader.utils.*
-import android.content.Intent
-import android.support.v7.widget.helper.ItemTouchHelper
-import android.view.Menu
-import android.view.MenuItem
-import android.support.v7.widget.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
+import org.hugoandrade.rtpplaydownloader.utils.*
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
+
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -60,18 +61,17 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         initializeUI()
 
-        val devUrl: String? = DevConstants.url
-        if (devUrl != null) {
-            binding.inputUriEditText.setText(devUrl)
-            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-        }
-        else {
-            ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-        }
+        if (oldDownloadManager == null ) { // is first
+            val devUrl: String? = DevConstants.url
+            if (devUrl != null) {
+                binding.inputUriEditText.setText(devUrl)
+                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+            } else {
+                ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
+            }
 
-        extractActionSendIntentAndUpdateUI(intent)
-
-        populateDownloadItemsRecyclerView()
+            extractActionSendIntentAndUpdateUI(intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -122,10 +122,22 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
-        if (DevConstants.enablePersistence) {
+        if (DevConstants.enableSwipe) {
             ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
                     0,
                     ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
+
+                override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder): Float {
+                    return super.getSwipeThreshold(viewHolder)
+                }
+
+                override fun getSwipeEscapeVelocity(defaultValue: Float): Float {
+                    return super.getSwipeEscapeVelocity(defaultValue) * 5
+                }
+
+                override fun getSwipeVelocityThreshold(defaultValue: Float): Float {
+                    return super.getSwipeVelocityThreshold(defaultValue) * 0.2f
+                }
 
                 override fun onMove(recyclerView: RecyclerView,
                                     viewHolder1: RecyclerView.ViewHolder,
@@ -149,31 +161,44 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
     }
 
-    private fun populateDownloadItemsRecyclerView() {
-        mDownloadManager.retrieveItemsFromDB()
-    }
-
-    override fun populateDownloadableItemsRecyclerView(downloadableItems: List<DownloadableItemAction>) {
+    override fun displayDownloadableItems(actions: List<DownloadableItemAction>) {
 
         runOnUiThread {
-            mDownloadItemsAdapter.clear()
-            mDownloadItemsAdapter.addAll(downloadableItems)
+            mDownloadItemsAdapter.addAll(actions)
             mDownloadItemsAdapter.notifyDataSetChanged()
+            mDownloadItemsRecyclerView.scrollToPosition(0)
+            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+        }
+    }
+
+    override fun displayDownloadableItem(action: DownloadableItemAction) {
+
+        uploadHistoryMap[action.item.id] = action
+
+        action.item.addDownloadStateChangeListener(changeListener)
+
+        runOnUiThread {
+            mDownloadItemsAdapter.add(action)
             binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }
 
     private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {
+        if (intent == null) return
 
-        if (intent != null && checkNotNull(intent.action?.equals(Intent.ACTION_SEND))) {
-            val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)
-            binding.inputUriEditText.setText(url)
-            binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+        val action: String = intent.action?: return
 
-            ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-            binding.inputUriEditText.clearFocus()
-            doDownload(binding.inputUriEditText.text.toString())
-        }
+        if (action != Intent.ACTION_SEND) return
+        if (!intent.hasExtra(Intent.EXTRA_TEXT)) return
+
+        val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)?: return
+
+        binding.inputUriEditText.setText(url)
+        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+
+        ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
+        binding.inputUriEditText.clearFocus()
+        doDownload(binding.inputUriEditText.text.toString())
     }
 
     private fun toggleClearTextButton() {
@@ -305,9 +330,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         FilenameLockerAdapter.instance.clear()
                     }
 
-                    override fun onDownload(tasks : ArrayList<DownloaderTaskBase>) {
+                    override fun onDownload(tasks : ArrayList<ParsingTaskBase>) {
                         tasks.forEach(action = { task ->
-                            val filename: String? = task.videoFileName
+                            val filename: String? = task.filename
                             if (filename != null) {
                                 FilenameLockerAdapter.instance.putUnremovable(filename)
                             }
@@ -322,9 +347,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         FilenameLockerAdapter.instance.clear()
                         parsingDialog?.loading()
                         paginationFuture = mDownloadManager.parsePagination(url, paginationTask)
-                        paginationFuture?.addCallback(object : FutureCallback<ArrayList<DownloaderTaskBase>> {
+                        paginationFuture?.addCallback(object : FutureCallback<ArrayList<ParsingTaskBase>> {
 
-                            override fun onSuccess(result: ArrayList<DownloaderTaskBase>) {
+                            override fun onSuccess(result: ArrayList<ParsingTaskBase>) {
 
                                 runOnUiThread {
                                     parsingDialog?.showPaginationResult(paginationTask, result)
@@ -348,9 +373,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     override fun onParseMore(paginationTask: PaginationParserTaskBase) {
                         parsingDialog?.loadingMore()
                         paginationMoreFuture = mDownloadManager.parseMore(url, paginationTask)
-                        paginationMoreFuture?.addCallback(object : FutureCallback<ArrayList<DownloaderTaskBase>> {
+                        paginationMoreFuture?.addCallback(object : FutureCallback<ArrayList<ParsingTaskBase>> {
 
-                            override fun onSuccess(result: ArrayList<DownloaderTaskBase>) {
+                            override fun onSuccess(result: ArrayList<ParsingTaskBase>) {
 
                                 runOnUiThread {
                                     parsingDialog?.showPaginationMoreResult(paginationTask, result)
@@ -377,29 +402,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         parsingDialog?.show()
     }
 
-    private fun startDownload(task: DownloaderTaskBase) {
-        val action : DownloadableItemAction = mDownloadManager.download(task)
-        action.item.addDownloadStateChangeListener(object :DownloadableItemStateChangeListener {
-            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-                // listen for end of download and show message
-                if (downloadableItem.state == DownloadableItemState.End) {
-                    runOnUiThread {
-                        val message = getString(R.string.finished_downloading) + " " + downloadableItem.filename
-                        Log.e(TAG, message)
-                        ViewUtils.showSnackBar(binding.root, message)
-                    }
-                    downloadableItem.removeDownloadStateChangeListener(this)
-
-                    // upload history
-                    VersionUtils.uploadHistory(getActivityContext(), action)
-                }
-            }
-
-        })
-        runOnUiThread {
-            mDownloadItemsAdapter.add(action)
-            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
-        }
+    private fun startDownload(task: ParsingTaskBase) {
+        mDownloadManager.download(task)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,
@@ -421,4 +425,26 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     }
                 })
     }
+
+    private val changeListener = object : DownloadableItemState.ChangeListener {
+
+        override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+            // listen for end of download and show message
+            if (downloadableItem.state == DownloadableItemState.End) {
+                runOnUiThread {
+                    val message = getString(R.string.finished_downloading) + " " + downloadableItem.filename
+                    Log.e(TAG, message)
+                    ViewUtils.showSnackBar(binding.root, message)
+                }
+                downloadableItem.removeDownloadStateChangeListener(this)
+
+                // upload history
+                val action = uploadHistoryMap[downloadableItem.id]?: return
+
+                VersionUtils.uploadHistory(getActivityContext(), action)
+            }
+        }
+    }
+
+    private val uploadHistoryMap : HashMap<Int, DownloadableItemAction> = HashMap()
 }

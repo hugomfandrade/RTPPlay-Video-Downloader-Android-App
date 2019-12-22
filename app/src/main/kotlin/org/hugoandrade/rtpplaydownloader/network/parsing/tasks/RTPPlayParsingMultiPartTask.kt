@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.download
+package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
@@ -6,47 +6,31 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.net.SocketTimeoutException
 
-class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
+class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
-    override fun getVideoFileName(urlString: String, videoFile: String?): String {
+    override fun getMediaFileName(url: String, videoFile: String?): String {
         // do nothing
         return null.toString()
     }
 
-    override fun downloadMediaFile(listener: DownloaderTaskListener) {
-        // do nothing
-    }
-
-    override fun cancel() {
-        // do nothing
-    }
-
-    override fun resume() {
-        // do nothing
-    }
-
-    override fun pause() {
-        // do nothing
-    }
-
-    override fun parseMediaFile(urlString: String): Boolean {
+    override fun parseMediaFile(url: String): Boolean {
 
         tasks.clear()
 
-        val urls: ArrayList<RTPPlayMultiPartMetadata> = getUrls(urlString)
+        val metadatasList: ArrayList<RTPPlayMultiPartMetadata> = getUrls(url)
 
-        urls.forEach(action = { url ->
-            val task = RTPPlayDownloaderTask()
+        metadatasList.forEach(action = { metadata ->
+            val task = RTPPlayParsingTask()
 
-            if (task.isValid(url.urlString) && task.parseMediaFile(url.urlString)) {
-                val part = url.suffix
-                val originalFilename = task.getVideoFileName(url.urlString, task.videoFile)
+            if (task.isValid(metadata.urlString) && task.parseMediaFile(metadata.urlString)) {
+                val part = metadata.suffix
+                val originalFilename = task.getMediaFileName(metadata.urlString, task.mediaUrl)
 
                 if (part != null) {
                     val lastDot = originalFilename.lastIndexOf(".")
                     val preFilename = originalFilename.substring(0, lastDot)
                     val extFilename = originalFilename.substring(lastDot, originalFilename.length)
-                    task.videoFileName = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
+                    task.filename = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
                 }
                 tasks.add(task)
             }
@@ -56,7 +40,7 @@ class RTPPlayDownloaderMultiPartTask : DownloaderMultiPartTaskBase() {
     }
 
     override fun isValid(urlString: String) : Boolean {
-        if (!RTPPlayDownloaderTask().isValid(urlString)) {
+        if (!RTPPlayParsingTask().isValid(urlString)) {
             return false
         }
 

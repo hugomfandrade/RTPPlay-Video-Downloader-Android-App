@@ -11,7 +11,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.KeyEvent
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 
 class ParsingDialog(val mContext: Context) {
@@ -94,7 +94,7 @@ class ParsingDialog(val mContext: Context) {
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
-        val tasks : ArrayList<DownloaderTaskBase> = parsingData.tasks
+        val tasks : ArrayList<ParsingTaskBase> = parsingData.tasks
         val paginationTask: PaginationParserTaskBase? = parsingData.paginationTask
 
         if (tasks.isEmpty()) {
@@ -124,7 +124,7 @@ class ParsingDialog(val mContext: Context) {
     }
 
     fun showPaginationResult(paginationTask: PaginationParserTaskBase,
-                             tasks: ArrayList<DownloaderTaskBase>) {
+                             tasks: ArrayList<ParsingTaskBase>) {
 
         if (tasks.isEmpty()) {
             dismissDialog()
@@ -142,7 +142,7 @@ class ParsingDialog(val mContext: Context) {
     }
 
     fun showPaginationMoreResult(paginationTask: PaginationParserTaskBase,
-                                 tasks: ArrayList<DownloaderTaskBase>) {
+                                 tasks: ArrayList<ParsingTaskBase>) {
 
         mParsingItemsAdapter.hideProgressBarView()
         mParsingItemsAdapter.addAllAndNotify(tasks)
@@ -202,7 +202,7 @@ class ParsingDialog(val mContext: Context) {
 
     interface OnParsingListener {
         fun onCancelled()
-        fun onDownload(tasks : ArrayList<DownloaderTaskBase>)
+        fun onDownload(tasks : ArrayList<ParsingTaskBase>)
         fun onParseEntireSeries(paginationTask : PaginationParserTaskBase)
         fun onParseMore(paginationTask: PaginationParserTaskBase)
     }

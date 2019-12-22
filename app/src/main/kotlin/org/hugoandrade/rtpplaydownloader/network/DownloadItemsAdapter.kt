@@ -10,15 +10,16 @@ import android.view.ViewGroup
 import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.common.ImageHolder
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
+import java.io.File
 import java.util.*
 
 class DownloadItemsAdapter :
 
         RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
-        DownloadableItemStateChangeListener {
+        DownloadableItemState.ChangeListener {
 
     private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
@@ -52,9 +53,9 @@ class DownloadItemsAdapter :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        // holder.binding.setPost(downloadableItemList[position])
+
         val downloadableItemAction: DownloadableItemAction = downloadableItemList[position]
-        val downloadableItem: DownloadableItem = downloadableItemList[position].item
+        val downloadableItem: DownloadableItem = downloadableItemAction.item
 
         if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
             (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
@@ -63,45 +64,64 @@ class DownloadItemsAdapter :
             holder.binding.downloadItemTitleTextView.isSelected = true
         }
 
-        val thumbnailPath = downloadableItem.thumbnailPath
-        if (thumbnailPath == null) {
-            holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-        }
-        else {
-            // holder.binding.downloadItemMediaImageView.setImageResource(R.drawable.media_file_icon)
-            ImageHolder.Builder.instance(holder.binding.downloadItemMediaImageView)
-                    .setFileUrl(thumbnailPath)
-                    .setDefaultImageResource(R.drawable.media_file_icon)
-                    .execute()
-        }
+        // THUMBNAIL
 
-        when {
-            downloadableItem.state == DownloadableItemState.Start -> {
+        val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
+        val thumbnailUrl : String? = downloadableItem.thumbnailUrl
+
+        ImageHolder.Builder()
+                .withDefault(R.drawable.media_file_icon)
+                .download(thumbnailUrl)
+                .toDir(dir)
+                .displayIn(holder.binding.downloadItemMediaImageView)
+
+        when (downloadableItem.state) {
+            DownloadableItemState.Start -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = ""
             }
-            downloadableItem.state == DownloadableItemState.Downloading -> {
+            DownloadableItemState.Downloading -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
-                holder.binding.downloadProgressTextView.text = Math.round(downloadableItem.progress * 100f).toString() + "%"
+                holder.binding.downloadProgressTextView.text =
+                        Math.round(downloadableItem.progress * 100f).toString() + "%"
                 holder.binding.downloadProgressTextView.text =
                         MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
-                        MediaUtils.humanReadableByteCount(downloadableItem.fileSize, true)
+                                MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
                 holder.binding.downloadProgressTextView.text =
                         MediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
-                        MediaUtils.humanReadableTime(downloadableItem.remainingTime)
+                                MediaUtils.humanReadableTime(downloadableItem.remainingTime)
             }
-            downloadableItem.state == DownloadableItemState.End -> {
+            DownloadableItemState.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text = "100%"
-                holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.fileSize, true)
+                holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
             }
-            downloadableItem.state == DownloadableItemState.Failed -> {
+            DownloadableItemState.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
-                holder.binding.downloadProgressTextView.text = "did not download"
+
+                val message = downloadableItem.downloadMessage
+                val context = holder.binding.downloadProgressTextView.context
+
+                if (context != null && message != null) {
+                    when (message) {
+                        context.getString(R.string.url_no_longer_exists) -> {
+                            holder.binding.downloadProgressTextView.setText(R.string.url_no_longer_exists)
+                        }
+                        context.getString(R.string.download_cancelled) -> {
+                            holder.binding.downloadProgressTextView.setText(R.string.download_cancelled)
+                        }
+                        else -> {
+                            holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
+                        }
+                    }
+                }
+                else {
+                    holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
+                }
             }
         }
 
@@ -109,9 +129,9 @@ class DownloadItemsAdapter :
         val isDownloading : Boolean = downloadableItemAction.isDownloading()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
+        holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
         holder.binding.pauseDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
         holder.binding.resumeDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
-        holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
     }
 
     fun get(index: Int): DownloadableItemAction {
@@ -136,11 +156,19 @@ class DownloadItemsAdapter :
 
     fun add(downloadableItem: DownloadableItemAction) {
         synchronized(downloadableItemList) {
+
             if (!downloadableItemList.contains(downloadableItem)) {
+                var pos = 0
+                while(pos < downloadableItemList.size &&
+                        downloadableItem.item.id <
+                        downloadableItemList[pos].item.id) {
+                    pos++
+                }
                 downloadableItem.item.addDownloadStateChangeListener(this)
-                downloadableItemList.add(0, downloadableItem)
-                notifyItemInserted(0)
-                notifyItemRangeChanged(0, itemCount)
+                downloadableItemList.add(pos, downloadableItem)
+                notifyItemInserted(pos)
+                notifyItemRangeChanged(pos, itemCount)
+                recyclerView?.scrollToPosition(0)
             }
         }
     }

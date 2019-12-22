@@ -9,7 +9,6 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceJsonTable
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
 import org.jsoup.Jsoup
 import java.io.IOException
@@ -134,6 +133,7 @@ private constructor() {
         }
 
         private const val appTableHistoryName: String =  "RTPPlayAppDownloadHistory"
+        private const val appTableHistoryOriginalUrl: String =  "OriginalUrl"
         private const val appTableHistoryUrl: String =  "Url"
         private const val appTableHistoryUrlTaskID: String =  "UrlTaskID"
 
@@ -147,8 +147,8 @@ private constructor() {
             }
 
             val insertObject = JsonObject()
-            insertObject.addProperty(appTableHistoryUrl, downloadableItem.downloaderTask.videoFile)
-            insertObject.addProperty(appTableHistoryUrlTaskID, downloadableItem.downloaderTask.TAG)
+            insertObject.addProperty(appTableHistoryOriginalUrl, downloadableItem.item.url)
+            insertObject.addProperty(appTableHistoryUrl, downloadableItem.item.mediaUrl)
 
             try {
                 val mClient = MobileServiceClient(
