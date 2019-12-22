@@ -4,29 +4,30 @@ import android.Manifest
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.v7.widget.*
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
-import org.hugoandrade.rtpplaydownloader.utils.*
-import android.content.Intent
-import android.support.v7.widget.helper.ItemTouchHelper
-import android.view.Menu
-import android.view.MenuItem
-import android.support.v7.widget.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
+import org.hugoandrade.rtpplaydownloader.utils.*
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
+
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
@@ -125,6 +126,18 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
                     0,
                     ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
+
+                override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder): Float {
+                    return super.getSwipeThreshold(viewHolder)
+                }
+
+                override fun getSwipeEscapeVelocity(defaultValue: Float): Float {
+                    return super.getSwipeEscapeVelocity(defaultValue) * 5
+                }
+
+                override fun getSwipeVelocityThreshold(defaultValue: Float): Float {
+                    return super.getSwipeVelocityThreshold(defaultValue) * 0.2f
+                }
 
                 override fun onMove(recyclerView: RecyclerView,
                                     viewHolder1: RecyclerView.ViewHolder,
@@ -411,10 +424,6 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         }
                     }
                 })
-    }
-
-    private fun setupDownloadableItemListener(action: DownloadableItemAction) {
-
     }
 
     private val changeListener = object : DownloadableItemState.ChangeListener {
