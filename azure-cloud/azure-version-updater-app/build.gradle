@@ -24,4 +24,8 @@ sourceSets {
 
 dependencies {
     implementation 'com.microsoft.sqlserver:mssql-jdbc:7.0.0.jre8'
+
+    // TVI Player
+    implementation 'org.apache.httpcomponents:httpclient:4.5.10'
+    implementation 'org.jsoup:jsoup:1.12.1'
 }
