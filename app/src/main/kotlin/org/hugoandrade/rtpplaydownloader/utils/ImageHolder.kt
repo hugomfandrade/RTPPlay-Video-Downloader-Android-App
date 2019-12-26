@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import android.widget.ImageView
+import org.hugoandrade.rtpplaydownloader.DevConstants
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -13,7 +14,6 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
-import org.hugoandrade.rtpplaydownloader.DevConstants
 
 class ImageHolder(private val mDir: File) {
 
@@ -112,23 +112,37 @@ class ImageHolder(private val mDir: File) {
 
             try {
                 // Download Image from URL
-                val input = URL(imageURL).openStream()
-                // Decode Bitmap
-                val bitmap = BitmapFactory.decodeStream(input)
+                var inputStream = URL(imageURL).openStream()
+                var bitmap = BitmapFactory.decodeStream(inputStream)
 
-                val a = imageURL.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val filename = a[a.size - 1]
+                if (bitmap == null) {
+                    inputStream.close()
+                    inputStream = URL(imageURL.replace("http", "https")).openStream()
+                    bitmap = BitmapFactory.decodeStream(inputStream)
+                }
+
+                val filename = getFilename(imageURL)
 
                 val pictureFile = File(dir, filename)
                 try {
                     val fos = FileOutputStream(pictureFile)
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
                     fos.close()
+                    inputStream.close()
                 } catch (e: FileNotFoundException) {
                     Log.e(TAG, "File not found: " + e.message)
+                    pictureFile.delete()
+                    inputStream.close()
                     return null
                 } catch (e: IOException) {
                     Log.e(TAG, "Error accessing file: " + e.message)
+                    pictureFile.delete()
+                    inputStream.close()
+                    return null
+                }catch (e: Exception) {
+                    Log.e(TAG, "Error: " + e.message)
+                    pictureFile.delete()
+                    inputStream.close()
                     return null
                 }
 
@@ -138,17 +152,25 @@ class ImageHolder(private val mDir: File) {
                 Log.w(TAG, "MalformedURLException: $imageURL")
             } catch (e: IOException) {
                 Log.e(TAG, "IOException: $imageURL")
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception: $imageURL")
+                e.printStackTrace()
             }
 
             return null
+        }
+
+        private fun getFilename(imageURL: String): String {
+            return imageURL
+                    .replace("/", "_")
+                    .replace(".", "_")
         }
 
         fun getImageUriIfExists(filesDir: File?, imageUri: String?): File? {
             if (imageUri == null)
                 return null
 
-            val a = imageUri.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            val filename = a[a.size - 1]
+            val filename = getFilename(imageUri)
 
             if (filesDir == null)
                 return null
@@ -159,6 +181,7 @@ class ImageHolder(private val mDir: File) {
                 }
                 return null
             } catch (e: NullPointerException) {
+                e.printStackTrace()
                 return null
             }
         }
