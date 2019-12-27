@@ -66,7 +66,7 @@ class DownloadItemsAdapter :
 
         // THUMBNAIL
 
-        val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
+        val dir : File? = recyclerView?.context?.cacheDir
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
         ImageHolder.Builder()
@@ -142,15 +142,9 @@ class DownloadItemsAdapter :
         return downloadableItemList.size
     }
 
-    fun clear() {
-        synchronized(downloadableItemList) {
-            downloadableItemList.forEach(action = {remove(it)})
-        }
-    }
-
     fun addAll(downloadableItems: List<DownloadableItemAction>) {
-        synchronized(downloadableItemList) {
-            downloadableItems.forEach(action = {add(it)})
+        for (downloadableItem in downloadableItems) {
+            add(downloadableItem)
         }
     }
 
@@ -173,9 +167,17 @@ class DownloadItemsAdapter :
         }
     }
 
-    fun remove(downloadableItem: DownloadableItemAction) {
-        downloadableItem.item.removeDownloadStateChangeListener(this)
+    fun clear() {
         synchronized(downloadableItemList) {
+            for (i in downloadableItemList.size - 1 downTo 0) {
+                remove(downloadableItemList[i])
+            }
+        }
+    }
+
+    fun remove(downloadableItem: DownloadableItemAction) {
+        synchronized(downloadableItemList) {
+            downloadableItem.item.removeDownloadStateChangeListener(this)
             if (downloadableItemList.contains(downloadableItem)) {
                 val index: Int = downloadableItemList.indexOf(downloadableItem)
                 downloadableItemList.remove(downloadableItem)

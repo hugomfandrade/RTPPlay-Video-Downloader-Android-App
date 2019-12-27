@@ -57,7 +57,6 @@ class DownloadManager : IDownloadManager {
         mDatabaseModel.onCreate(object : PersistencePresenterOps {
 
             override fun onDownloadableItemInserted(downloadableItem: DownloadableItem?) {
-                if (!DevConstants.enablePersistence) return
                 if (downloadableItem == null) {
                     Log.e(TAG, "failed to insert")
                     return
@@ -69,11 +68,6 @@ class DownloadManager : IDownloadManager {
                 val downloaderTask = DownloaderTask(mediaUrl, filename, downloadableItem)
                 val action = DownloadableItemAction(downloadableItem, downloaderTask)
                 action.addActionListener(actionListener)
-                downloadableItem.addDownloadStateChangeListener(object :DownloadableItemState.ChangeListener {
-                    override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-                        mDatabaseModel.updateDownloadableEntry(downloadableItem)
-                    }
-                })
 
                 downloadService?.startDownload(action)
 
@@ -83,62 +77,55 @@ class DownloadManager : IDownloadManager {
             }
 
             override fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
-                if (!DevConstants.enablePersistence) return
 
                 val actions : ArrayList<DownloadableItemAction> = ArrayList()
 
-                downloadableItems.forEach{ item ->
-                    run {
+                for (item in downloadableItems) {
 
-                        item.addDownloadStateChangeListener(object : DownloadableItemState.ChangeListener {
+                    synchronized(this@DownloadManager.downloadableItems) {
+                        val listItems = this@DownloadManager.downloadableItems
 
-                            override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-                                if (!DevConstants.enablePersistence) return
 
-                                mDatabaseModel.updateDownloadableEntry(downloadableItem)
-                            }
-                        })
-
-                        val task = DownloaderTask(item.mediaUrl?:"", item.filename?:"", item)
-                        val action = DownloadableItemAction(item, task)
-                        action.addActionListener(actionListener)
-                        actions.add(action)
-
-                        var isPresent = false
-                        for (i in this@DownloadManager.downloadableItems.size - 1 downTo 0) {
-                            if (this@DownloadManager.downloadableItems[i].item.id == action.item.id) {
-                                isPresent = true
+                        var contains = false
+                        // add if not already in list
+                        for (i in listItems.size - 1 downTo 0) {
+                            if (listItems[i].item.id == item.id) {
+                                contains = true
                                 break
                             }
                         }
 
-                        if (!isPresent) {
+                        if (!contains) {
+
+                            val task = DownloaderTask(item.mediaUrl ?: "", item.filename
+                                    ?: "", item)
+                            val action = DownloadableItemAction(item, task)
+                            action.addActionListener(actionListener)
+                            actions.add(action)
                             if (action.item.state == DownloadableItemState.Downloading) {
                                 action.item.state = DownloadableItemState.Failed
                             }
-                            this@DownloadManager.downloadableItems.add(action)
-                            this@DownloadManager.downloadableItems.sortedWith(compareBy { it.item.id } )
+                            listItems.add(action)
+                            listItems.sortedWith(compareBy { it.item.id })
+
                             mViewOps.get()?.displayDownloadableItem(action)
                         }
+                        Log.e(TAG, "from DB = " + this@DownloadManager.downloadableItems.size)
                     }
                 }
 
-                this@DownloadManager.downloadableItems.sortedWith(compareBy { it.item.id } )
                 mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
             }
 
             override fun onDownloadableItemsDeleted(downloadableItems: List<DownloadableItem>) {
-                if (!DevConstants.enablePersistence) return
-
                 this@DownloadManager.downloadableItems.clear()
-                mViewOps.get()?.displayDownloadableItems(ArrayList())
+                mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
             }
 
-            override fun onDatabaseReset(wasSuccessfullyDeleted : Boolean){
-                if (!DevConstants.enablePersistence) return
+            override fun onDatabaseReset(wasSuccessfullyDeleted : Boolean) {
 
                 downloadableItems.clear()
-                mViewOps.get()?.displayDownloadableItems(ArrayList())
+                mViewOps.get()?.displayDownloadableItems(downloadableItems)
             }
 
             override fun getActivityContext(): Context? {
@@ -186,20 +173,24 @@ class DownloadManager : IDownloadManager {
             val downloadService = this@DownloadManager.downloadService
             val activeItemActions : ArrayList<DownloadableItemAction> =  downloadService?.getItemActions()?:return
 
+            // populate with items which are being downloaded
             for (itemAction in activeItemActions) {
-                for (i in downloadableItems.size - 1 downTo 0) {
-                    if (downloadableItems[i].item.id == itemAction.item.id) {
-                        downloadableItems.removeAt(i)
-                        downloadableItems.add(itemAction)
-                        break
-                    }
-                }
 
-                if (!downloadableItems.contains(itemAction)) {
-                    downloadableItems.add(itemAction)
+                synchronized(this@DownloadManager.downloadableItems) {
+                    val listItems = this@DownloadManager.downloadableItems
+                    for (i in listItems.size - 1 downTo 0) {
+                        if (listItems[i].item.id == itemAction.item.id) {
+                            listItems.removeAt(i)
+                            break
+                        }
+                    }
+
+                    listItems.add(itemAction)
+
+                    Log.e(TAG, "from Service = " + this@DownloadManager.downloadableItems.size)
+                    listItems.sortedWith(compareBy { it.item.id })
                 }
             }
-            downloadableItems.sortedWith(compareBy { it.item.id } )
 
             mViewOps.get()?.displayDownloadableItems(downloadableItems)
         }
@@ -513,34 +504,18 @@ class DownloadManager : IDownloadManager {
         val item = DownloadableItem(url, mediaUrl, thumbnailUrl, filename)
         item.downloadTask = ParsingIdentifier.findType(task)?.name
 
-        if (DevConstants.enablePersistence) {
-            mDatabaseModel.insertDownloadableItem(item)
-        }
-        else {
-            val downloadTask = DownloaderTask(mediaUrl, filename, item)
-            val action = DownloadableItemAction(item, downloadTask)
-            action.addActionListener(actionListener)
-            downloadService?.startDownload(action)
-
-            downloadableItems.add(action)
-            downloadableItems.sortedWith(compareBy { it.item.id } )
-
-            mViewOps.get()?.displayDownloadableItem(action)
-        }
+        mDatabaseModel.insertDownloadableItem(item)
     }
 
     override fun retrieveItemsFromDB() {
-        if (!DevConstants.enablePersistence) return
         mDatabaseModel.retrieveAllDownloadableItems()
     }
 
     override fun emptyDB() {
-        if (!DevConstants.enablePersistence) return
         mDatabaseModel.deleteAllDownloadableItem()
     }
 
     override fun archive(downloadableItem: DownloadableItem) {
-        if (!DevConstants.enablePersistence) return
         downloadableItem.isArchived = true
         mDatabaseModel.updateDownloadableEntry(downloadableItem)
     }
