@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
@@ -10,6 +11,8 @@ import android.support.v4.content.ContextCompat
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.MainActivity
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.network.persistance.DatabaseModel
+import org.hugoandrade.rtpplaydownloader.network.persistance.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.*
 import java.util.concurrent.Executors
@@ -33,13 +36,30 @@ class DownloadService : Service() {
 
     private val mBinder = DownloadServiceBinder()
 
+    private lateinit var mDatabaseModel: DatabaseModel
+
     override fun onCreate() {
         super.onCreate()
+
+        val databaseModel = object : DatabaseModel(){}
+        databaseModel.onCreate(object : PersistencePresenterOps {
+
+            override fun getActivityContext(): Context? {
+                return this@DownloadService.applicationContext
+            }
+
+            override fun getApplicationContext(): Context? {
+                return this@DownloadService
+            }
+        })
+
+        mDatabaseModel = databaseModel
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
+        mDatabaseModel.onDestroy()
         downloadExecutors.shutdown()
     }
 
@@ -198,6 +218,8 @@ class DownloadService : Service() {
 
                     updateNotification()
                 }
+
+                mDatabaseModel.updateDownloadableEntry(downloadableItem)
             }
         })
 

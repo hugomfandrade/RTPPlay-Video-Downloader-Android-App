@@ -164,6 +164,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     override fun displayDownloadableItems(actions: List<DownloadableItemAction>) {
 
         runOnUiThread {
+            mDownloadItemsAdapter.clear()
             mDownloadItemsAdapter.addAll(actions)
             mDownloadItemsAdapter.notifyDataSetChanged()
             mDownloadItemsRecyclerView.scrollToPosition(0)
