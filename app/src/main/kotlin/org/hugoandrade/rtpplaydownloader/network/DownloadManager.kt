@@ -110,7 +110,6 @@ class DownloadManager : IDownloadManager {
 
                             mViewOps.get()?.displayDownloadableItem(action)
                         }
-                        Log.e(TAG, "from DB = " + this@DownloadManager.downloadableItems.size)
                     }
                 }
 
@@ -187,7 +186,6 @@ class DownloadManager : IDownloadManager {
 
                     listItems.add(itemAction)
 
-                    Log.e(TAG, "from Service = " + this@DownloadManager.downloadableItems.size)
                     listItems.sortedWith(compareBy { it.item.id })
                 }
             }
