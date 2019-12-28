@@ -191,11 +191,16 @@ class ImageHolder(private val mDir: File) {
         private val imageLoaderExecutors = Executors.newFixedThreadPool(DevConstants.nImageLoadingThreads)
 
         fun displayImage(dir: File?, url: String?, imageView: ImageView, defaultResID : Int?) {
-            val cacheBitmap = bitmapCacheMap[url?:""]?.get()
 
-            if (cacheBitmap != null) {
-                imageView.setImageBitmap(cacheBitmap)
-                return
+            if (url != null) {
+                imageViewCacheMap[imageView.hashCode()] = url
+
+                val cacheBitmap = bitmapCacheMap[url]?.get()
+
+                if (cacheBitmap != null) {
+                    imageView.setImageBitmap(cacheBitmap)
+                    return
+                }
             }
 
             if (defaultResID != null) {
@@ -204,15 +209,10 @@ class ImageHolder(private val mDir: File) {
 
             if (dir != null && url != null) {
 
-                imageViewCacheMap[imageView.hashCode()] = url
-
                 imageLoaderExecutors.submit {
 
                     val imageViewRef: WeakReference<ImageView> = WeakReference(imageView)
                     val imageHolder = ImageHolder(dir)
-
-                    // val timestamp = System.currentTimeMillis()
-                    // System.err.println("1 " + url + " = " + (System.currentTimeMillis() - timestamp))
 
                     // load from cache, if it exists
                     var bitmap = imageHolder.loadFromCache(url)
@@ -230,22 +230,23 @@ class ImageHolder(private val mDir: File) {
             }
         }
 
-        private fun displayImage(ref: WeakReference<ImageView>, url: String, bitmap: Bitmap?) {
+        private fun displayImage(ref: WeakReference<ImageView>, refUrl: String, bitmap: Bitmap) {
 
+            val refImageView : ImageView = ref.get()?: return
 
-            if (bitmap != null) {
+            // get current search item
+            val mapUrl: String? = imageViewCacheMap[refImageView.hashCode()]?: return
 
-                val refImageView : ImageView? = ref.get()
+            if (refUrl == mapUrl) {
+                refImageView.post {
 
-                if (refImageView != null) {
+                    val refImageView: ImageView = ref.get()?: return@post
 
                     // get current search item
-                    val mapUrl: String? = imageViewCacheMap[refImageView.hashCode()]
+                    val mapUrl = imageViewCacheMap[refImageView.hashCode()]?: return@post
 
-                    if (mapUrl != null && url == mapUrl) {
-                        refImageView.post {
-                            refImageView.setImageBitmap(bitmap)
-                        }
+                    if (refUrl == mapUrl) {
+                        refImageView.setImageBitmap(bitmap)
                     }
                 }
             }
