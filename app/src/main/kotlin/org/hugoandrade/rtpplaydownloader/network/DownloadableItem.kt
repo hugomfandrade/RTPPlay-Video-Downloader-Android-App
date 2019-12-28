@@ -51,18 +51,26 @@ class DownloadableItem(var id: Int,// url
         this.progress = downloadedSize.toFloat() / totalSize.toFloat()
 
         val tmpTimestamp: Long = System.currentTimeMillis()
-        if ((tmpTimestamp - oldTimestamp) >= DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS) {
-            val downloadingSpeedPerSecond : Float = MediaUtils.calculateDownloadingSpeed(oldTimestamp, tmpTimestamp, oldDownloadSize, downloadedSize)
-            val remainingTimeInMillis: Long = MediaUtils.calculateRemainingDownloadTime(oldTimestamp, tmpTimestamp, oldDownloadSize, downloadedSize, totalSize)
-
-            this.downloadingSpeed = downloadingSpeedPerSecond
-            this.remainingTime = remainingTimeInMillis
-
+        if (updateProgressUtils()) {
             oldTimestamp = tmpTimestamp
             oldDownloadSize = downloadedSize
         }
 
         // fireDownloadStateChange()
+    }
+
+    fun updateProgressUtils(): Boolean {
+
+        val tmpTimestamp: Long = System.currentTimeMillis()
+        if ((tmpTimestamp - oldTimestamp) >= DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS) {
+            val downloadingSpeedPerSecond : Float = MediaUtils.calculateDownloadingSpeed(oldTimestamp, tmpTimestamp, oldDownloadSize, progressSize)
+            val remainingTimeInMillis: Long = MediaUtils.calculateRemainingDownloadTime(oldTimestamp, tmpTimestamp, oldDownloadSize, progressSize, filesize?:0)
+
+            this.downloadingSpeed = downloadingSpeedPerSecond
+            this.remainingTime = remainingTimeInMillis
+            return true
+        }
+        return false
     }
 
     override fun downloadStarted(f: File) {

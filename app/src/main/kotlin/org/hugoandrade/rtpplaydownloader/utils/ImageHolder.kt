@@ -186,53 +186,67 @@ class ImageHolder(private val mDir: File) {
             }
         }
 
+        private val bitmapCacheMap: ConcurrentHashMap<String, WeakReference<Bitmap>> = ConcurrentHashMap()
         private val imageViewCacheMap: ConcurrentHashMap<Int, String> = ConcurrentHashMap()
         private val imageLoaderExecutors = Executors.newFixedThreadPool(DevConstants.nImageLoadingThreads)
 
         fun displayImage(dir: File?, url: String?, imageView: ImageView, defaultResID : Int?) {
-            if (dir != null && url != null) {
 
-                val imageHolder = ImageHolder(dir)
+            if (url != null) {
+                imageViewCacheMap[imageView.hashCode()] = url
 
-                // load from cache, if it exists
-                val bitmap = imageHolder.loadFromCache(url)
+                val cacheBitmap = bitmapCacheMap[url]?.get()
 
-                if (bitmap != null) {
-                    imageView.setImageBitmap(bitmap)
+                if (cacheBitmap != null) {
+                    imageView.setImageBitmap(cacheBitmap)
                     return
                 }
-                else {
-                    val imageViewRef: WeakReference<ImageView> = WeakReference(imageView)
-
-                    imageViewCacheMap[imageView.hashCode()] = url
-
-                    imageLoaderExecutors.submit {
-                        // get bitmap
-                        displayImage(imageViewRef, url, imageHolder.load(url))
-                    }
-                }
             }
+
             if (defaultResID != null) {
                 imageView.setImageResource(defaultResID)
             }
+
+            if (dir != null && url != null) {
+
+                imageLoaderExecutors.submit {
+
+                    val imageViewRef: WeakReference<ImageView> = WeakReference(imageView)
+                    val imageHolder = ImageHolder(dir)
+
+                    // load from cache, if it exists
+                    var bitmap = imageHolder.loadFromCache(url)
+
+                    if (bitmap != null) {
+                        bitmap = imageHolder.load(url)
+                    }
+
+                    if (bitmap != null) {
+                        bitmapCacheMap[url] = WeakReference(bitmap)
+
+                        displayImage(imageViewRef, url, bitmap)
+                    }
+                }
+            }
         }
 
-        private fun displayImage(ref: WeakReference<ImageView>, url: String, bitmap: Bitmap?) {
+        private fun displayImage(ref: WeakReference<ImageView>, refUrl: String, bitmap: Bitmap) {
 
+            val refImageView : ImageView = ref.get()?: return
 
-            if (bitmap != null) {
+            // get current search item
+            val mapUrl: String? = imageViewCacheMap[refImageView.hashCode()]?: return
 
-                val refImageView : ImageView? = ref.get()
+            if (refUrl == mapUrl) {
+                refImageView.post {
 
-                if (refImageView != null) {
+                    val refImageView: ImageView = ref.get()?: return@post
 
                     // get current search item
-                    val mapUrl: String? = imageViewCacheMap[refImageView.hashCode()]
+                    val mapUrl = imageViewCacheMap[refImageView.hashCode()]?: return@post
 
-                    if (mapUrl != null && url == mapUrl) {
-                        refImageView.post {
-                            refImageView.setImageBitmap(bitmap)
-                        }
+                    if (refUrl == mapUrl) {
+                        refImageView.setImageBitmap(bitmap)
                     }
                 }
             }

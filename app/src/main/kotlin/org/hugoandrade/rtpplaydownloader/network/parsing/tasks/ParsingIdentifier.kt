@@ -16,6 +16,7 @@ class ParsingIdentifier() {
                         FileType.RTPPlay -> return RTPPlayParsingTask()
                         FileType.SIC -> return SICParsingTask()
                         FileType.SAPO -> return SAPOParsingTask()
+                        FileType.TVIPlayer -> return TVIPlayerParsingTask()
                     }
                 }
             }
@@ -27,6 +28,7 @@ class ParsingIdentifier() {
             if (task is RTPPlayParsingTask) return FileType.RTPPlay
             if (task is SICParsingTask) return FileType.SIC
             if (task is SAPOParsingTask) return FileType.SAPO
+            if (task is TVIPlayerParsingTask) return FileType.TVIPlayer
             return null
         }
 
@@ -36,6 +38,7 @@ class ParsingIdentifier() {
         RTPPlayMultiPart(RTPPlayParsingMultiPartTask()),
         RTPPlay(RTPPlayParsingTask()),
         SIC(SICParsingTask()),
-        SAPO(SAPOParsingTask())
+        SAPO(SAPOParsingTask()),
+        TVIPlayer(TVIPlayerParsingTask())
     }
 }

@@ -66,7 +66,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
 
             // THUMBNAIL
 
-            val dir : File? = recyclerView?.context?.cacheDir
+            val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
             val thumbnailUrl : String? = parsingItem.task.thumbnailUrl
 
             ImageHolder.Builder()

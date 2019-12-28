@@ -66,7 +66,7 @@ class DownloadItemsAdapter :
 
         // THUMBNAIL
 
-        val dir : File? = recyclerView?.context?.cacheDir
+        val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
         ImageHolder.Builder()
@@ -82,6 +82,8 @@ class DownloadItemsAdapter :
                 holder.binding.downloadProgressTextView.text = ""
             }
             DownloadableItemState.Downloading -> {
+                downloadableItem.updateProgressUtils()
+
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text =
