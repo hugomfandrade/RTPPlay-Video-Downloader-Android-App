@@ -79,7 +79,7 @@ class DownloadManager : IDownloadManager {
         val context = mViewOps.get()?.getApplicationContext() ?: return
 
         val serviceIntent = Intent(context, DownloadService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
+        context.startService(serviceIntent)
         context.bindService(serviceIntent, mConnection, 0)
     }
 
