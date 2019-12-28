@@ -66,7 +66,7 @@ class DownloadItemsAdapter :
 
         // THUMBNAIL
 
-        val dir : File? = recyclerView?.context?.cacheDir
+        val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
         ImageHolder.Builder()
