@@ -1,18 +1,14 @@
 package org.hugoandrade.rtpplaydownloader
 
-import android.content.Context
-
 interface DevConstants {
 
     companion object {
 
-        const val simDownload: Boolean = false
         const val showLog: Boolean = false
-
-        const val nPersistenceThreads: Int = 5
 
         const val nParsingThreads: Int = 10
         const val nDownloadThreads: Int = 5
+        const val nPersistenceThreads: Int = 5
         const val nImageLoadingThreads: Int = 10
 
         const val enablePauseResume = false
@@ -31,7 +27,10 @@ interface DevConstants {
         private const val url_11 = "https://www.rtp.pt/play/p5093/perdidos"
         private const val url_12 = "https://sicradical.pt/programas/cabaret-da-coxa/episodios"
         private const val url_13 = "https://sicradical.pt/programas/irritacoes/Videos/2019-11-29-Irritacoes---Programa-de-29-de-novembro"
+        private const val url_14 = "https://tviplayer.iol.pt/" +
+                "programa/governo-sombra/53c6b3a33004dc006243d5fb/" +
+                "video/5e07229c0cf20719306879c1";
 
-        val url : String? = null
+        val url : String? = url_14
     }
 }

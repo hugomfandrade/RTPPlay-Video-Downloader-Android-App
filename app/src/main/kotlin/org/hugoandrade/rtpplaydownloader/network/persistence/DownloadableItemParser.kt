@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.persistance
+package org.hugoandrade.rtpplaydownloader.network.persistence
 
 import android.content.ContentValues
 import android.database.Cursor

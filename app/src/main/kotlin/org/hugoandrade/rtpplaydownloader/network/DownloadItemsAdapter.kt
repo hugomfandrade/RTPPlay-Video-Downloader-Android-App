@@ -82,6 +82,8 @@ class DownloadItemsAdapter :
                 holder.binding.downloadProgressTextView.text = ""
             }
             DownloadableItemState.Downloading -> {
+                downloadableItem.updateProgressUtils()
+
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text =

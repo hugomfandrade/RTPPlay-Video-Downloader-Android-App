@@ -2,7 +2,6 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import android.os.Environment
-import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -17,15 +16,17 @@ open class DownloaderTask(private val mediaUrl : String,
                           private val filename : String,
                           private val listener : DownloaderTaskListener) {
 
-    val TAG : String = javaClass.simpleName
-
     constructor(mediaUrl : String,
                 filename : String,
                 listener : DownloaderTaskListener) :
-        this(mediaUrl, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename, listener)
+        this(mediaUrl,
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(),
+                filename,
+                listener)
+
+    open val TAG : String = javaClass.simpleName
 
     var isDownloading : Boolean = false
-
     var doCanceling: Boolean = false
 
     open fun downloadMediaFile() {
@@ -36,38 +37,6 @@ open class DownloaderTask(private val mediaUrl : String,
 
         isDownloading = true
         doCanceling = false
-
-        if (DevConstants.simDownload) {
-            val f = File(dirPath, filename)
-            listener.downloadStarted(f)
-            var progress = 0L
-            val size = 1024L
-            while (progress < size) {
-                if (doCanceling) {
-                    listener.downloadFailed("Downloading was cancelled")
-                    isDownloading = false
-                    doCanceling = false
-                    return
-                }
-                while (!isDownloading){
-                    // paused
-
-                    if (doCanceling) {
-                        listener.downloadFailed("Downloading was cancelled")
-                        isDownloading = false
-                        doCanceling = false
-                        return
-                    }
-                }
-
-                listener.onProgress(progress, size)
-                progress += 8
-                Thread.sleep(1000)
-            }
-            listener.downloadFinished(f)
-            isDownloading = false
-            return
-        }
 
         val u: URL?
         var inputStream: InputStream? = null
@@ -88,7 +57,7 @@ open class DownloaderTask(private val mediaUrl : String,
                 huc.contentLength.toLong()
             }
 
-            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+            val storagePath = dirPath
             val f = File(storagePath, filename)
             if (MediaUtils.doesMediaFileExist(f)) {
                 isDownloading = false

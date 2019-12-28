@@ -1,11 +1,5 @@
 package org.hugoandrade.rtpplaydownloader.versionupdater;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
@@ -13,9 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,15 +18,10 @@ public class TVIPlayerTest {
 
     private static String getJWIOL() {
 
-        CookieStore httpCookieStore = new BasicCookieStore();
-
         try {
             String tokenUrl = "https://services.iol.pt/matrix?userId=";
-            HttpClient client = HttpClientBuilder.create().setDefaultCookieStore(httpCookieStore).build();
-            HttpGet get = new HttpGet(tokenUrl);
-            HttpResponse response = client.execute(get);
+            InputStream inputStream = new URL(tokenUrl).openStream();
 
-            InputStream inputStream = response.getEntity().getContent();
             StringBuilder textBuilder = new StringBuilder();
             try (Reader reader = new BufferedReader(new InputStreamReader
                     (inputStream, Charset.forName(StandardCharsets.UTF_8.name())))) {
@@ -119,6 +106,7 @@ public class TVIPlayerTest {
     private static void doDownload(List<String> tsUrls) {
 
         try {
+            new File("./test-output-resources/").mkdir();
             File f = new File("./test-output-resources/", "tmp.ts");
             FileOutputStream fos = new FileOutputStream(f);
 
@@ -153,7 +141,7 @@ public class TVIPlayerTest {
 
         String url = "https://tviplayer.iol.pt/" +
                 "programa/governo-sombra/53c6b3a33004dc006243d5fb/" +
-                "video/5dfd75b60cf2853f0740adcb";
+                "video/5e07229c0cf20719306879c1";
 
         String jwiol = getJWIOL();
         String m3u8Url = getM3U8ChunkUrl(url);
@@ -164,19 +152,19 @@ public class TVIPlayerTest {
         List<String> tsUrls = getTSUrls(playlistUrl);
         List<String> tsFullUrls = new ArrayList<>();
 
-        for (String tsUrl : tsUrls) {
-            String tsFullUrl = baseUrl + tsUrl;
-            System.err.println("tsUrl = " + tsUrl);
-            System.err.println("tsUrl = " + tsFullUrl);
-            tsFullUrls.add(tsFullUrl);
-        }
-
         System.err.println("jwiol = " + jwiol);
         System.err.println("m3u8Url = " + m3u8Url);
         System.err.println("baseUrl = " + baseUrl);
         System.err.println("m3u8 = " + m3u8);
         System.err.println("playlist = " + playlist);
         System.err.println("playlistUrl = " + playlistUrl);
+
+        for (String tsUrl : tsUrls) {
+            String tsFullUrl = baseUrl + tsUrl;
+            System.err.println("tsUrl = " + tsUrl);
+            System.err.println("tsUrl = " + tsFullUrl);
+            tsFullUrls.add(tsFullUrl);
+        }
 
         doDownload(tsFullUrls);
 

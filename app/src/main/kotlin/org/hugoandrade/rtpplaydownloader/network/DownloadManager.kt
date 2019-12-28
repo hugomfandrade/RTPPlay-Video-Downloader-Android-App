@@ -10,7 +10,9 @@ import android.support.v4.content.ContextCompat
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderIdentifier
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.TVIPlayerTSDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
@@ -19,8 +21,9 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
-import org.hugoandrade.rtpplaydownloader.network.persistance.DatabaseModel
-import org.hugoandrade.rtpplaydownloader.network.persistance.PersistencePresenterOps
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TVIPlayerParsingTask
+import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
+import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
@@ -54,87 +57,7 @@ class DownloadManager : IDownloadManager {
         startService()
 
         mDatabaseModel = object : DatabaseModel(){}
-        mDatabaseModel.onCreate(object : PersistencePresenterOps {
-
-            override fun onDownloadableItemInserted(downloadableItem: DownloadableItem?) {
-                if (downloadableItem == null) {
-                    Log.e(TAG, "failed to insert")
-                    return
-                }
-
-                val mediaUrl = downloadableItem.mediaUrl ?: return
-                val filename = downloadableItem.filename ?: return
-
-                val downloaderTask = DownloaderTask(mediaUrl, filename, downloadableItem)
-                val action = DownloadableItemAction(downloadableItem, downloaderTask)
-                action.addActionListener(actionListener)
-
-                downloadService?.startDownload(action)
-
-                downloadableItems.add(action)
-                downloadableItems.sortedWith(compareBy { it.item.id } )
-                mViewOps.get()?.displayDownloadableItem(action)
-            }
-
-            override fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
-
-                val actions : ArrayList<DownloadableItemAction> = ArrayList()
-
-                for (item in downloadableItems) {
-
-                    synchronized(this@DownloadManager.downloadableItems) {
-                        val listItems = this@DownloadManager.downloadableItems
-
-
-                        var contains = false
-                        // add if not already in list
-                        for (i in listItems.size - 1 downTo 0) {
-                            if (listItems[i].item.id == item.id) {
-                                contains = true
-                                break
-                            }
-                        }
-
-                        if (!contains) {
-
-                            val task = DownloaderTask(item.mediaUrl ?: "", item.filename
-                                    ?: "", item)
-                            val action = DownloadableItemAction(item, task)
-                            action.addActionListener(actionListener)
-                            actions.add(action)
-                            if (action.item.state == DownloadableItemState.Downloading) {
-                                action.item.state = DownloadableItemState.Failed
-                            }
-                            listItems.add(action)
-                            listItems.sortedWith(compareBy { it.item.id })
-
-                            mViewOps.get()?.displayDownloadableItem(action)
-                        }
-                    }
-                }
-
-                mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
-            }
-
-            override fun onDownloadableItemsDeleted(downloadableItems: List<DownloadableItem>) {
-                this@DownloadManager.downloadableItems.clear()
-                mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
-            }
-
-            override fun onDatabaseReset(wasSuccessfullyDeleted : Boolean) {
-
-                downloadableItems.clear()
-                mViewOps.get()?.displayDownloadableItems(downloadableItems)
-            }
-
-            override fun getActivityContext(): Context? {
-                return mViewOps.get()?.getActivityContext()
-            }
-
-            override fun getApplicationContext(): Context? {
-                return mViewOps.get()?.getApplicationContext()
-            }
-        })
+        mDatabaseModel.onCreate(mPersistencePresenterOps)
 
         retrieveItemsFromDB()
     }
@@ -163,6 +86,101 @@ class DownloadManager : IDownloadManager {
     private fun stopService() {
         val context = mViewOps.get()?.getApplicationContext() ?: return
         context.unbindService(mConnection)
+    }
+
+    private val mPersistencePresenterOps = object : PersistencePresenterOps {
+
+        override fun onDownloadableItemInserted(downloadableItem: DownloadableItem?) {
+            if (downloadableItem == null) {
+                Log.e(TAG, "failed to insert")
+                return
+            }
+
+            val mediaUrl = downloadableItem.mediaUrl ?: return
+            val filename = downloadableItem.filename ?: return
+            val downloadTask = downloadableItem.downloadTask
+
+            val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask)) {
+                DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, filename, downloadableItem)
+                DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(mediaUrl, filename, downloadableItem)
+                null -> return
+            }
+
+            val action = DownloadableItemAction(downloadableItem, downloaderTask)
+            action.addActionListener(actionListener)
+
+            downloadService?.startDownload(action)
+
+            downloadableItems.add(action)
+            downloadableItems.sortedWith(compareBy { it.item.id } )
+            mViewOps.get()?.displayDownloadableItem(action)
+        }
+
+        override fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
+
+            val actions : ArrayList<DownloadableItemAction> = ArrayList()
+
+            for (item in downloadableItems) {
+
+                synchronized(this@DownloadManager.downloadableItems) {
+                    val listItems = this@DownloadManager.downloadableItems
+
+
+                    var contains = false
+                    // add if not already in list
+                    for (i in listItems.size - 1 downTo 0) {
+                        if (listItems[i].item.id == item.id) {
+                            contains = true
+                            break
+                        }
+                    }
+
+                    if (!contains) {
+
+                        val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask)) {
+                            DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "", item.filename ?: "", item)
+                            DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(item.mediaUrl ?: "", item.filename ?: "", item)
+                            null -> null
+                        }
+
+                        if (task != null) {
+
+                            val action = DownloadableItemAction(item, task)
+                            action.addActionListener(actionListener)
+                            actions.add(action)
+                            if (action.item.state == DownloadableItemState.Downloading) {
+                                action.item.state = DownloadableItemState.Failed
+                            }
+                            listItems.add(action)
+                            listItems.sortedWith(compareBy { it.item.id })
+
+                            mViewOps.get()?.displayDownloadableItem(action)
+                        }
+                    }
+                }
+            }
+
+            mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
+        }
+
+        override fun onDownloadableItemsDeleted(downloadableItems: List<DownloadableItem>) {
+            this@DownloadManager.downloadableItems.clear()
+            mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
+        }
+
+        override fun onDatabaseReset(wasSuccessfullyDeleted : Boolean) {
+
+            downloadableItems.clear()
+            mViewOps.get()?.displayDownloadableItems(downloadableItems)
+        }
+
+        override fun getActivityContext(): Context? {
+            return mViewOps.get()?.getActivityContext()
+        }
+
+        override fun getApplicationContext(): Context? {
+            return mViewOps.get()?.getApplicationContext()
+        }
     }
 
     private val mConnection: ServiceConnection = object : ServiceConnection {

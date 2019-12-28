@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.persistance
+package org.hugoandrade.rtpplaydownloader.network.persistence
 
 import org.hugoandrade.rtpplaydownloader.common.ContextView
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem

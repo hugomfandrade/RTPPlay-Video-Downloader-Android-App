@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.persistance
+package org.hugoandrade.rtpplaydownloader.network.persistence
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -94,8 +94,8 @@ abstract class DatabaseModel {
                     d = downloadableEntry
                     break
                 }
-                // make sure to close the cursor
 
+                // make sure to close the cursor
                 cursor.close()
             }
 

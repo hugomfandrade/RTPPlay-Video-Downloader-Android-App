@@ -11,8 +11,8 @@ import android.support.v4.content.ContextCompat
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.MainActivity
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.persistance.DatabaseModel
-import org.hugoandrade.rtpplaydownloader.network.persistance.PersistencePresenterOps
+import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
+import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.*
 import java.util.concurrent.Executors
@@ -42,16 +42,7 @@ class DownloadService : Service() {
         super.onCreate()
 
         val databaseModel = object : DatabaseModel(){}
-        databaseModel.onCreate(object : PersistencePresenterOps {
-
-            override fun getActivityContext(): Context? {
-                return this@DownloadService.applicationContext
-            }
-
-            override fun getApplicationContext(): Context? {
-                return this@DownloadService
-            }
-        })
+        databaseModel.onCreate(mPersistencePresenterOps)
 
         mDatabaseModel = databaseModel
     }
@@ -65,6 +56,17 @@ class DownloadService : Service() {
 
     override fun onBind(intent: Intent): IBinder {
         return mBinder
+    }
+
+    val mPersistencePresenterOps = object : PersistencePresenterOps {
+
+        override fun getActivityContext(): Context? {
+            return this@DownloadService.applicationContext
+        }
+
+        override fun getApplicationContext(): Context? {
+            return this@DownloadService
+        }
     }
 
     private fun createNotificationChannel() {
