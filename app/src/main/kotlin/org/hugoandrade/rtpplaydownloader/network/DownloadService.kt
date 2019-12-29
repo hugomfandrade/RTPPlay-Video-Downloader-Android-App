@@ -76,6 +76,9 @@ class DownloadService : Service() {
                     CHANNEL_NAME,
                     NotificationManager.IMPORTANCE_DEFAULT
             )
+            serviceChannel.enableLights(false)
+            serviceChannel.enableVibration(false)
+            serviceChannel.vibrationPattern = LongArray(0)
             val manager = getSystemService(NotificationManager::class.java)
             manager?.createNotificationChannel(serviceChannel)
         }
