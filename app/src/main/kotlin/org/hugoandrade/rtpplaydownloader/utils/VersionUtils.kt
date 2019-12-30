@@ -141,16 +141,18 @@ private constructor() {
 
             val uploadHistoryFuture : ListenableFutureImpl<String> = ListenableFutureImpl()
 
-            if (!NetworkUtils.isNetworkAvailable(context)) {
-                uploadHistoryFuture.failed("no network")
-                return uploadHistoryFuture
-            }
-
-            val insertObject = JsonObject()
-            insertObject.addProperty(appTableHistoryOriginalUrl, downloadableItem.item.url)
-            insertObject.addProperty(appTableHistoryUrl, downloadableItem.item.mediaUrl)
-
             try {
+
+                if (!NetworkUtils.isNetworkAvailable(context)) {
+                    uploadHistoryFuture.failed("no network")
+                    return uploadHistoryFuture
+                }
+
+                val insertObject = JsonObject()
+                insertObject.addProperty(appTableHistoryOriginalUrl, downloadableItem.item.url)
+                insertObject.addProperty(appTableHistoryUrl, downloadableItem.item.mediaUrl)
+                insertObject.addProperty(appTableHistoryUrlTaskID, downloadableItem.item.downloadTask)
+
                 val mClient = MobileServiceClient(
                         appUrl,
                         null,
