@@ -217,7 +217,7 @@ class ImageHolder(private val mDir: File) {
                     // load from cache, if it exists
                     var bitmap = imageHolder.loadFromCache(url)
 
-                    if (bitmap != null) {
+                    if (bitmap == null) {
                         bitmap = imageHolder.load(url)
                     }
 
