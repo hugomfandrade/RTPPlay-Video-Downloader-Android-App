@@ -205,13 +205,15 @@ class DownloadService : Service() {
         downloadableItemAction.item.addDownloadStateChangeListener(object : DownloadableItemState.ChangeListener {
 
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+
                 if (downloadableItem.state == DownloadableItemState.End ||
                         downloadableItem.state == DownloadableItemState.Failed) {
+
                     downloadMap.remove(downloadableItem.id)
 
                     updateNotification()
 
-                    downloadableItemAction.item.removeDownloadStateChangeListener(this)
+                    // downloadableItemAction.item.removeDownloadStateChangeListener(this)
                 }
                 else if (downloadableItem.state == DownloadableItemState.Start) {
 
