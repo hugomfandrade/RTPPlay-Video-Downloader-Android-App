@@ -73,9 +73,9 @@ open class ListenableFutureImpl<T> : ListenableFuture<T> {
     private fun fireCallback() {
         if (isFinished) {
             if (isSuccess) {
-                onScanningCallback?.onSuccess(result!!)
+                result?.let { onScanningCallback?.onSuccess(it) }
             } else {
-                onScanningCallback?.onFailed(errorMessage!!)
+                errorMessage?.let { onScanningCallback?.onFailed(it) }
             }
         }
     }

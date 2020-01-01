@@ -137,8 +137,6 @@ class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
                 "type=" + type + "&" +
                 "currentItemSelected=" + currentItemSelected
 
-        android.util.Log.e(TAG, "req = $req")
-
         try {
 
             val d: Document?

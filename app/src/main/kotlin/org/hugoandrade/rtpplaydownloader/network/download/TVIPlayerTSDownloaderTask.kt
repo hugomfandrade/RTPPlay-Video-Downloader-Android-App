@@ -2,6 +2,8 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import android.os.Environment
+import android.util.Log
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TVIPlayerParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -12,7 +14,8 @@ import java.net.URL
 import java.util.*
 import kotlin.collections.ArrayList
 
-open class TVIPlayerTSDownloaderTask(private val mediaUrl : String,
+open class TVIPlayerTSDownloaderTask(private val url : String?,
+                                     private val mediaUrl : String,
                                      private val dirPath : String,
                                      private val filename : String,
                                      private val listener : DownloaderTaskListener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
@@ -22,7 +25,14 @@ open class TVIPlayerTSDownloaderTask(private val mediaUrl : String,
     constructor(mediaUrl : String,
                 filename : String,
                 listener : DownloaderTaskListener) :
-        this(mediaUrl, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename, listener)
+            this(null, mediaUrl, filename, listener)
+
+    constructor(url : String?,
+                mediaUrl : String,
+                filename : String,
+                listener : DownloaderTaskListener) :
+        this(url, mediaUrl, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename, listener)
+
 
     override fun downloadMediaFile() {
 
@@ -44,7 +54,18 @@ open class TVIPlayerTSDownloaderTask(private val mediaUrl : String,
 
             val m3u8: String = mediaUrl
             val baseUrl: String = m3u8.substring(0, m3u8.lastIndexOf("/") + 1)
-            val playlist = getM3U8Playlist(m3u8)
+            var playlist = getM3U8Playlist(m3u8)
+
+            if (playlist == null && url != null) {
+                // try reparse
+                Log.d(TAG, "try reparse $url")
+                val parsingTask = TVIPlayerParsingTask()
+                parsingTask.parseMediaFile(url)
+                val parsingMediaUrl = parsingTask.mediaUrl
+                if (parsingMediaUrl != null) {
+                    playlist = getM3U8Playlist(parsingMediaUrl)
+                }
+            }
             val playlistUrl = baseUrl + playlist
             val tsUrls = getTSUrls(playlistUrl)
             val tsFullUrls: ArrayList<String> = ArrayList()
@@ -67,7 +88,6 @@ open class TVIPlayerTSDownloaderTask(private val mediaUrl : String,
             var size = 0L
             val fos = FileOutputStream(f)
             for ((i, tsUrl) in tsFullUrls.withIndex()) {
-                android.util.Log.d(TAG, "downloading " + (i + 1) + " of " + tsFullUrls.size)// + " = " + tsUrl)
 
                 val u = URL(tsUrl)
                 val inputStream = u.openStream()
@@ -121,7 +141,7 @@ open class TVIPlayerTSDownloaderTask(private val mediaUrl : String,
 
             fos.close()
 
-        } catch (ioe: IOException) {
+        } catch (ioe: Exception) {
             ioe.printStackTrace()
             listener.downloadFailed("Internal error while downloading")
         }

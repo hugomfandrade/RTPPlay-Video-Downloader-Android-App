@@ -96,13 +96,14 @@ class DownloadManager : IDownloadManager {
                 return
             }
 
+            val url = downloadableItem.url
             val mediaUrl = downloadableItem.mediaUrl ?: return
             val filename = downloadableItem.filename ?: return
             val downloadTask = downloadableItem.downloadTask
 
             val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask)) {
                 DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, filename, downloadableItem)
-                DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(mediaUrl, filename, downloadableItem)
+                DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, filename, downloadableItem)
                 null -> return
             }
 
@@ -139,7 +140,7 @@ class DownloadManager : IDownloadManager {
 
                         val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask)) {
                             DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "", item.filename ?: "", item)
-                            DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(item.mediaUrl ?: "", item.filename ?: "", item)
+                            DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(item.url, item.mediaUrl ?: "", item.filename ?: "", item)
                             null -> null
                         }
 
