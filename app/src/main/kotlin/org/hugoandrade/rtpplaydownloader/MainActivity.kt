@@ -5,8 +5,13 @@ import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.databinding.DataBindingUtil
+import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.support.v4.view.GravityCompat
+import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.widget.*
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.Editable
@@ -38,6 +43,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     private lateinit var mDownloadManager: DownloadManager
 
+    private var mDrawerToggle: ActionBarDrawerToggle? = null
+    private var mDrawerAdapter: DrawerItemListAdapter? = null
+    private var mPendingRunnable: Runnable? = null
+    private val mHandler = Handler()
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -74,6 +83,18 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
     }
 
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle?.syncState()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        // Pass any configuration change to the drawer toggle
+        mDrawerToggle?.onConfigurationChanged(newConfig)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         menu.findItem(R.id.action_empty_db).isVisible = false
@@ -81,6 +102,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val drawerToggle = mDrawerToggle
+
+        if (drawerToggle != null && drawerToggle.onOptionsItemSelected(item)) return true
+
         when (item.itemId) {
             R.id.action_empty_db -> {
                 mDownloadManager.emptyDB()
@@ -98,9 +123,85 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
     }
 
+    override fun onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     private fun initializeUI() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+
+        setSupportActionBar(binding.toolbar)
+
+        val actionBar = supportActionBar
+        if (actionBar != null) {
+            actionBar.title = getString(R.string.app_name)
+            actionBar.setDisplayHomeAsUpEnabled(true)
+            actionBar.setHomeButtonEnabled(false)
+        }
+
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the sliding drawer and the action bar app icon
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the sliding drawer and the action bar app icon
+        val drawerToggle = object : ActionBarDrawerToggle(this,
+                binding.drawerLayout,
+                R.string.drawer_open,
+                R.string.drawer_close) {
+            /**
+             * Called when a drawer has settled in a completely closed state.
+             */
+            override fun onDrawerClosed(view: View) {
+                super.onDrawerClosed(view)
+                if (mPendingRunnable != null) {
+                    mHandler.post(mPendingRunnable)
+                    mPendingRunnable = null
+                }
+            }
+
+            /**
+             * Called when a drawer has settled in a completely open state.
+             */
+            override fun onDrawerOpened(drawerView: View) {
+                super.onDrawerOpened(drawerView)
+            }
+        }
+        binding.drawerLayout.addDrawerListener(drawerToggle)
+
+        val drawerAdapter = DrawerItemListAdapter(this)
+        drawerAdapter.addHeader(getString(R.string.quick_assess))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_rtpplay, "RTP Play", "https://www.rtp.pt/play/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_tvi_player, "TVI Player", "https://tviplayer.iol.pt/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicradical, "SIC Radical", "https://sicradical.pt/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicnoticias, "SIC Notícias", "https://sicnoticias.pt/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sic, "SIC", "https://sic.pt/"))
+        drawerAdapter.setOnItemClickListener(object : DrawerItemListAdapter.OnDrawerClickListener {
+
+            override fun onItemClicked(drawerItem: DrawerItemListAdapter.QuickAccessItem?) {
+                if (drawerItem != null) {
+                    try {
+                        mPendingRunnable = Runnable {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(drawerItem.url))
+                            startActivity(browserIntent)
+                        }
+                    } catch (e : Exception) {
+
+                    }
+                }
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+            }
+        })
+
+        binding.drawerLayout.navigationDrawerContent.adapter = drawerAdapter
+        binding.drawerLayout.navigationDrawerContent.layoutManager = LinearLayoutManager(this)
+
+        this.mDrawerToggle = drawerToggle
+        this.mDrawerAdapter = drawerAdapter
+
         binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
         binding.inputUriEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) { }

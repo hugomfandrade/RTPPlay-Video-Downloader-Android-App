@@ -37,4 +37,8 @@
     <string name="url_no_longer_exists">URL no longer exists</string>
     <string name="download_cancelled">cancelled</string>
 
+    <string name="drawer_open">open</string>
+    <string name="drawer_close">close</string>
+    <string name="quick_assess">Quick Access</string>
+
 </resources>

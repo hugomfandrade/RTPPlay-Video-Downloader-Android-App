@@ -1,108 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity">
+
     <data>
         <variable name="MainActivity" type="org.hugoandrade.rtpplaydownloader.MainActivity"/>
     </data>
 
-    <RelativeLayout
-        android:id="@+id/activity_main_kt_root"
+    <org.hugoandrade.rtpplaydownloader.widget.NavigationDrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        android:layout_height="match_parent">
 
-        <org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout
-            android:id="@+id/input_layout"
+        <android.support.design.widget.CoordinatorLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:padding="4dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            app:stroke_color="@android:color/transparent"
-            app:stroke_width="0dp"
-            app:background_color="#ddd">
+            android:layout_height="match_parent" >
 
-            <EditText
-                android:id="@+id/input_uri_edit_text"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:inputType="textUri"
-                android:ems="10"
-                android:hint="@string/hint_uri_input"
-                android:background="@android:color/transparent" />
+            <android.support.design.widget.AppBarLayout
+                android:id="@+id/appbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <ImageView
-                android:id="@+id/clear_text_button"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:padding="4dp"
-                android:src="@drawable/ic_clear"
-                android:onClick="clearUriEditText"/>
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    style="@style/ActionBarStyleOverlay"
+                    app:theme="@style/ActionBarThemeOverlay"
+                    app:popupTheme="@style/ActionBarThemeOverlay.Popup"
+                    app:titleTextAppearance="@style/ActionBarThemeOverlay.TitleText"
+                    app:subtitleTextAppearance="@style/ActionBarThemeOverlay.SubTitleText"/>
 
-            <ImageView
-                android:id="@+id/paste_from_clipboard_button"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:padding="4dp"
-                android:src="@drawable/ic_content_paste"
-                android:onClick="pasteFromClipboard"/>
+            </android.support.design.widget.AppBarLayout>
 
-        </org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout>
+            <RelativeLayout
+                android:id="@+id/activity_main_kt_root"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <Button
-            android:id="@+id/download_media_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/input_layout"
-            android:ems="10"
-            android:text="@string/download"
-            android:onClick="download" />
-            <!--android:onClick="@{MainActivity::download}"/-->
+                <org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout
+                    android:id="@+id/input_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginRight="8dp"
+                    android:padding="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    app:stroke_color="@android:color/transparent"
+                    app:stroke_width="0dp"
+                    app:background_color="#ddd">
+
+                    <EditText
+                        android:id="@+id/input_uri_edit_text"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginRight="8dp"
+                        android:inputType="textUri"
+                        android:ems="10"
+                        android:hint="@string/hint_uri_input"
+                        android:background="@android:color/transparent" />
+
+                    <ImageView
+                        android:id="@+id/clear_text_button"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_clear"
+                        android:onClick="clearUriEditText"/>
+
+                    <ImageView
+                        android:id="@+id/paste_from_clipboard_button"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_content_paste"
+                        android:onClick="pasteFromClipboard"/>
+
+                </org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout>
+
+                <Button
+                    android:id="@+id/download_media_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/input_layout"
+                    android:ems="10"
+                    android:text="@string/download"
+                    android:onClick="download" />
+                <!--android:onClick="@{MainActivity::download}"/-->
 
 
-        <include
-            android:id="@+id/tv_no_network_connection"
-            layout="@layout/layout_no_network_connection" />
+                <include
+                    android:id="@+id/tv_no_network_connection"
+                    layout="@layout/layout_no_network_connection" />
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/download_items_recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@id/tv_no_network_connection"
-            android:layout_below="@id/download_media_button" />
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/download_items_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/tv_no_network_connection"
+                    android:layout_below="@id/download_media_button" />
 
-        <LinearLayout
-            android:id="@+id/empty_list_view_group"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/download_media_button"
-            android:paddingTop="70dp"
-            android:gravity="center"
-            android:orientation="vertical">
+                <LinearLayout
+                    android:id="@+id/empty_list_view_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/download_media_button"
+                    android:paddingTop="70dp"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_movie"
-                android:tint="#BFBFBF"/>
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_movie"
+                        android:tint="#BFBFBF"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/insert_link_and_download"
-                android:textColor="#BFBFBF"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/insert_link_and_download"
+                        android:textColor="#BFBFBF"/>
 
-        </LinearLayout>
+                </LinearLayout>
 
-    </RelativeLayout>
+            </RelativeLayout>
+
+        </android.support.design.widget.CoordinatorLayout>
+
+    </org.hugoandrade.rtpplaydownloader.widget.NavigationDrawerLayout>
 
 </layout>

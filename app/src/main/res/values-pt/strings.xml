@@ -46,4 +46,8 @@
     <string name="url_no_longer_exists">URL indisponível</string>
     <string name="download_cancelled">cancelado</string>
 
+    <string name="drawer_open">open</string>
+    <string name="drawer_close">close</string>
+    <string name="quick_assess">Acesso Rápido</string>
+
 </resources>
