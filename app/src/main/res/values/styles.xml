@@ -2,12 +2,17 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    <style name="AppTheme.Archive" parent="AppTheme">
 
-
+    </style>
+    <style name="AppTheme.Main" parent="AppTheme">
+        <!-- Custom action bar with SearchView -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
         <item name="searchViewStyle">@style/SearchViewStyle</item>
     </style>
     <style name="SearchViewStyle" parent="Widget.AppCompat.Light.SearchView">

@@ -17,22 +17,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
-            <android.support.design.widget.AppBarLayout
-                android:id="@+id/appbar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <android.support.v7.widget.Toolbar
-                    android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize"
-                    style="@style/ActionBarStyleOverlay"
-                    app:theme="@style/ActionBarThemeOverlay"
-                    app:popupTheme="@style/ActionBarThemeOverlay.Popup"
-                    app:titleTextAppearance="@style/ActionBarThemeOverlay.TitleText"
-                    app:subtitleTextAppearance="@style/ActionBarThemeOverlay.SubTitleText"/>
-
-            </android.support.design.widget.AppBarLayout>
+            <include
+                layout="@layout/layout_toolbar" />
 
             <RelativeLayout
                 android:layout_width="match_parent"

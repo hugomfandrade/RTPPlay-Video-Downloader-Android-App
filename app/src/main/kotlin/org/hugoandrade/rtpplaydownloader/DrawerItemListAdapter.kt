@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader
 
 import android.app.Activity
+import android.content.Intent
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,10 @@ import android.widget.TextView
 import java.util.*
 
 class DrawerItemListAdapter (private val activity: Activity) : RecyclerView.Adapter<DrawerItemListAdapter.ViewHolder>() {
+
+    companion object {
+        private val TAG = DrawerItemListAdapter::class.java.simpleName
+    }
 
     private val mItemList: MutableList<Item> = ArrayList()
     private var mListener: OnDrawerClickListener? = null
@@ -29,18 +34,31 @@ class DrawerItemListAdapter (private val activity: Activity) : RecyclerView.Adap
             val isHeader = item is Header
             holder.drawerHeader.visibility = if (isHeader) View.VISIBLE else View.GONE
             holder.drawerLayout.visibility = if (isHeader) View.GONE else View.VISIBLE
-            if (isHeader) {
-                holder.tvHeader.text = (item as Header).headerTitle
-            } else {
-                val drawerItem = (item as QuickAccessItem)
-                holder.tvTitle.text = drawerItem.title
-                holder.ivIcon.setImageResource(drawerItem.resourceID)
+            when (item) {
+                is Header -> {
+                    holder.tvHeader.text = item.headerTitle
+                }
+                is QuickAccessItem -> {
+                    holder.tvTitle.text = item.title
+                    holder.ivIcon.setImageResource(item.resourceID)
+                }
+                is OptionItem -> {
+                    holder.tvTitle.text = item.title
+                    holder.ivIcon.setImageResource(item.resourceID)
+                }
+                else -> {
+                    holder.drawerLayout.visibility = View.GONE
+                }
             }
         }
     }
 
     fun setOnItemClickListener(listener: OnDrawerClickListener?) {
         mListener = listener
+    }
+
+    fun addOptionItem(item: OptionItem) {
+        synchronized(mItemList) { mItemList.add(item) }
     }
 
     fun addItem(item: QuickAccessItem) {
@@ -51,29 +69,21 @@ class DrawerItemListAdapter (private val activity: Activity) : RecyclerView.Adap
         synchronized(mItemList) { mItemList.add(Header(header)) }
     }
 
-    fun getItemAt(position: Int): QuickAccessItem? {
+    fun getItemAt(position: Int): Item? {
         synchronized(mItemList) {
-            var i = 0
-            for (item in mItemList) {
-                if (item is QuickAccessItem) {
-                    if (i == position) {
-                        return item
-                    } else {
-                        i++
-                    }
-                }
-            }
+            return mItemList[position]
         }
-        return null
     }
 
     interface OnDrawerClickListener {
-        fun onItemClicked(drawerItem: QuickAccessItem?)
+        fun onItemClicked(drawerItem: Item?)
     }
 
     abstract class Item
 
     class Header internal constructor(val headerTitle: String?) : Item()
+
+    data class OptionItem(val resourceID: Int, val title: String, val intent: Intent) : Item()
 
     data class QuickAccessItem(val resourceID: Int, val title: String, val url: String) : Item()
 
@@ -86,9 +96,9 @@ class DrawerItemListAdapter (private val activity: Activity) : RecyclerView.Adap
         var tvTitle: TextView = view.findViewById(R.id.tv_drawer_title)
 
         override fun onClick(v: View) {
-            val drawerItem = getItemAt(adjustPosition(adapterPosition))
+            val drawerItem = getItemAt(adapterPosition)
             if (drawerItem != null) {
-                mListener?.onItemClicked(getItemAt(adjustPosition(adapterPosition)))
+                mListener?.onItemClicked(drawerItem)
             }
         }
 
@@ -98,27 +108,4 @@ class DrawerItemListAdapter (private val activity: Activity) : RecyclerView.Adap
             tvTitle = view.findViewById(R.id.tv_drawer_title)
         }
     }
-
-    private fun adjustPosition(adapterPosition: Int): Int {
-        synchronized(mItemList) {
-            var i = 0
-            var adapterI = 0
-            for (item in mItemList) {
-                if (item is QuickAccessItem) {
-                    if (i == adapterPosition) {
-                        return adapterI
-                    } else {
-                        adapterI++
-                    }
-                }
-                i++
-            }
-        }
-        return adapterPosition
-    }
-
-    companion object {
-        private val TAG = DrawerItemListAdapter::class.java.simpleName
-    }
-
 }

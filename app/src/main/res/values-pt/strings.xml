@@ -20,6 +20,9 @@
 
     <string name="insert_link_and_download">insira o link e faça download</string>
 
+    <string name="archive">Arquivo</string>
+    <string name="archive_is_empty">o arquivo está vazio</string>
+
     <string name="parsing">analisando…</string>
 
     <string name="all_episodes">Toda a Série</string>

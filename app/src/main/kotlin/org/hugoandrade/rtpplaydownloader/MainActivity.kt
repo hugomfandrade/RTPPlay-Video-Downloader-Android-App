@@ -20,6 +20,7 @@ import android.widget.EditText
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
+import org.hugoandrade.rtpplaydownloader.network.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
@@ -209,7 +210,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
-        setSupportActionBar(binding.toolbar)
+        setSupportActionBar(findViewById(R.id.toolbar))
 
         val actionBar = supportActionBar
         if (actionBar != null) {
@@ -247,6 +248,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         binding.drawerLayout.addDrawerListener(drawerToggle)
 
         val drawerAdapter = DrawerItemListAdapter(this)
+        drawerAdapter.addOptionItem(DrawerItemListAdapter.OptionItem(R.drawable.ic_archive, getString(R.string.archive), ArchiveActivity.makeIntent(this)))
         drawerAdapter.addHeader(getString(R.string.quick_assess))
         drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_rtpplay, "RTP Play", "https://www.rtp.pt/play/"))
         drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_tvi_player, "TVI Player", "https://tviplayer.iol.pt/"))
@@ -255,15 +257,26 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sic, "SIC", "https://sic.pt/"))
         drawerAdapter.setOnItemClickListener(object : DrawerItemListAdapter.OnDrawerClickListener {
 
-            override fun onItemClicked(drawerItem: DrawerItemListAdapter.QuickAccessItem?) {
+            override fun onItemClicked(drawerItem: DrawerItemListAdapter.Item?) {
                 if (drawerItem != null) {
-                    try {
-                        mPendingRunnable = Runnable {
-                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(drawerItem.url))
-                            startActivity(browserIntent)
-                        }
-                    } catch (e : Exception) {
+                    if (drawerItem is DrawerItemListAdapter.QuickAccessItem) {
+                        try {
+                            mPendingRunnable = Runnable {
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(drawerItem.url))
+                                startActivity(browserIntent)
+                            }
+                        } catch (e: Exception) {
 
+                        }
+                    }
+                    else if (drawerItem is DrawerItemListAdapter.OptionItem) {
+                        try {
+                            mPendingRunnable = Runnable {
+                                startActivity(drawerItem.intent)
+                            }
+                        } catch (e: Exception) {
+
+                        }
                     }
                 }
                 binding.drawerLayout.closeDrawer(GravityCompat.START)

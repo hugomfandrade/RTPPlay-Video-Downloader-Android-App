@@ -13,6 +13,8 @@
 
     <string name="hint_uri_input" translatable="true">Url (eg. RTP Play, SIC, Sapo)</string>
     <string name="insert_link_and_download">insert link and download</string>
+    <string name="archive">Archive</string>
+    <string name="archive_is_empty">archive is empty</string>
     <string name="parsing">parsing…</string>
     <string name="all_episodes">All Episodes</string>
     <string name="not_now">not now</string>

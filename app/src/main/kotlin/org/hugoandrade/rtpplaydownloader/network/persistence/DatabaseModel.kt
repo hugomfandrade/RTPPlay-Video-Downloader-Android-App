@@ -44,12 +44,28 @@ abstract class DatabaseModel {
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
+            mPresenterOps.get()?.onDownloadableItemsRetrieved(retrieveDownloadableItems(false))
+        }
+    }
+
+    fun retrieveArchivedDownloadableItems() {
+
+        if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
+        persistenceExecutors.execute {
+
+            mPresenterOps.get()?.onArchivedDownloadableItemsRetrieved(retrieveDownloadableItems(true))
+        }
+    }
+
+
+    private fun retrieveDownloadableItems(isArchived: Boolean) : ArrayList<DownloadableItem> {
+
             val downloadableItems = ArrayList<DownloadableItem>()
 
             val cursor = database?.query(DownloadableItem.Entry.TABLE_NAME,
                     null,
                     DownloadableItem.Entry.Cols.IS_ARCHIVED + " = ?",
-                    arrayOf("0"),
+                    arrayOf(if (isArchived) "1" else "0"),
                     null,
                     null,
                     null)
@@ -64,8 +80,7 @@ abstract class DatabaseModel {
                 cursor.close()
             }
 
-            mPresenterOps.get()?.onDownloadableItemsRetrieved(downloadableItems)
-        }
+        return downloadableItems
     }
 
     fun insertDownloadableItem(downloadableItem: DownloadableItem) {
