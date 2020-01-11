@@ -40,5 +40,6 @@
     <string name="drawer_open">open</string>
     <string name="drawer_close">close</string>
     <string name="quick_assess">Quick Access</string>
+    <string name="search">Search</string>
 
 </resources>

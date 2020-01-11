@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.databinding.DataBindingUtil
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -17,9 +18,14 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.TextView.OnEditorActionListener
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
@@ -36,6 +42,7 @@ import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
+    private var searchView: SearchView? = null
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var mDownloadItemsRecyclerView: RecyclerView
@@ -97,21 +104,98 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        menu.findItem(R.id.action_empty_db).isVisible = false
+        val searchView = menu.findItem(R.id.app_search_bar).actionView as SearchView
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
+            override fun onQueryTextSubmit(p0: String?): Boolean {
+                doDownload(searchView.query.toString())
+                return false
+            }
+
+            override fun onQueryTextChange(p0: String?): Boolean {
+                return false
+            }
+        })
+        searchView.setOnCloseListener {
+            val drawerLayout = binding.drawerLayout
+            if (drawerLayout != null) {
+                mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+            }
+            false
+        }
+        searchView.setOnSearchClickListener {
+            val drawerLayout = binding.drawerLayout
+            if (drawerLayout != null) {
+                mDrawerToggle?.onDrawerSlide(drawerLayout, 1f)
+
+                /*
+                ValueAnimator anim = ValueAnimator.ofFloat(start, end);
+                anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        float slideOffset = (Float) valueAnimator.getAnimatedValue();
+                        toolbarDrawerToggle.onDrawerSlide(drawerLayout, slideOffset);
+                    }
+                });
+                anim.setInterpolator(new DecelerateInterpolator());
+                // You can change this duration to more closely match that of the default animation.
+                anim.setDuration(500);
+                anim.start();
+                 */
+            }
+        }
+
+        searchView.setOnQueryTextFocusChangeListener(object: View.OnFocusChangeListener {
+
+            override fun onFocusChange(v: View?, hasFocus: Boolean) {
+                if (!hasFocus) {
+                    searchView.isIconified = true
+                    val drawerLayout = binding.drawerLayout
+                    if (drawerLayout != null) {
+                        mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+                    }
+                }
+            }
+        });
+
+        //
+        val editText = searchView.findViewById<View>(android.support.v7.appcompat.R.id.search_src_text) as EditText
+        editText.setTextColor(Color.WHITE)
+        editText.setHintTextColor(Color.parseColor("#90ffffff"))
+
+        //
+        val devUrl: String? = DevConstants.url
+        if (devUrl != null) {
+            searchView.setQuery(devUrl, true)
+            editText.setSelection(editText.text.length)
+        } else {
+            ViewUtils.hideSoftKeyboardAndClearFocus(searchView)
+        }
+
+        this.searchView = searchView
+
+        extractActionSendIntentAndUpdateUI(intent)
+
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val drawerToggle = mDrawerToggle
 
-        if (drawerToggle != null && drawerToggle.onOptionsItemSelected(item)) return true
-
-        when (item.itemId) {
-            R.id.action_empty_db -> {
-                mDownloadManager.emptyDB()
+        if (item.itemId == android.R.id.home) {
+            val searchView = this.searchView
+            if (searchView != null && !searchView.isIconified) {
+                searchView.isIconified = true
+                val drawerLayout = binding.drawerLayout
+                if (drawerLayout != null) {
+                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+                }
                 return true
             }
         }
+
+        if (drawerToggle != null && drawerToggle.onOptionsItemSelected(item)) return true
+
         return super.onOptionsItemSelected(item)
     }
 
@@ -127,7 +211,16 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
         } else {
-            super.onBackPressed()
+            val searchView = this.searchView
+            if (searchView != null && !searchView.isIconified) {
+                searchView.isIconified = true
+                val drawerLayout = binding.drawerLayout
+                if (drawerLayout != null) {
+                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+                }
+            } else {
+                super.onBackPressed()
+            }
         }
     }
 
