@@ -1,9 +1,6 @@
 package org.hugoandrade.rtpplaydownloader
 
 import android.Manifest
-import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.databinding.DataBindingUtil
@@ -15,17 +12,11 @@ import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.widget.*
 import android.support.v7.widget.helper.ItemTouchHelper
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
-import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import android.widget.TextView
-import android.widget.TextView.OnEditorActionListener
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
@@ -76,18 +67,6 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
 
         initializeUI()
-
-        if (oldDownloadManager == null ) { // is first
-            val devUrl: String? = DevConstants.url
-            if (devUrl != null) {
-                binding.inputUriEditText.setText(devUrl)
-                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-            } else {
-                ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-            }
-
-            extractActionSendIntentAndUpdateUI(intent)
-        }
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -104,11 +83,18 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+
+        // set up SearchView
         val searchView = menu.findItem(R.id.app_search_bar).actionView as SearchView
+        this.searchView = searchView
+
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
 
             override fun onQueryTextSubmit(p0: String?): Boolean {
-                doDownload(searchView.query.toString())
+                val searchView = this@MainActivity.searchView
+                if (searchView != null) {
+                    doDownload(searchView.query.toString())
+                }
                 return false
             }
 
@@ -145,34 +131,29 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             }
         }
 
-        searchView.setOnQueryTextFocusChangeListener(object: View.OnFocusChangeListener {
-
-            override fun onFocusChange(v: View?, hasFocus: Boolean) {
-                if (!hasFocus) {
-                    searchView.isIconified = true
-                    val drawerLayout = binding.drawerLayout
-                    if (drawerLayout != null) {
-                        mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-                    }
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                searchView.isIconified = true
+                val drawerLayout = binding.drawerLayout
+                if (drawerLayout != null) {
+                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
                 }
             }
-        });
+        };
 
         //
-        val editText = searchView.findViewById<View>(android.support.v7.appcompat.R.id.search_src_text) as EditText
-        editText.setTextColor(Color.WHITE)
-        editText.setHintTextColor(Color.parseColor("#90ffffff"))
+        val editText: EditText? = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)
+        editText?.setTextColor(Color.WHITE)
+        editText?.setHintTextColor(Color.parseColor("#90ffffff"))
 
         //
         val devUrl: String? = DevConstants.url
         if (devUrl != null) {
             searchView.setQuery(devUrl, true)
-            editText.setSelection(editText.text.length)
+            editText?.setSelection(editText.text.length)
         } else {
             ViewUtils.hideSoftKeyboardAndClearFocus(searchView)
         }
-
-        this.searchView = searchView
 
         extractActionSendIntentAndUpdateUI(intent)
 
@@ -295,17 +276,6 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         this.mDrawerToggle = drawerToggle
         this.mDrawerAdapter = drawerAdapter
 
-        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-        binding.inputUriEditText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) { }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                toggleClearTextButton()
-            }
-        })
-
-        toggleClearTextButton()
-
         val simpleItemAnimator : SimpleItemAnimator = DefaultItemAnimator()
         simpleItemAnimator.supportsChangeAnimations = false
 
@@ -388,73 +358,14 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)?: return
 
-        binding.inputUriEditText.setText(url)
-        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+        //
+        val searchView = this.searchView
+        val editText: EditText? = searchView?.findViewById(android.support.v7.appcompat.R.id.search_src_text)
 
-        ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-        binding.inputUriEditText.clearFocus()
-        doDownload(binding.inputUriEditText.text.toString())
-    }
+        searchView?.setQuery(url, true)
+        editText?.setSelection(editText.text.length)
 
-    private fun toggleClearTextButton() {
-
-        binding.clearTextButton.visibility =
-                if (binding.inputUriEditText.text.isEmpty()) View.INVISIBLE
-                else View.VISIBLE
-    }
-
-    /**
-     * from activity_main.xml
-     */
-    fun pasteFromClipboard(view: View) {
-
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-
-        val primaryClipDescription = clipboard.primaryClipDescription
-
-        // If it does contain data, decide if you can handle the data.
-        if (clipboard.hasPrimaryClip()
-                && primaryClipDescription != null
-                && primaryClipDescription.hasMimeType(MIMETYPE_TEXT_PLAIN)) {
-
-            // since the clipboard has data but it is not plain text
-
-            //since the clipboard contains plain text.
-            val item = clipboard.primaryClip?.getItemAt(0)
-
-            // Gets the clipboard as text.
-            val pasteData = item?.text.toString()
-
-            if (NetworkUtils.isValidURL(pasteData)) {
-                binding.inputUriEditText.setText(pasteData)
-                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-            } else {
-                ViewUtils.showSnackBar(binding.root, getString(R.string.not_a_valid_url))
-            }
-        } else {
-            ViewUtils.showSnackBar(binding.root, getString(R.string.nothing_to_paste))
-        }
-    }
-
-    /**
-     * from activity_main.xml
-     */
-    fun clearUriEditText(view: View) {
-
-        doClearUriEditText()
-    }
-
-    private fun doClearUriEditText() {
-
-        binding.inputUriEditText.setText("")
-    }
-
-    fun download(view: View) {
-
-        ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-        binding.inputUriEditText.clearFocus()
-
-        doDownload(binding.inputUriEditText.text.toString())
+        doDownload(url)
     }
 
     private var parsingDialog : ParsingDialog? = null
@@ -612,7 +523,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     override fun onRequestPermissionsResult(permissionType: String, wasPermissionGranted: Boolean) {
                         when (permissionType) {
                             Manifest.permission.WRITE_EXTERNAL_STORAGE -> if (wasPermissionGranted) {
-                                doDownload(binding.inputUriEditText.text.toString())
+                                val searchView = this@MainActivity.searchView
+                                if (searchView != null) {
+                                    doDownload(searchView.query.toString())
+                                }
                             } else {
                                 // onBackPressed()
                             }

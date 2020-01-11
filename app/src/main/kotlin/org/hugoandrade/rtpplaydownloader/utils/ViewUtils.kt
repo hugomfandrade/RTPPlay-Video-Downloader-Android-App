@@ -154,7 +154,8 @@ private constructor() {
          *
          * @param view The target view for soft keyboard input.
          */
-        fun hideSoftKeyboardAndClearFocus(view: View) {
+        fun hideSoftKeyboardAndClearFocus(view: View?) {
+            if (view == null) return
             view.clearFocus()
             hideSoftKeyboard(view)
         }

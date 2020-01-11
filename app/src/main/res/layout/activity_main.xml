@@ -35,67 +35,9 @@
             </android.support.design.widget.AppBarLayout>
 
             <RelativeLayout
-                android:id="@+id/activity_main_kt_root"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-                <org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout
-                    android:id="@+id/input_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginRight="8dp"
-                    android:padding="4dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    app:stroke_color="@android:color/transparent"
-                    app:stroke_width="0dp"
-                    app:background_color="#ddd">
-
-                    <EditText
-                        android:id="@+id/input_uri_edit_text"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="8dp"
-                        android:layout_marginRight="8dp"
-                        android:inputType="textUri"
-                        android:ems="10"
-                        android:hint="@string/hint_uri_input"
-                        android:background="@android:color/transparent" />
-
-                    <ImageView
-                        android:id="@+id/clear_text_button"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_clear"
-                        android:onClick="clearUriEditText"/>
-
-                    <ImageView
-                        android:id="@+id/paste_from_clipboard_button"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_content_paste"
-                        android:onClick="pasteFromClipboard"/>
-
-                </org.hugoandrade.rtpplaydownloader.widget.RoundedLinearLayout>
-
-                <Button
-                    android:id="@+id/download_media_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/input_layout"
-                    android:ems="10"
-                    android:text="@string/download"
-                    android:onClick="download" />
-                <!--android:onClick="@{MainActivity::download}"/-->
-
 
                 <include
                     android:id="@+id/tv_no_network_connection"
@@ -104,16 +46,14 @@
                 <android.support.v7.widget.RecyclerView
                     android:id="@+id/download_items_recycler_view"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_above="@id/tv_no_network_connection"
-                    android:layout_below="@id/download_media_button" />
+                    android:layout_height="match_parent"
+                    android:layout_above="@id/tv_no_network_connection" />
 
                 <LinearLayout
                     android:id="@+id/empty_list_view_group"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/download_media_button"
-                    android:paddingTop="70dp"
+                    android:paddingTop="120dp"
                     android:gravity="center"
                     android:orientation="vertical">
 
