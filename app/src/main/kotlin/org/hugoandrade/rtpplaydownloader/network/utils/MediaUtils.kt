@@ -1,5 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.utils
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Environment
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import java.io.File
@@ -18,6 +21,32 @@ private constructor() {
     }
 
     companion object {
+
+        const val sharedPreferencesName = "org.hugoandrade.rtpplaydownloader"
+        const val directoryKey = "org.hugoandrade.rtpplaydownloader.directoryKey"
+
+        fun getDownloadsDirectory(context: Context) : Uri? {
+
+            try {
+                return Uri.parse(context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE)
+                        .getString(directoryKey, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()))
+            }
+            catch (e : Exception) {
+                return Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES))
+            }
+        }
+
+        fun putDownloadsDirectory(context: Context, uri: Uri) {
+            putDownloadsDirectory(context, uri.toString())
+        }
+
+        fun putDownloadsDirectory(context: Context, uri: String) {
+
+            context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(directoryKey, uri)
+                    .apply()
+        }
 
         fun doesMediaFileExist(file : File) : Boolean {
             return file.exists()

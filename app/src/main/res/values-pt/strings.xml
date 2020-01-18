@@ -20,6 +20,7 @@
 
     <string name="insert_link_and_download">insira o link e faça download</string>
 
+    <string name="settings">Preferências</string>
     <string name="archive">Arquivo</string>
     <string name="archive_is_empty">o arquivo está vazio</string>
 
@@ -53,5 +54,9 @@
     <string name="drawer_close">close</string>
     <string name="quick_assess">Acesso Rápido</string>
     <string name="search">Procurar</string>
+
+    <!-- PREFERENCES -->
+    <string name="directory_storage_title">Directório dos Downloads</string>
+    <string name="directory_storage_summary">Clique para escolher o directório destino dos downloads</string>
 
 </resources>

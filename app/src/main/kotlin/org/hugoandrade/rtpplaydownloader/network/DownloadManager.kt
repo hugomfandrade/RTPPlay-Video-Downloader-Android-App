@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
+import android.os.Environment
 import android.os.IBinder
 import android.support.v4.content.ContextCompat
 import android.util.Log
@@ -96,14 +97,22 @@ class DownloadManager : IDownloadManager {
                 return
             }
 
+            val context = getApplicationContext()
             val url = downloadableItem.url
             val mediaUrl = downloadableItem.mediaUrl ?: return
             val filename = downloadableItem.filename ?: return
             val downloadTask = downloadableItem.downloadTask
+            val dirPath = if (context != null) {
+                MediaUtils.getDownloadsDirectory(context)
+            }
+            else {
+                null
+            }
+            val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
 
             val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask)) {
-                DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, filename, downloadableItem)
-                DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, filename, downloadableItem)
+                DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(url, dir, mediaUrl, filename, downloadableItem)
                 null -> return
             }
 
@@ -120,6 +129,15 @@ class DownloadManager : IDownloadManager {
         override fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
 
             val actions : ArrayList<DownloadableItemAction> = ArrayList()
+
+            val context = getApplicationContext()
+            val dirPath = if (context != null) {
+                MediaUtils.getDownloadsDirectory(context)
+            }
+            else {
+                null
+            }
+            val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
 
             for (item in downloadableItems) {
 
@@ -139,8 +157,8 @@ class DownloadManager : IDownloadManager {
                     if (!contains) {
 
                         val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask)) {
-                            DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "", item.filename ?: "", item)
-                            DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(item.url, item.mediaUrl ?: "", item.filename ?: "", item)
+                            DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "",  dir, item.filename ?: "", item)
+                            DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(item.url, dir, item.mediaUrl ?: "", item.filename ?: "", item)
                             null -> null
                         }
 

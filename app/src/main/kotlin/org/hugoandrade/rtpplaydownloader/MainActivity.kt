@@ -17,6 +17,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import org.hugoandrade.rtpplaydownloader.app.SettingsActivity
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
@@ -255,6 +256,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicradical, "SIC Radical", "https://sicradical.pt/"))
         drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicnoticias, "SIC Notícias", "https://sicnoticias.pt/"))
         drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sic, "SIC", "https://sic.pt/"))
+        drawerAdapter.addHeader("")
+        drawerAdapter.addOptionItem(DrawerItemListAdapter.OptionItem(R.drawable.ic_settings, getString(R.string.settings), SettingsActivity.makeIntent(this)))
         drawerAdapter.setOnItemClickListener(object : DrawerItemListAdapter.OnDrawerClickListener {
 
             override fun onItemClicked(drawerItem: DrawerItemListAdapter.Item?) {

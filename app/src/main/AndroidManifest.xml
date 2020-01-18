@@ -45,6 +45,12 @@
             android:label="@string/archive"
             android:theme="@style/AppTheme.Archive">
         </activity>
+        <activity android:name=".app.SettingsActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTask"
+            android:label="@string/archive"
+            android:theme="@style/AppTheme.Archive">
+        </activity>
 
     </application>
 

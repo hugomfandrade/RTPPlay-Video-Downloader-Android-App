@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
-import android.os.Environment
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -15,14 +14,6 @@ open class DownloaderTask(private val mediaUrl : String,
                           private val dirPath : String,
                           private val filename : String,
                           private val listener : DownloaderTaskListener) {
-
-    constructor(mediaUrl : String,
-                filename : String,
-                listener : DownloaderTaskListener) :
-        this(mediaUrl,
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(),
-                filename,
-                listener)
 
     open val TAG : String = javaClass.simpleName
 
