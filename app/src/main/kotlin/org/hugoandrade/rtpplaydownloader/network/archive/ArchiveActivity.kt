@@ -3,7 +3,10 @@ package org.hugoandrade.rtpplaydownloader.network.archive
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.support.v7.widget.*
 import android.view.MenuItem
 import android.view.View
@@ -13,7 +16,9 @@ import org.hugoandrade.rtpplaydownloader.databinding.ActivityArchiveBinding
 import org.hugoandrade.rtpplaydownloader.network.*
 import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
 import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
+import java.io.File
 
 class ArchiveActivity : ActivityBase() {
 
@@ -32,6 +37,8 @@ class ArchiveActivity : ActivityBase() {
     private lateinit var mArchiveItemsAdapter: ArchiveItemsAdapter
 
     private val downloadableItems: ArrayList<DownloadableItem> = ArrayList()
+
+    private var detailsDialog : DownloadableItemDetailsDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +83,90 @@ class ArchiveActivity : ActivityBase() {
                 if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) LinearLayoutManager(this)
                 else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mArchiveItemsAdapter = ArchiveItemsAdapter()
+        mArchiveItemsAdapter.setListener(object : ArchiveItemsAdapter.Listener {
+
+            override fun onItemClicked(item: DownloadableItem) {
+                val dialog = detailsDialog
+
+                if (dialog != null) {
+                    dialog.show(item)
+                } else {
+
+                    detailsDialog = DownloadableItemDetailsDialog.Builder.instance(getActivityContext())
+                            .setOnItemDetailsDialogListener(object : DownloadableItemDetailsDialog.OnItemDetailsListener {
+                                override fun onCancelled() {
+                                    detailsDialog = null
+                                }
+
+                                override fun onArchive(item: DownloadableItem) {
+
+                                    detailsDialog?.dismissDialog()
+
+                                    item.isArchived = false
+                                    mDatabaseModel.updateDownloadableEntry(item)
+
+                                    mArchiveItemsAdapter.remove(item)
+                                    binding.emptyListViewGroup.visibility = if (mArchiveItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+                                }
+
+                                override fun onRedirect(item: DownloadableItem) {
+
+                                    detailsDialog?.dismissDialog()
+
+                                    try {
+                                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
+                                        startActivity(browserIntent)
+                                    } catch (e: Exception) {
+                                    }
+                                }
+
+                                override fun onShowInFolder(item: DownloadableItem) {
+
+                                    detailsDialog?.dismissDialog()
+
+                                    try {
+                                        val dir = Uri.parse(File(item.filepath).parentFile.absolutePath + File.separator)
+
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+                                            intent.addCategory(Intent.CATEGORY_DEFAULT)
+
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, dir)
+                                            }
+
+                                            intent.putExtra("android.content.extra.SHOW_ADVANCED", true)
+                                            startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
+                                        } else {
+                                            val intent = Intent(Intent.ACTION_GET_CONTENT)
+                                            intent.setDataAndType(dir, "*/*")
+                                            startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
+                                        }
+                                    } catch (e: Exception) { }
+                                }
+
+                                override fun onPlay(item: DownloadableItem) {
+
+                                    detailsDialog?.dismissDialog()
+
+                                    try {
+                                        val filepath = item.filepath
+                                        if (MediaUtils.doesMediaFileExist(item)) {
+                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+                                                    .setDataAndType(Uri.parse(filepath), "video/mp4"))
+                                        } else {
+                                            ViewUtils.showToast(getActivityContext(), getString(R.string.file_not_found))
+                                        }
+                                    } catch (ignored: Exception) {
+                                    }
+                                }
+
+                            })
+                            .create(item)
+                    detailsDialog?.show()
+                }
+            }
+        })
         mDownloadItemsRecyclerView.adapter = mArchiveItemsAdapter
 
         binding.emptyListViewGroup.visibility = if (mArchiveItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
@@ -137,5 +228,4 @@ class ArchiveActivity : ActivityBase() {
             return this@ArchiveActivity.applicationContext
         }
     }
-
 }

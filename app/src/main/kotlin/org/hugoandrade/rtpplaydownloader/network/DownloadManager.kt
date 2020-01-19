@@ -556,19 +556,9 @@ class DownloadManager : IDownloadManager {
     }
 
     private val actionListener: DownloadableItemActionListener = object : DownloadableItemActionListener {
+
         override fun onPlay(action: DownloadableItemAction) {
-            try {
-                val filepath = action.item.filepath
-                if (MediaUtils.doesMediaFileExist(action.item)) {
-                    mViewOps.get()?.getApplicationContext()?.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
-                                    .setDataAndType(Uri.parse(filepath), "video/mp4"))
-                } else {
-                    ViewUtils.showToast(
-                            mViewOps.get()?.getActivityContext(),
-                            mViewOps.get()?.getActivityContext()?.getString(R.string.file_not_found))
-                }
-            }catch (ignored : Exception) {}
+            // no-ops
         }
 
         override fun onRefresh(action: DownloadableItemAction) {

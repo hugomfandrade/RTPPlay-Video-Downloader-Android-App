@@ -61,9 +61,7 @@ class DownloadableItemAction(val item : DownloadableItem,
     }
 
     override fun play() {
-        if (!downloadTask.isDownloading && item.state == DownloadableItemState.End) {
-            actionListener.forEach { l -> l.onPlay(this)}
-        }
+        actionListener.forEach { l -> l.onPlay(this)}
     }
 
     fun isDownloading(): Boolean {

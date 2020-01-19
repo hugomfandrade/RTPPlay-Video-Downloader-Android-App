@@ -59,4 +59,7 @@
     <string name="directory_storage_title">Directório dos Downloads</string>
     <string name="directory_storage_summary">Clique para escolher o directório destino dos downloads</string>
 
+    <string name="play">reproduzir</string>
+    <string name="open_folder">Abrir directório</string>
+
 </resources>

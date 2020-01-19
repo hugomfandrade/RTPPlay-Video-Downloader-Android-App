@@ -25,6 +25,8 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
 
     private val downloadableItemList: ArrayList<DownloadableItem> = ArrayList()
 
+    private var listener: Listener? = null
+
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
 
@@ -222,6 +224,14 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
         }
     }
 
+    interface Listener {
+        fun onItemClicked(item : DownloadableItem)
+    }
+
+    fun setListener(listener: Listener?) {
+        this.listener = listener
+    }
+
     inner class ViewHolder(val binding: DownloadItemBinding) :
             RecyclerView.ViewHolder(binding.root),
             View.OnClickListener {
@@ -234,6 +244,7 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
             val item : DownloadableItem
             synchronized(downloadableItemList) {
                 item = downloadableItemList[adapterPosition]
+                listener?.onItemClicked(item)
             }
         }
     }

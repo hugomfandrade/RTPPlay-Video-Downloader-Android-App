@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.Preference
-import android.support.v7.preference.PreferenceCategory
 import android.support.v7.preference.PreferenceFragmentCompat
 import android.view.MenuItem
 import org.hugoandrade.rtpplaydownloader.R
@@ -23,6 +22,7 @@ class SettingsActivity : AppCompatActivity() {
         private val TAG = SettingsActivity::class.java.simpleName
 
         private const val REQUEST_EXTERNAL_ACCESS = 100
+
         fun makeIntent(context: Context) : Intent {
             return Intent(context, SettingsActivity::class.java)
         }
@@ -77,17 +77,19 @@ class SettingsActivity : AppCompatActivity() {
                     ViewUtils.showSnackBar(activity.findViewById(android.R.id.content), "Cannot be done with this Android Version")
                     return@OnPreferenceClickListener true
                 }
+                else {
 
-                val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                i.addCategory(Intent.CATEGORY_DEFAULT)
+                    val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    i.addCategory(Intent.CATEGORY_DEFAULT)
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    i.putExtra(DocumentsContract.EXTRA_INITIAL_URI, MediaUtils.getDownloadsDirectory(context))
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        i.putExtra(DocumentsContract.EXTRA_INITIAL_URI, MediaUtils.getDownloadsDirectory(context))
+                    }
+
+                    i.putExtra("android.content.extra.SHOW_ADVANCED", true)
+                    startActivityForResult(Intent.createChooser(i, getString(R.string.directory_storage_summary)), REQUEST_EXTERNAL_ACCESS)
+                    true
                 }
-
-                i.putExtra("android.content.extra.SHOW_ADVANCED", true);
-                startActivityForResult(Intent.createChooser(i, getString(R.string.directory_storage_summary)), REQUEST_EXTERNAL_ACCESS)
-                true
             }
 
             this.filePicker = filePicker

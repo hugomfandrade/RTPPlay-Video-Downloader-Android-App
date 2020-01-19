@@ -50,4 +50,7 @@
     <string name="directory_storage_summary">Click to choose directory</string>
     <string name="directory_storage_directory" translatable="false">Movies</string>
     <string name="key_directory_name" translatable="false">key_directory_picker</string>
+
+    <string name="play">play</string>
+    <string name="open_folder">Open folder</string>
 </resources>
