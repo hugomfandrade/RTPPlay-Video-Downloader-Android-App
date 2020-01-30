@@ -4,15 +4,13 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.net.Uri
 import android.os.Environment
 import android.os.IBinder
-import android.support.v4.content.ContextCompat
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
-import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderIdentifier
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayTSDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.TVIPlayerTSDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
@@ -22,13 +20,12 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TVIPlayerParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayV2ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
 import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.FutureCallback
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
-import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.Executors
@@ -112,7 +109,11 @@ class DownloadManager : IDownloadManager {
 
             val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask)) {
                 DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
-                DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(url, dir, mediaUrl, filename, downloadableItem)
+                DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                DownloaderIdentifier.DownloadType.RTPTSFiles -> {
+                    if (filename.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                    else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                }
                 null -> return
             }
 
@@ -158,7 +159,12 @@ class DownloadManager : IDownloadManager {
 
                         val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask)) {
                             DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "",  dir, item.filename ?: "", item)
-                            DownloaderIdentifier.DownloadType.TSFiles -> TVIPlayerTSDownloaderTask(item.url, dir, item.mediaUrl ?: "", item.filename ?: "", item)
+                            DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
+                            DownloaderIdentifier.DownloadType.RTPTSFiles ->  {
+                                val mediaUrl = item.mediaUrl
+                                if (mediaUrl != null && mediaUrl.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, item.filename ?: "", item)
+                                else  RTPPlayTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
+                            }
                             null -> null
                         }
 
@@ -305,6 +311,47 @@ class DownloadManager : IDownloadManager {
         return future
     }
 
+    fun parseUrlWithoutPagination(url: String) : ParseFuture {
+
+        val future = ParseFuture(url)
+
+        parsingExecutors.execute(object : Runnable {
+
+            override fun run() {
+
+                if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                    future.failed("no network")
+                    return
+                }
+
+                val isUrl : Boolean = NetworkUtils.isValidURL(url)
+
+                if (!isUrl) {
+                    future.failed("is not a valid website")
+                    return
+                }
+
+                val parsingTask: ParsingTaskBase? = ParsingIdentifier.findHost(url)
+
+                if (parsingTask == null) {
+                    future.failed("could not find host")
+                    return
+                }
+
+                val parsing : Boolean = parsingTask.parseMediaFile(url)
+
+                if (!parsing) {
+                    future.failed("could not find filetype")
+                    return
+                }
+
+                future.success(ParsingData(parsingTask, null))
+            }
+        })
+
+        return future
+    }
+
     override fun parsePagination(url: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture {
 
         val future = PaginationParseFuture(url, paginationTask)
@@ -327,8 +374,10 @@ class DownloadManager : IDownloadManager {
                     return
                 }
 
+                System.err.println("11 --> " + paginationUrls.size)
                 paginationUrls.forEach(action = { paginationUrl ->
-                    val paginationFuture : ParseFuture = parseUrl(paginationUrl)
+                    System.err.println("12 --> " + paginationUrl)
+                    val paginationFuture : ParseFuture = parseUrlWithoutPagination(paginationUrl)
                     paginationFuture.addCallback(object : FutureCallback<ParsingData> {
 
                         override fun onSuccess(result: ParsingData) {
@@ -398,7 +447,7 @@ class DownloadManager : IDownloadManager {
                 }
 
                 paginationUrls.forEach(action = { paginationUrl ->
-                    val paginationFuture : ParseFuture = parseUrl(paginationUrl)
+                    val paginationFuture : ParseFuture = parseUrlWithoutPagination(paginationUrl)
                     paginationFuture.addCallback(object : FutureCallback<ParsingData> {
 
                         override fun onSuccess(result: ParsingData) {

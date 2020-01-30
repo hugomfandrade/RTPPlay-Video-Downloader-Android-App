@@ -478,6 +478,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     private var parsingDialog : ParsingDialog? = null
     private var detailsDialog : DownloadableItemDetailsDialog? = null
 
+    @Synchronized
     private fun doDownload(url: String) {
 
         if (!PermissionUtils.hasGrantedPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {

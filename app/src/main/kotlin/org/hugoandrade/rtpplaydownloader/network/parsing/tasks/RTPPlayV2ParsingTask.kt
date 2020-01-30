@@ -9,13 +9,12 @@ import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
-@Deprecated(message = "use RTPPlayV2ParsingTask")
-open class RTPPlayParsingTask : ParsingTaskBase() {
+open class RTPPlayV2ParsingTask : ParsingTaskBase() {
 
     override fun parseMediaFile(url: String): Boolean {
 
         this.url = url
-        this.mediaUrl = getVideoFile(url) ?: return false
+        this.mediaUrl = getM3U8File(url) ?: return false
         this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
         this.thumbnailUrl = getThumbnailPath(url)
 
@@ -40,7 +39,7 @@ open class RTPPlayParsingTask : ParsingTaskBase() {
 
         if (isFileType) {
 
-            val videoFile: String? = getVideoFile(urlString)
+            val videoFile: String? = getM3U8File(urlString)
 
             return videoFile != null
         }
@@ -48,7 +47,7 @@ open class RTPPlayParsingTask : ParsingTaskBase() {
         return false
     }
 
-    private fun getVideoFile(urlString: String): String? {
+    private fun getM3U8File(urlString: String): String? {
         try {
             val doc: Document?
 
@@ -65,33 +64,19 @@ open class RTPPlayParsingTask : ParsingTaskBase() {
                 for (scriptElement in scriptElements.iterator()) {
 
                     for (dataNode: DataNode in scriptElement.dataNodes()) {
-                        if (dataNode.wholeData.contains("RTPPlayer")) {
+                        if (dataNode.wholeData.contains("RTPPlayer({")) {
 
                             val scriptText: String = dataNode.wholeData
 
                             try {
 
-                                val rtpPlayerSubString: String = scriptText.substring(indexOfEx(scriptText, "RTPPlayer({"), scriptText.lastIndexOf("})"))
+                                val rtpPlayerSubString: String = scriptText
 
-                                if (rtpPlayerSubString.indexOf(".mp4") >= 0) {  // is video file
-
-                                    if (rtpPlayerSubString.indexOf("fileKey: \"") >= 0) {
-
-                                        val link: String = rtpPlayerSubString.substring(
-                                                indexOfEx(rtpPlayerSubString, "fileKey: \""),
-                                                indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","))
-
-
-                                        return "http://cdn-ondemand.rtp.pt$link"
-                                    }
-
-                                } else if (rtpPlayerSubString.indexOf(".mp3") >= 0) { // is audio file
-
-                                    if (rtpPlayerSubString.indexOf("file: \"") >= 0) {
-
+                                for (i in arrayOf("file: \"", "file : \"")) {
+                                    if (rtpPlayerSubString.indexOf(i) >= 0) {
                                         return rtpPlayerSubString.substring(
-                                                indexOfEx(rtpPlayerSubString, "file: \""),
-                                                indexOfEx(rtpPlayerSubString, "file: \"") + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","))
+                                                indexOfEx(rtpPlayerSubString, i),
+                                                indexOfEx(rtpPlayerSubString, i) + rtpPlayerSubString.substring(indexOfEx(rtpPlayerSubString, i)).indexOf("\","))
 
                                     }
                                 }

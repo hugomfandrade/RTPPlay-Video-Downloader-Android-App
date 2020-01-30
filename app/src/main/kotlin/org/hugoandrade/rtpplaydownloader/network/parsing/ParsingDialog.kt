@@ -26,6 +26,11 @@ class ParsingDialog(val mContext: Context) {
     private var mListener: OnParsingListener? = null
 
     private var mHandler: Handler = Handler()
+    private var isDelaying = false
+    private val delayedShowCallback: Runnable = Runnable() {
+        delayedShow()
+        isDelaying = false
+    }
 
     private var isDismissedBecauseOfTouchOutside : Boolean? = true
 
@@ -39,7 +44,8 @@ class ParsingDialog(val mContext: Context) {
 
     fun show() {
         val delayMillis = 100L
-        mHandler.postDelayed({ delayedShow() }, delayMillis)
+        isDelaying = true
+        mHandler.postDelayed(delayedShowCallback, delayMillis)
     }
 
     private fun buildView() {
@@ -194,10 +200,11 @@ class ParsingDialog(val mContext: Context) {
     fun dismissDialog() {
         isDismissedBecauseOfTouchOutside = false
         mAlertDialog?.dismiss()
+        mHandler.removeCallbacks(delayedShowCallback)
     }
 
     fun isShowing(): Boolean {
-        return mAlertDialog?.isShowing ?: false
+        return isDelaying || mAlertDialog?.isShowing ?: false
     }
 
     interface OnParsingListener {
