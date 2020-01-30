@@ -9,6 +9,7 @@ import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
+@Deprecated(message = "use RTPPlayV2ParsingTask")
 open class RTPPlayParsingTask : ParsingTaskBase() {
 
     override fun parseMediaFile(url: String): Boolean {

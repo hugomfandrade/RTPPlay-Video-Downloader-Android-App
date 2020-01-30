@@ -14,7 +14,8 @@ class DownloaderIdentifier() {
             for (fileType: FileType in FileType.values()) {
                 if (fileType.name == downloadTask) {
                     when (fileType) {
-                        FileType.TVIPlayer -> return DownloadType.TSFiles
+                        FileType.TVIPlayer -> return DownloadType.TVITSFiles
+                        FileType.RTPPlay -> return DownloadType.RTPTSFiles
                         else -> DownloadType.FullFile
                     }
                 }
@@ -25,6 +26,7 @@ class DownloaderIdentifier() {
 
     enum class DownloadType {
         FullFile,
-        TSFiles
+        TVITSFiles,
+        RTPTSFiles
     }
 }

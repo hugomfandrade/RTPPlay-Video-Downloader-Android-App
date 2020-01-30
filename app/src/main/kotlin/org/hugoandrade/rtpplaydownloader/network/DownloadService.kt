@@ -3,6 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.media.MediaScannerConnection
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -213,6 +214,13 @@ class DownloadService : Service() {
 
                     updateNotification()
 
+                    if (downloadableItem.state == DownloadableItemState.End) {
+                        val filePath = downloadableItem.filepath
+                        if (filePath != null) {
+                            MediaScannerConnection.scanFile(this@DownloadService, arrayOf(filePath.toString()), null, null)
+                        }
+                    }
+
                     // downloadableItemAction.item.removeDownloadStateChangeListener(this)
                 }
                 else if (downloadableItem.state == DownloadableItemState.Start) {
@@ -232,6 +240,43 @@ class DownloadService : Service() {
 
         downloadExecutors.execute {
             downloadableItemAction.downloadTask.downloadMediaFile()
+        }
+    }
+
+    // NOT YET USED
+    private val changeListener = object : DownloadableItemState.ChangeListener {
+
+        override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
+            val itemID: Int = downloadableItem.id
+
+            if (downloadableItem.state == DownloadableItemState.End ||
+                    downloadableItem.state == DownloadableItemState.Failed) {
+
+                downloadMap.remove(downloadableItem.id)
+
+                updateNotification()
+
+                if (downloadableItem.state == DownloadableItemState.End) {
+                    val filePath = downloadableItem.filepath
+                    if (filePath != null) {
+                        MediaScannerConnection.scanFile(this@DownloadService, arrayOf(filePath.toString()), null, null)
+                    }
+                }
+
+                // downloadableItemAction.item.removeDownloadStateChangeListener(this)
+            }
+            else if (downloadableItem.state == DownloadableItemState.Start) {
+
+                if (downloadMap.isEmpty()) {
+                    setForeground()
+                }
+
+                // downloadMap[itemID] = downloadableItemAction
+
+                updateNotification()
+            }
+
+            mDatabaseModel.updateDownloadableEntry(downloadableItem)
         }
     }
 

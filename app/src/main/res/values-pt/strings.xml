@@ -20,6 +20,10 @@
 
     <string name="insert_link_and_download">insira o link e faça download</string>
 
+    <string name="settings">Preferências</string>
+    <string name="archive">Arquivo</string>
+    <string name="archive_is_empty">o arquivo está vazio</string>
+
     <string name="parsing">analisando…</string>
 
     <string name="all_episodes">Toda a Série</string>
@@ -45,5 +49,17 @@
     <string name="did_not_download">download falhado</string>
     <string name="url_no_longer_exists">URL indisponível</string>
     <string name="download_cancelled">cancelado</string>
+
+    <string name="drawer_open">open</string>
+    <string name="drawer_close">close</string>
+    <string name="quick_assess">Acesso Rápido</string>
+    <string name="search">Procurar</string>
+
+    <!-- PREFERENCES -->
+    <string name="directory_storage_title">Directório dos Downloads</string>
+    <string name="directory_storage_summary">Clique para escolher o directório destino dos downloads</string>
+
+    <string name="play">reproduzir</string>
+    <string name="open_folder">Abrir directório</string>
 
 </resources>

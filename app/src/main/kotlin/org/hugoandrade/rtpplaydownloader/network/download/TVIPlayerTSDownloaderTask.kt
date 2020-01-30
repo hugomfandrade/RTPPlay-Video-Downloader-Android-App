@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
-import android.os.Environment
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TVIPlayerParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
@@ -21,18 +20,6 @@ open class TVIPlayerTSDownloaderTask(private val url : String?,
                                      private val listener : DownloaderTaskListener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
 
     override val TAG : String = javaClass.simpleName
-
-    constructor(mediaUrl : String,
-                filename : String,
-                listener : DownloaderTaskListener) :
-            this(null, mediaUrl, filename, listener)
-
-    constructor(url : String?,
-                mediaUrl : String,
-                filename : String,
-                listener : DownloaderTaskListener) :
-        this(url, mediaUrl, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString(), filename, listener)
-
 
     override fun downloadMediaFile() {
 

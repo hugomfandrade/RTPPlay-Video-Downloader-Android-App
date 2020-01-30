@@ -189,6 +189,21 @@ class DownloadItemsAdapter :
         }
     }
 
+    fun remove(downloadableItem: DownloadableItem) {
+        synchronized(downloadableItemList) {
+            downloadableItem.removeDownloadStateChangeListener(this)
+            for (itemAction in downloadableItemList) {
+                if (itemAction.item == downloadableItem) {
+                    val index: Int = downloadableItemList.indexOf(itemAction)
+                    downloadableItemList.removeAt(index)
+                    notifyItemRemoved(index)
+                    notifyItemRangeChanged(index, itemCount)
+                    break
+                }
+            }
+        }
+    }
+
     override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
         synchronized(downloadableItemList) {
             downloadableItemList.forEachIndexed { index, item ->

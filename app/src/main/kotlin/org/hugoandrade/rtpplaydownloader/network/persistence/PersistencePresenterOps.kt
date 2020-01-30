@@ -9,6 +9,10 @@ interface PersistencePresenterOps : ContextView {
         //No-op
     }
 
+    fun onArchivedDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
+        //No-op
+    }
+
     fun onDownloadableItemInserted(downloadableItem: DownloadableItem?) {
         //No-op
     }

@@ -2,8 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id="@+id/action_empty_db"
-        android:title="Empty DB"
-        app:showAsAction="never" />
+    <item
+        android:id="@+id/app_search_bar"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="@string/search"
+        app:showAsAction="ifRoom|withText"
+        app:actionViewClass="android.support.v7.widget.SearchView"/>
 
 </menu>

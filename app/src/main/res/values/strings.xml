@@ -13,6 +13,9 @@
 
     <string name="hint_uri_input" translatable="true">Url (eg. RTP Play, SIC, Sapo)</string>
     <string name="insert_link_and_download">insert link and download</string>
+    <string name="settings">Settings</string>
+    <string name="archive">Archive</string>
+    <string name="archive_is_empty">archive is empty</string>
     <string name="parsing">parsing…</string>
     <string name="all_episodes">All Episodes</string>
     <string name="not_now">not now</string>
@@ -37,4 +40,17 @@
     <string name="url_no_longer_exists">URL no longer exists</string>
     <string name="download_cancelled">cancelled</string>
 
+    <string name="drawer_open">open</string>
+    <string name="drawer_close">close</string>
+    <string name="quick_assess">Quick Access</string>
+    <string name="search">Search</string>
+
+    <!-- PREFERENCES -->
+    <string name="directory_storage_title">Output directory</string>
+    <string name="directory_storage_summary">Click to choose directory</string>
+    <string name="directory_storage_directory" translatable="false">Movies</string>
+    <string name="key_directory_name" translatable="false">key_directory_picker</string>
+
+    <string name="play">play</string>
+    <string name="open_folder">Open folder</string>
 </resources>

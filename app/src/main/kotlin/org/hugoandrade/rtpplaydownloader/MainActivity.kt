@@ -1,23 +1,29 @@
 package org.hugoandrade.rtpplaydownloader
 
 import android.Manifest
-import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.databinding.DataBindingUtil
+import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.provider.DocumentsContract
+import android.support.v4.view.GravityCompat
+import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.widget.*
 import android.support.v7.widget.helper.ItemTouchHelper
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
+import org.hugoandrade.rtpplaydownloader.app.SettingsActivity
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
+import org.hugoandrade.rtpplaydownloader.network.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
@@ -25,12 +31,14 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationPa
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.*
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
-
+import java.io.File
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
+    private var searchView: SearchView? = null
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var mDownloadItemsRecyclerView: RecyclerView
@@ -38,6 +46,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     private lateinit var mDownloadManager: DownloadManager
 
+    private var mDrawerToggle: ActionBarDrawerToggle? = null
+    private var mDrawerAdapter: DrawerItemListAdapter? = null
+    private var mPendingRunnable: Runnable? = null
+    private val mHandler = Handler()
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -60,33 +72,116 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
 
         initializeUI()
+    }
 
-        if (oldDownloadManager == null ) { // is first
-            val devUrl: String? = DevConstants.url
-            if (devUrl != null) {
-                binding.inputUriEditText.setText(devUrl)
-                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-            } else {
-                ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-            }
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle?.syncState()
+    }
 
-            extractActionSendIntentAndUpdateUI(intent)
-        }
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        // Pass any configuration change to the drawer toggle
+        mDrawerToggle?.onConfigurationChanged(newConfig)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        menu.findItem(R.id.action_empty_db).isVisible = false
+
+        // set up SearchView
+        val searchView = menu.findItem(R.id.app_search_bar).actionView as SearchView
+        this.searchView = searchView
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
+            override fun onQueryTextSubmit(p0: String?): Boolean {
+                val searchView = this@MainActivity.searchView
+                if (searchView != null) {
+                    doDownload(searchView.query.toString())
+                }
+                return false
+            }
+
+            override fun onQueryTextChange(p0: String?): Boolean {
+                return false
+            }
+        })
+        searchView.setOnCloseListener {
+            val drawerLayout = binding.drawerLayout
+            if (drawerLayout != null) {
+                mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+            }
+            false
+        }
+        searchView.setOnSearchClickListener {
+            val drawerLayout = binding.drawerLayout
+            if (drawerLayout != null) {
+                mDrawerToggle?.onDrawerSlide(drawerLayout, 1f)
+
+                /*
+                ValueAnimator anim = ValueAnimator.ofFloat(start, end);
+                anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        float slideOffset = (Float) valueAnimator.getAnimatedValue();
+                        toolbarDrawerToggle.onDrawerSlide(drawerLayout, slideOffset);
+                    }
+                });
+                anim.setInterpolator(new DecelerateInterpolator());
+                // You can change this duration to more closely match that of the default animation.
+                anim.setDuration(500);
+                anim.start();
+                 */
+            }
+        }
+
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                searchView.isIconified = true
+                val drawerLayout = binding.drawerLayout
+                if (drawerLayout != null) {
+                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+                }
+            }
+        };
+
+        //
+        val editText: EditText? = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)
+        editText?.setTextColor(Color.WHITE)
+        editText?.setHintTextColor(Color.parseColor("#90ffffff"))
+
+        //
+        val devUrl: String? = DevConstants.url
+        if (devUrl != null) {
+            searchView.setQuery(devUrl, true)
+            editText?.setSelection(editText.text.length)
+        } else {
+            ViewUtils.hideSoftKeyboardAndClearFocus(searchView)
+        }
+
+        extractActionSendIntentAndUpdateUI(intent)
+
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.action_empty_db -> {
-                mDownloadManager.emptyDB()
+        val drawerToggle = mDrawerToggle
+
+        if (item.itemId == android.R.id.home) {
+            val searchView = this.searchView
+            if (searchView != null && !searchView.isIconified) {
+                searchView.isIconified = true
+                val drawerLayout = binding.drawerLayout
+                if (drawerLayout != null) {
+                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+                }
                 return true
             }
         }
+
+        if (drawerToggle != null && drawerToggle.onOptionsItemSelected(item)) return true
+
         return super.onOptionsItemSelected(item)
     }
 
@@ -98,19 +193,107 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
     }
 
+    override fun onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            val searchView = this.searchView
+            if (searchView != null && !searchView.isIconified) {
+                searchView.isIconified = true
+                val drawerLayout = binding.drawerLayout
+                if (drawerLayout != null) {
+                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
+                }
+            } else {
+                super.onBackPressed()
+            }
+        }
+    }
+
     private fun initializeUI() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-        binding.inputUriEditText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) { }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                toggleClearTextButton()
+
+        setSupportActionBar(findViewById(R.id.toolbar))
+
+        val actionBar = supportActionBar
+        if (actionBar != null) {
+            actionBar.title = getString(R.string.app_name)
+            actionBar.setDisplayHomeAsUpEnabled(true)
+            actionBar.setHomeButtonEnabled(false)
+        }
+
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the sliding drawer and the action bar app icon
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the sliding drawer and the action bar app icon
+        val drawerToggle = object : ActionBarDrawerToggle(this,
+                binding.drawerLayout,
+                R.string.drawer_open,
+                R.string.drawer_close) {
+            /**
+             * Called when a drawer has settled in a completely closed state.
+             */
+            override fun onDrawerClosed(view: View) {
+                super.onDrawerClosed(view)
+                if (mPendingRunnable != null) {
+                    mHandler.post(mPendingRunnable)
+                    mPendingRunnable = null
+                }
+            }
+
+            /**
+             * Called when a drawer has settled in a completely open state.
+             */
+            override fun onDrawerOpened(drawerView: View) {
+                super.onDrawerOpened(drawerView)
+            }
+        }
+        binding.drawerLayout.addDrawerListener(drawerToggle)
+
+        val drawerAdapter = DrawerItemListAdapter(this)
+        drawerAdapter.addOptionItem(DrawerItemListAdapter.OptionItem(R.drawable.ic_archive, getString(R.string.archive), ArchiveActivity.makeIntent(this)))
+        drawerAdapter.addHeader(getString(R.string.quick_assess))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_rtpplay, "RTP Play", "https://www.rtp.pt/play/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_tvi_player, "TVI Player", "https://tviplayer.iol.pt/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicradical, "SIC Radical", "https://sicradical.pt/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicnoticias, "SIC Notícias", "https://sicnoticias.pt/"))
+        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sic, "SIC", "https://sic.pt/"))
+        drawerAdapter.addHeader("")
+        drawerAdapter.addOptionItem(DrawerItemListAdapter.OptionItem(R.drawable.ic_settings, getString(R.string.settings), SettingsActivity.makeIntent(this)))
+        drawerAdapter.setOnItemClickListener(object : DrawerItemListAdapter.OnDrawerClickListener {
+
+            override fun onItemClicked(drawerItem: DrawerItemListAdapter.Item?) {
+                if (drawerItem != null) {
+                    if (drawerItem is DrawerItemListAdapter.QuickAccessItem) {
+                        try {
+                            mPendingRunnable = Runnable {
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(drawerItem.url))
+                                startActivity(browserIntent)
+                            }
+                        } catch (e: Exception) {
+
+                        }
+                    }
+                    else if (drawerItem is DrawerItemListAdapter.OptionItem) {
+                        try {
+                            mPendingRunnable = Runnable {
+                                startActivity(drawerItem.intent)
+                            }
+                        } catch (e: Exception) {
+
+                        }
+                    }
+                }
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
             }
         })
 
-        toggleClearTextButton()
+        binding.drawerLayout.navigationDrawerContent.adapter = drawerAdapter
+        binding.drawerLayout.navigationDrawerContent.layoutManager = LinearLayoutManager(this)
+
+        this.mDrawerToggle = drawerToggle
+        this.mDrawerAdapter = drawerAdapter
 
         val simpleItemAnimator : SimpleItemAnimator = DefaultItemAnimator()
         simpleItemAnimator.supportsChangeAnimations = false
@@ -173,6 +356,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     }
 
     override fun displayDownloadableItem(action: DownloadableItemAction) {
+        action.addActionListener(actionListener)
 
         uploadHistoryMap[action.item.id] = action
 
@@ -181,6 +365,93 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         runOnUiThread {
             mDownloadItemsAdapter.add(action)
             binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+        }
+    }
+
+    private val actionListener: DownloadableItemActionListener = object : DownloadableItemActionListener {
+        override fun onPlay(action: DownloadableItemAction) {
+
+
+            val dialog = detailsDialog
+
+            if (dialog != null) {
+                dialog.show(action.item)
+            }
+            else {
+
+                detailsDialog = DownloadableItemDetailsDialog.Builder.instance(getActivityContext())
+                        .setOnItemDetailsDialogListener(object : DownloadableItemDetailsDialog.OnItemDetailsListener {
+                            override fun onCancelled() {
+                                detailsDialog = null
+                            }
+
+                            override fun onArchive(item: DownloadableItem) {
+
+                                detailsDialog?.dismissDialog()
+
+                                mDownloadManager.archive(item)
+                                mDownloadItemsAdapter.remove(item)
+                                binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+                            }
+
+                            override fun onRedirect(item: DownloadableItem) {
+
+                                detailsDialog?.dismissDialog()
+
+                                try {
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
+                                    startActivity(browserIntent)
+                                } catch (e: Exception) { }
+                            }
+
+                            override fun onShowInFolder(item: DownloadableItem) {
+
+                                detailsDialog?.dismissDialog()
+
+                                try {
+                                    val dir = Uri.parse(File(item.filepath).parentFile.absolutePath + File.separator)
+
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                                        intent.addCategory(Intent.CATEGORY_DEFAULT)
+
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, dir)
+                                        }
+
+                                        intent.putExtra("android.content.extra.SHOW_ADVANCED", true)
+                                        startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
+                                    } else {
+                                        val intent = Intent(Intent.ACTION_GET_CONTENT)
+                                        intent.setDataAndType(dir, "*/*")
+                                        startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
+                                    }
+                                } catch (e: Exception) { }
+                            }
+
+                            override fun onPlay(item: DownloadableItem) {
+
+                                detailsDialog?.dismissDialog()
+
+                                try {
+                                    val filepath = action.item.filepath
+                                    if (MediaUtils.doesMediaFileExist(action.item)) {
+                                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+                                                .setDataAndType(Uri.parse(filepath), "video/mp4"))
+                                    } else {
+                                        ViewUtils.showToast(getActivityContext(), getString(R.string.file_not_found))
+                                    }
+                                } catch (ignored: Exception) { }
+                            }
+
+                        })
+                        .create(action.item)
+                detailsDialog?.show()
+            }
+        }
+
+        override fun onRefresh(action: DownloadableItemAction) {
+            // no-ops
         }
     }
 
@@ -194,77 +465,20 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)?: return
 
-        binding.inputUriEditText.setText(url)
-        binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
+        //
+        val searchView = this.searchView
+        val editText: EditText? = searchView?.findViewById(android.support.v7.appcompat.R.id.search_src_text)
 
-        ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-        binding.inputUriEditText.clearFocus()
-        doDownload(binding.inputUriEditText.text.toString())
-    }
+        searchView?.setQuery(url, true)
+        editText?.setSelection(editText.text.length)
 
-    private fun toggleClearTextButton() {
-
-        binding.clearTextButton.visibility =
-                if (binding.inputUriEditText.text.isEmpty()) View.INVISIBLE
-                else View.VISIBLE
-    }
-
-    /**
-     * from activity_main.xml
-     */
-    fun pasteFromClipboard(view: View) {
-
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-
-        val primaryClipDescription = clipboard.primaryClipDescription
-
-        // If it does contain data, decide if you can handle the data.
-        if (clipboard.hasPrimaryClip()
-                && primaryClipDescription != null
-                && primaryClipDescription.hasMimeType(MIMETYPE_TEXT_PLAIN)) {
-
-            // since the clipboard has data but it is not plain text
-
-            //since the clipboard contains plain text.
-            val item = clipboard.primaryClip?.getItemAt(0)
-
-            // Gets the clipboard as text.
-            val pasteData = item?.text.toString()
-
-            if (NetworkUtils.isValidURL(pasteData)) {
-                binding.inputUriEditText.setText(pasteData)
-                binding.inputUriEditText.setSelection(binding.inputUriEditText.text.length)
-            } else {
-                ViewUtils.showSnackBar(binding.root, getString(R.string.not_a_valid_url))
-            }
-        } else {
-            ViewUtils.showSnackBar(binding.root, getString(R.string.nothing_to_paste))
-        }
-    }
-
-    /**
-     * from activity_main.xml
-     */
-    fun clearUriEditText(view: View) {
-
-        doClearUriEditText()
-    }
-
-    private fun doClearUriEditText() {
-
-        binding.inputUriEditText.setText("")
-    }
-
-    fun download(view: View) {
-
-        ViewUtils.hideSoftKeyboardAndClearFocus(binding.inputUriEditText)
-        binding.inputUriEditText.clearFocus()
-
-        doDownload(binding.inputUriEditText.text.toString())
+        doDownload(url)
     }
 
     private var parsingDialog : ParsingDialog? = null
+    private var detailsDialog : DownloadableItemDetailsDialog? = null
 
+    @Synchronized
     private fun doDownload(url: String) {
 
         if (!PermissionUtils.hasGrantedPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
@@ -418,7 +632,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     override fun onRequestPermissionsResult(permissionType: String, wasPermissionGranted: Boolean) {
                         when (permissionType) {
                             Manifest.permission.WRITE_EXTERNAL_STORAGE -> if (wasPermissionGranted) {
-                                doDownload(binding.inputUriEditText.text.toString())
+                                val searchView = this@MainActivity.searchView
+                                if (searchView != null) {
+                                    doDownload(searchView.query.toString())
+                                }
                             } else {
                                 // onBackPressed()
                             }
