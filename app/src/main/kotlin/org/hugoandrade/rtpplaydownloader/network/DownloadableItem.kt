@@ -1,7 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.util.Log
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenerSet
 import java.io.File
@@ -13,12 +13,12 @@ class DownloadableItem(var id: Int,// url
                        val filename: String?,// local
                        var filepath: String?,
                        var filesize: Long?,// url
-                       var state: DownloadableItemState?,
+                       var state: State?,
                        var isArchived: Boolean?,
                        var downloadTask: String?,
                        var downloadMessage: String?) :
 
-        DownloaderTaskListener {
+        DownloaderTask.Listener {
 
     @Suppress("PrivatePropertyName")
     private val TAG : String = javaClass.simpleName
@@ -43,7 +43,7 @@ class DownloadableItem(var id: Int,// url
 
 
     override fun onProgress(downloadedSize: Long, totalSize : Long) {
-        this.state = DownloadableItemState.Downloading
+        this.state = State.Downloading
 
         this.progressSize = downloadedSize
         this.filesize = totalSize
@@ -75,7 +75,7 @@ class DownloadableItem(var id: Int,// url
 
     override fun downloadStarted(f: File) {
         this.filepath = f.absolutePath
-        this.state = DownloadableItemState.Start
+        this.state = State.Start
         this.downloadMessage = null
 
         this.progressSize = 0L
@@ -88,7 +88,7 @@ class DownloadableItem(var id: Int,// url
 
     override fun downloadFinished(f: File) {
         this.filepath = f.absolutePath
-        this.state = DownloadableItemState.End
+        this.state = State.End
         this.downloadMessage = null
 
         Log.e(TAG, "finished downloading to " + f.absolutePath)
@@ -96,7 +96,7 @@ class DownloadableItem(var id: Int,// url
     }
 
     override fun downloadFailed(message: String?) {
-        this.state = DownloadableItemState.Failed
+        this.state = State.Failed
         this.downloadMessage = message
 
         fireDownloadStateChange()
@@ -104,13 +104,13 @@ class DownloadableItem(var id: Int,// url
         Log.e(TAG, message)
     }
 
-    private val listenerSet : ListenerSet<DownloadableItemState.ChangeListener>  = ListenerSet()
+    private val listenerSet : ListenerSet<DownloadableItem.State.ChangeListener>  = ListenerSet()
 
-    fun addDownloadStateChangeListener(listener: DownloadableItemState.ChangeListener) {
+    fun addDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
         listenerSet.addListener(listener)
     }
 
-    fun removeDownloadStateChangeListener(listener: DownloadableItemState.ChangeListener) {
+    fun removeDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
         listenerSet.removeListener(listener)
     }
 
@@ -123,8 +123,8 @@ class DownloadableItem(var id: Int,// url
 
     init {
         this.filesize = filesize?: 0L
-        this.state = state ?: DownloadableItemState.Start
-        this.progress = if (this.state == DownloadableItemState.End) 1f else 0f
+        this.state = state ?: State.Start
+        this.progress = if (this.state == State.End) 1f else 0f
         this.isArchived = isArchived ?: false
     }
 
@@ -145,6 +145,18 @@ class DownloadableItem(var id: Int,// url
             const val IS_ARCHIVED = "IsArchived"
             const val DOWNLOAD_MESSAGE = "DownloadMessage"
             const val DOWNLOAD_TASK = "DownloadTask"
+        }
+    }
+
+    enum class State {
+        Start,
+        Downloading,
+        End,
+
+        Failed;
+
+        interface ChangeListener {
+            fun onDownloadStateChange(downloadableItem: DownloadableItem)
         }
     }
 }

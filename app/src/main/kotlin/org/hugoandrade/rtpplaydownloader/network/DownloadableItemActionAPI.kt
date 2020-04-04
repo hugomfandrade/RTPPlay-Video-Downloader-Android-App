@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-interface IDownloadableItemAction {
+interface DownloadableItemActionAPI {
 
     fun startDownload()
 

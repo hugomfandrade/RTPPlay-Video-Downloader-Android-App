@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
 
 abstract class ParsingTaskBase {
 
@@ -12,11 +12,11 @@ abstract class ParsingTaskBase {
     var filename: String? = null
     var isDownloading : Boolean = false
 
-    lateinit var mDownloaderTaskListener: DownloaderTaskListener
+    lateinit var mDownloaderTaskListener: DownloaderTask
 
     var doCanceling: Boolean = false
 
-    abstract fun isValid(urlString: String) : Boolean
+    abstract fun isValid(url: String) : Boolean
 
     abstract fun parseMediaFile(url: String): Boolean
 

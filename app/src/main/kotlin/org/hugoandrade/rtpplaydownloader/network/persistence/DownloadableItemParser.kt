@@ -3,7 +3,6 @@ package org.hugoandrade.rtpplaydownloader.network.persistence
 import android.content.ContentValues
 import android.database.Cursor
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItemState
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem.Entry
 
 class DownloadableItemParser
@@ -28,7 +27,7 @@ private constructor() {
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.FILENAME)),
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.FILEPATH)),
                     cursor.getLong(cursor.getColumnIndex(Entry.Cols.FILESIZE)),
-                    DownloadableItemState.values()[cursor.getInt(cursor.getColumnIndex(Entry.Cols.STAGE))],
+                    DownloadableItem.State.values()[cursor.getInt(cursor.getColumnIndex(Entry.Cols.STAGE))],
                     cursor.getInt(cursor.getColumnIndex(Entry.Cols.IS_ARCHIVED)) == 1,
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.DOWNLOAD_TASK)),
                     cursor.getString(cursor.getColumnIndex(Entry.Cols.DOWNLOAD_MESSAGE)))

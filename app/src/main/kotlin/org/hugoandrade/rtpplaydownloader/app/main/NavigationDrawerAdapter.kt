@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader
+package org.hugoandrade.rtpplaydownloader.app.main
 
 import android.app.Activity
 import android.content.Intent
@@ -8,12 +8,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import org.hugoandrade.rtpplaydownloader.R
 import java.util.*
 
-class DrawerItemListAdapter (private val activity: Activity) : RecyclerView.Adapter<DrawerItemListAdapter.ViewHolder>() {
+class NavigationDrawerAdapter (private val activity: Activity) : RecyclerView.Adapter<NavigationDrawerAdapter.ViewHolder>() {
 
     companion object {
-        private val TAG = DrawerItemListAdapter::class.java.simpleName
+        private val TAG = NavigationDrawerAdapter::class.java.simpleName
     }
 
     private val mItemList: MutableList<Item> = ArrayList()

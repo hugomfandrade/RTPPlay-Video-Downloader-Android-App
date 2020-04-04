@@ -1,8 +1,7 @@
-package org.hugoandrade.rtpplaydownloader.app
+package org.hugoandrade.rtpplaydownloader.app.settings
 
 import android.content.ContentUris
 import android.content.Context
-import android.content.SharedPreferences
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
@@ -10,10 +9,6 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.support.annotation.RequiresApi
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
-import java.io.File
-import java.text.Normalizer
-import kotlin.math.ln
 
 class SettingsUtils
 

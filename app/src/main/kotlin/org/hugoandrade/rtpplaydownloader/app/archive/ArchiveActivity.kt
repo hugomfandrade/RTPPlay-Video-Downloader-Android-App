@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.archive
+package org.hugoandrade.rtpplaydownloader.app.archive
 
 import android.content.Context
 import android.content.Intent

@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader
+package org.hugoandrade.rtpplaydownloader.app.main
 
 import android.Manifest
 import android.content.Intent
@@ -19,11 +19,13 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
-import org.hugoandrade.rtpplaydownloader.app.SettingsActivity
+import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
-import org.hugoandrade.rtpplaydownloader.network.archive.ArchiveActivity
+import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
@@ -47,7 +49,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     private lateinit var mDownloadManager: DownloadManager
 
     private var mDrawerToggle: ActionBarDrawerToggle? = null
-    private var mDrawerAdapter: DrawerItemListAdapter? = null
+    private var mDrawerAdapter: NavigationDrawerAdapter? = null
     private var mPendingRunnable: Runnable? = null
     private val mHandler = Handler()
 
@@ -251,31 +253,31 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
         binding.drawerLayout.addDrawerListener(drawerToggle)
 
-        val drawerAdapter = DrawerItemListAdapter(this)
-        drawerAdapter.addOptionItem(DrawerItemListAdapter.OptionItem(R.drawable.ic_archive, getString(R.string.archive), ArchiveActivity.makeIntent(this)))
+        val drawerAdapter = NavigationDrawerAdapter(this)
+        drawerAdapter.addOptionItem(NavigationDrawerAdapter.OptionItem(R.drawable.ic_archive, getString(R.string.archive), ArchiveActivity.makeIntent(this)))
         drawerAdapter.addHeader(getString(R.string.quick_assess))
-        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_rtpplay, "RTP Play", "https://www.rtp.pt/play/"))
-        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_tvi_player, "TVI Player", "https://tviplayer.iol.pt/"))
-        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicradical, "SIC Radical", "https://sicradical.pt/"))
-        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sicnoticias, "SIC Notícias", "https://sicnoticias.pt/"))
-        drawerAdapter.addItem(DrawerItemListAdapter.QuickAccessItem(R.mipmap.ic_sic, "SIC", "https://sic.pt/"))
+        drawerAdapter.addItem(NavigationDrawerAdapter.QuickAccessItem(R.mipmap.ic_rtpplay, "RTP Play", "https://www.rtp.pt/play/"))
+        drawerAdapter.addItem(NavigationDrawerAdapter.QuickAccessItem(R.mipmap.ic_tvi_player, "TVI Player", "https://tviplayer.iol.pt/"))
+        drawerAdapter.addItem(NavigationDrawerAdapter.QuickAccessItem(R.mipmap.ic_sicradical, "SIC Radical", "https://sicradical.pt/"))
+        drawerAdapter.addItem(NavigationDrawerAdapter.QuickAccessItem(R.mipmap.ic_sicnoticias, "SIC Notícias", "https://sicnoticias.pt/"))
+        drawerAdapter.addItem(NavigationDrawerAdapter.QuickAccessItem(R.mipmap.ic_sic, "SIC", "https://sic.pt/"))
         drawerAdapter.addHeader("")
-        drawerAdapter.addOptionItem(DrawerItemListAdapter.OptionItem(R.drawable.ic_settings, getString(R.string.settings), SettingsActivity.makeIntent(this)))
-        drawerAdapter.setOnItemClickListener(object : DrawerItemListAdapter.OnDrawerClickListener {
+        drawerAdapter.addOptionItem(NavigationDrawerAdapter.OptionItem(R.drawable.ic_settings, getString(R.string.settings), SettingsActivity.makeIntent(this)))
+        drawerAdapter.setOnItemClickListener(object : NavigationDrawerAdapter.OnDrawerClickListener {
 
-            override fun onItemClicked(drawerItem: DrawerItemListAdapter.Item?) {
+            override fun onItemClicked(drawerItem: NavigationDrawerAdapter.Item?) {
                 if (drawerItem != null) {
-                    if (drawerItem is DrawerItemListAdapter.QuickAccessItem) {
-                        try {
-                            mPendingRunnable = Runnable {
+                    if (drawerItem is NavigationDrawerAdapter.QuickAccessItem) {
+                        mPendingRunnable = Runnable {
+                            try {
                                 val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(drawerItem.url))
                                 startActivity(browserIntent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-
                         }
                     }
-                    else if (drawerItem is DrawerItemListAdapter.OptionItem) {
+                    else if (drawerItem is NavigationDrawerAdapter.OptionItem) {
                         try {
                             mPendingRunnable = Runnable {
                                 startActivity(drawerItem.intent)
@@ -368,7 +370,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
     }
 
-    private val actionListener: DownloadableItemActionListener = object : DownloadableItemActionListener {
+    private val actionListener: DownloadableItemAction.Listener = object : DownloadableItemAction.Listener {
         override fun onPlay(action: DownloadableItemAction) {
 
 
@@ -460,10 +462,11 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         val action: String = intent.action?: return
 
-        if (action != Intent.ACTION_SEND) return
-        if (!intent.hasExtra(Intent.EXTRA_TEXT)) return
+        if (action != Intent.ACTION_SEND || !intent.hasExtra(Intent.EXTRA_TEXT)) return
 
         val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)?: return
+
+        intent.removeExtra(Intent.EXTRA_TEXT)
 
         //
         val searchView = this.searchView
@@ -644,11 +647,11 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 })
     }
 
-    private val changeListener = object : DownloadableItemState.ChangeListener {
+    private val changeListener = object : DownloadableItem.State.ChangeListener {
 
         override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
             // listen for end of download and show message
-            if (downloadableItem.state == DownloadableItemState.End) {
+            if (downloadableItem.state == DownloadableItem.State.End) {
                 runOnUiThread {
                     val message = getString(R.string.finished_downloading) + " " + downloadableItem.filename
                     Log.e(TAG, message)

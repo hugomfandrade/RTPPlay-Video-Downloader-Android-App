@@ -13,7 +13,7 @@ import java.net.URL
 open class DownloaderTask(private val mediaUrl : String,
                           private val dirPath : String,
                           private val filename : String,
-                          private val listener : DownloaderTaskListener) {
+                          private val listener : Listener) {
 
     open val TAG : String = javaClass.simpleName
 
@@ -136,5 +136,13 @@ open class DownloaderTask(private val mediaUrl : String,
             return true
         }
         return false
+    }
+
+    interface Listener {
+
+        fun downloadStarted(f: File)
+        fun onProgress(downloadedSize: Long, totalSize: Long)
+        fun downloadFinished(f: File)
+        fun downloadFailed(message: String?)
     }
 }

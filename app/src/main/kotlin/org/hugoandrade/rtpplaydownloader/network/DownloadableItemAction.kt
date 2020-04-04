@@ -1,14 +1,13 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTaskListener
 import java.io.File
 
 class DownloadableItemAction(val item : DownloadableItem,
                              internal val downloadTask: DownloaderTask) :
 
-        IDownloadableItemAction,
-        DownloaderTaskListener {
+        DownloadableItemActionAPI,
+        DownloaderTask.Listener {
 
     private val TAG : String = javaClass.simpleName
 
@@ -17,7 +16,7 @@ class DownloadableItemAction(val item : DownloadableItem,
         val downloading : Boolean = downloadTask.isDownloading
 
         if (downloading) {
-            item.state = DownloadableItemState.Failed
+            item.state = DownloadableItem.State.Failed
 
             item.fireDownloadStateChange()
 
@@ -26,7 +25,7 @@ class DownloadableItemAction(val item : DownloadableItem,
         else {
             item.progress = 0.0f
             item.progressSize = 0
-            item.state = DownloadableItemState.Downloading
+            item.state = DownloadableItem.State.Downloading
 
             item.fireDownloadStateChange()
         }
@@ -34,7 +33,7 @@ class DownloadableItemAction(val item : DownloadableItem,
 
     override fun cancel() {
         downloadTask.cancel()
-        item.state = DownloadableItemState.Failed
+        item.state = DownloadableItem.State.Failed
         item.fireDownloadStateChange()
     }
 
@@ -52,9 +51,9 @@ class DownloadableItemAction(val item : DownloadableItem,
         actionListener.forEach { l -> l.onRefresh(this)}
     }
 
-    private val actionListener: HashSet<DownloadableItemActionListener> = HashSet()
+    private val actionListener: HashSet<Listener> = HashSet()
 
-    fun addActionListener(listener: DownloadableItemActionListener) {
+    fun addActionListener(listener: Listener) {
         if (!actionListener.contains(listener)) {
             actionListener.add(listener)
         }
@@ -84,5 +83,10 @@ class DownloadableItemAction(val item : DownloadableItem,
 
     override fun downloadFailed(message: String?) {
         item.downloadFailed(message)
+    }
+
+    interface Listener {
+        fun onPlay(action : DownloadableItemAction)
+        fun onRefresh(action: DownloadableItemAction)
     }
 }

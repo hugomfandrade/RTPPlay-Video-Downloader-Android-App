@@ -7,8 +7,8 @@ android {
         applicationId "org.hugoandrade.rtpplaydownloader"
         minSdkVersion 15
         targetSdkVersion 28
-        versionCode 11
-        versionName "1.1.7"
+        versionCode 14
+        versionName "1.1.10"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -38,6 +38,10 @@ dependencies {
 
     // azure
     implementation 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
+    // implementation "com.microsoft.azure:azure-mobile-android:3.2.0@aar"
+    // implementation "com.google.guava:guava:24.1-jre"
+    // implementation "com.google.code.gson:gson:2.8.5"
+    // implementation "com.squareup.okhttp:okhttp:2.5.0"
 }
 
 repositories {
