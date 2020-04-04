@@ -2,8 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import android.util.Log
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayV2ParsingTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TVIPlayerParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV2
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -18,7 +17,7 @@ open class RTPPlayTSDownloaderTask(private val url : String?,
                                    private val mediaUrl : String,
                                    private val dirPath : String,
                                    private val filename : String,
-                                   private val listener : DownloaderTaskListener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
+                                   private val listener : Listener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
 
     override val TAG : String = javaClass.simpleName
 
@@ -48,7 +47,7 @@ open class RTPPlayTSDownloaderTask(private val url : String?,
             if (tsUrls == null && url != null) {
                 // try reparse
                 Log.d(TAG, "try reparse $url")
-                val parsingTask = RTPPlayV2ParsingTask()
+                val parsingTask = RTPPlayParsingTaskV2()
                 parsingTask.parseMediaFile(url)
                 val parsingMediaUrl = parsingTask.mediaUrl
                 if (parsingMediaUrl != null) {

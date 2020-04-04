@@ -19,7 +19,7 @@ import java.util.*
 class DownloadItemsAdapter :
 
         RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
-        DownloadableItemState.ChangeListener {
+        DownloadableItem.State.ChangeListener {
 
     private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
@@ -76,12 +76,12 @@ class DownloadItemsAdapter :
                 .displayIn(holder.binding.downloadItemMediaImageView)
 
         when (downloadableItem.state) {
-            DownloadableItemState.Start -> {
+            DownloadableItem.State.Start -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
                 holder.binding.downloadProgressTextView.text = ""
             }
-            DownloadableItemState.Downloading -> {
+            DownloadableItem.State.Downloading -> {
                 downloadableItem.updateProgressUtils()
 
                 holder.binding.downloadItemTitleProgressView.setProgress(downloadableItem.progress.toDouble())
@@ -95,13 +95,13 @@ class DownloadItemsAdapter :
                         MediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
                                 MediaUtils.humanReadableTime(downloadableItem.remainingTime)
             }
-            DownloadableItemState.End -> {
+            DownloadableItem.State.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text = "100%"
                 holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
             }
-            DownloadableItemState.Failed -> {
+            DownloadableItem.State.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,14f)
 
@@ -127,7 +127,7 @@ class DownloadItemsAdapter :
             }
         }
 
-        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItemState.Downloading || downloadableItem.state == DownloadableItemState.Start
+        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItem.State.Downloading || downloadableItem.state == DownloadableItem.State.Start
         val isDownloading : Boolean = downloadableItemAction.isDownloading()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
@@ -276,8 +276,8 @@ class DownloadItemsAdapter :
                 override fun run() {
                     downloadableItemList.forEach { item ->
                         run {
-                            if (item.item.state == DownloadableItemState.Start ||
-                                item.item.state == DownloadableItemState.Downloading ) {
+                            if (item.item.state == DownloadableItem.State.Start ||
+                                item.item.state == DownloadableItem.State.Downloading ) {
                                 item.item.fireDownloadStateChange()
                             }
                         }

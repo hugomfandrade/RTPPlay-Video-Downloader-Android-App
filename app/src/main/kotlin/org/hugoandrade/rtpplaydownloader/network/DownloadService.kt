@@ -10,7 +10,7 @@ import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
 import org.hugoandrade.rtpplaydownloader.DevConstants
-import org.hugoandrade.rtpplaydownloader.MainActivity
+import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
 import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
@@ -203,18 +203,18 @@ class DownloadService : Service() {
 
         updateNotification()
 
-        downloadableItemAction.item.addDownloadStateChangeListener(object : DownloadableItemState.ChangeListener {
+        downloadableItemAction.item.addDownloadStateChangeListener(object : DownloadableItem.State.ChangeListener {
 
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
 
-                if (downloadableItem.state == DownloadableItemState.End ||
-                        downloadableItem.state == DownloadableItemState.Failed) {
+                if (downloadableItem.state == DownloadableItem.State.End ||
+                        downloadableItem.state == DownloadableItem.State.Failed) {
 
                     downloadMap.remove(downloadableItem.id)
 
                     updateNotification()
 
-                    if (downloadableItem.state == DownloadableItemState.End) {
+                    if (downloadableItem.state == DownloadableItem.State.End) {
                         val filePath = downloadableItem.filepath
                         if (filePath != null) {
                             MediaScannerConnection.scanFile(this@DownloadService, arrayOf(filePath.toString()), null, null)
@@ -223,7 +223,7 @@ class DownloadService : Service() {
 
                     // downloadableItemAction.item.removeDownloadStateChangeListener(this)
                 }
-                else if (downloadableItem.state == DownloadableItemState.Start) {
+                else if (downloadableItem.state == DownloadableItem.State.Start) {
 
                     if (downloadMap.isEmpty()) {
                         setForeground()
@@ -244,19 +244,19 @@ class DownloadService : Service() {
     }
 
     // NOT YET USED
-    private val changeListener = object : DownloadableItemState.ChangeListener {
+    private val changeListener = object : DownloadableItem.State.ChangeListener {
 
         override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
             val itemID: Int = downloadableItem.id
 
-            if (downloadableItem.state == DownloadableItemState.End ||
-                    downloadableItem.state == DownloadableItemState.Failed) {
+            if (downloadableItem.state == DownloadableItem.State.End ||
+                    downloadableItem.state == DownloadableItem.State.Failed) {
 
                 downloadMap.remove(downloadableItem.id)
 
                 updateNotification()
 
-                if (downloadableItem.state == DownloadableItemState.End) {
+                if (downloadableItem.state == DownloadableItem.State.End) {
                     val filePath = downloadableItem.filepath
                     if (filePath != null) {
                         MediaScannerConnection.scanFile(this@DownloadService, arrayOf(filePath.toString()), null, null)
@@ -265,7 +265,7 @@ class DownloadService : Service() {
 
                 // downloadableItemAction.item.removeDownloadStateChangeListener(this)
             }
-            else if (downloadableItem.state == DownloadableItemState.Start) {
+            else if (downloadableItem.state == DownloadableItem.State.Start) {
 
                 if (downloadMap.isEmpty()) {
                     setForeground()

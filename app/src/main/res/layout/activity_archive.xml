@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-        <variable name="ArchiveActivity" type="org.hugoandrade.rtpplaydownloader.network.archive.ArchiveActivity"/>
+        <variable name="ArchiveActivity" type="org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity"/>
     </data>
 
     <android.support.design.widget.CoordinatorLayout

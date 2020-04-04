@@ -20,7 +20,6 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayV2ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
 import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
@@ -32,7 +31,7 @@ import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
 
-class DownloadManager : IDownloadManager {
+class DownloadManager : DownloadManagerAPI {
     /**
      * Debugging tag used by the Android logger.
      */
@@ -107,7 +106,7 @@ class DownloadManager : IDownloadManager {
             }
             val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
 
-            val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask)) {
+            val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask, mediaUrl)) {
                 DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
                 DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
                 DownloaderIdentifier.DownloadType.RTPTSFiles -> {
@@ -157,7 +156,7 @@ class DownloadManager : IDownloadManager {
 
                     if (!contains) {
 
-                        val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask)) {
+                        val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask, item.mediaUrl?: "")) {
                             DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "",  dir, item.filename ?: "", item)
                             DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
                             DownloaderIdentifier.DownloadType.RTPTSFiles ->  {
@@ -173,8 +172,8 @@ class DownloadManager : IDownloadManager {
                             val action = DownloadableItemAction(item, task)
                             action.addActionListener(actionListener)
                             actions.add(action)
-                            if (action.item.state == DownloadableItemState.Downloading) {
-                                action.item.state = DownloadableItemState.Failed
+                            if (action.item.state == DownloadableItem.State.Downloading) {
+                                action.item.state = DownloadableItem.State.Failed
                             }
                             listItems.add(action)
                             listItems.sortedWith(compareBy { it.item.id })
@@ -374,9 +373,7 @@ class DownloadManager : IDownloadManager {
                     return
                 }
 
-                System.err.println("11 --> " + paginationUrls.size)
                 paginationUrls.forEach(action = { paginationUrl ->
-                    System.err.println("12 --> " + paginationUrl)
                     val paginationFuture : ParseFuture = parseUrlWithoutPagination(paginationUrl)
                     paginationFuture.addCallback(object : FutureCallback<ParsingData> {
 
@@ -604,7 +601,7 @@ class DownloadManager : IDownloadManager {
         mDatabaseModel.updateDownloadableEntry(downloadableItem)
     }
 
-    private val actionListener: DownloadableItemActionListener = object : DownloadableItemActionListener {
+    private val actionListener: DownloadableItemAction.Listener = object : DownloadableItemAction.Listener {
 
         override fun onPlay(action: DownloadableItemAction) {
             // no-ops

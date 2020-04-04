@@ -5,7 +5,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
 
-interface IDownloadManager {
+interface DownloadManagerAPI {
 
     fun onCreate(viewOps: DownloadManagerViewOps)
     fun onConfigurationChanged(viewOps: DownloadManagerViewOps)

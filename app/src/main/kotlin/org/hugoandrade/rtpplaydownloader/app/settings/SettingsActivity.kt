@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.app
+package org.hugoandrade.rtpplaydownloader.app.settings
 
 import android.app.Activity
 import android.content.Context

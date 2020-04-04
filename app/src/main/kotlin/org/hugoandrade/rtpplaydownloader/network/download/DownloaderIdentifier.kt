@@ -10,12 +10,14 @@ class DownloaderIdentifier() {
 
     companion object {
 
-        fun findHost(downloadTask: String?): DownloadType? {
+        fun findHost(downloadTask: String?, mediaUrl: String): DownloadType? {
             for (fileType: FileType in FileType.values()) {
                 if (fileType.name == downloadTask) {
                     when (fileType) {
                         FileType.TVIPlayer -> return DownloadType.TVITSFiles
-                        FileType.RTPPlay -> return DownloadType.RTPTSFiles
+                        FileType.RTPPlay -> {
+                            return if (mediaUrl.contains(".m3u8")) DownloadType.RTPTSFiles else DownloadType.FullFile
+                        }
                         else -> DownloadType.FullFile
                     }
                 }

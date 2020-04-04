@@ -17,7 +17,7 @@ open class TVIPlayerTSDownloaderTask(private val url : String?,
                                      private val mediaUrl : String,
                                      private val dirPath : String,
                                      private val filename : String,
-                                     private val listener : DownloaderTaskListener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
+                                     private val listener : Listener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
 
     override val TAG : String = javaClass.simpleName
 

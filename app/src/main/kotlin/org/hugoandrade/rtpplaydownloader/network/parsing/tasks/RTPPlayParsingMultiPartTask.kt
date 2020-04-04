@@ -17,10 +17,10 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
         tasks.clear()
 
-        val metadatasList: ArrayList<RTPPlayMultiPartMetadata> = getUrls(url)
+        val metadataList: ArrayList<Metadata> = getUrls(url)
 
-        metadatasList.forEach(action = { metadata ->
-            val task = RTPPlayV2ParsingTask()
+        metadataList.forEach(action = { metadata ->
+            val task = RTPPlayParsingTaskCompat()
 
             if (task.isValid(metadata.urlString) && task.parseMediaFile(metadata.urlString)) {
                 val part = metadata.suffix
@@ -39,8 +39,8 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
         return tasks.size != 0
     }
 
-    override fun isValid(urlString: String) : Boolean {
-        if (!RTPPlayV2ParsingTask().isValid(urlString)) {
+    override fun isValid(url: String) : Boolean {
+        if (!RTPPlayParsingTaskCompat().isValid(url)) {
             return false
         }
 
@@ -49,7 +49,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
             val doc: Document?
 
             try {
-                doc = Jsoup.connect(urlString).timeout(10000).get()
+                doc = Jsoup.connect(url).timeout(10000).get()
             } catch (ignored: SocketTimeoutException) {
                 return false
             }
@@ -85,16 +85,16 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
         return false
     }
 
-    private fun getUrls(urlString: String): ArrayList<RTPPlayMultiPartMetadata> {
+    private fun getUrls(url: String): ArrayList<Metadata> {
         val urls = ArrayList<String>()
-        val urlsMetadata = ArrayList<RTPPlayMultiPartMetadata>()
+        val urlsMetadata = ArrayList<Metadata>()
 
         // is Multi Part
         try {
             val doc: Document?
 
             try {
-                doc = Jsoup.connect(urlString).timeout(10000).get()
+                doc = Jsoup.connect(url).timeout(10000).get()
             } catch (ignored: SocketTimeoutException) {
                 return urlsMetadata
             }
@@ -116,8 +116,8 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
                                         .replace("\\s+","")
                                         .replace(" ","")
 
-                                urls.add(urlString)
-                                urlsMetadata.add(RTPPlayMultiPartMetadata(urlString, part))
+                                urls.add(url)
+                                urlsMetadata.add(Metadata(url, part))
                             }
                             // urls.add(urlString)
                             continue
@@ -132,7 +132,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
                             if (href.isEmpty()) continue
                             urls.add("https://www.rtp.pt$href")
-                            urlsMetadata.add(RTPPlayMultiPartMetadata("https://www.rtp.pt$href", part))
+                            urlsMetadata.add(Metadata("https://www.rtp.pt$href", part))
                         }
                     }
                 }
@@ -145,4 +145,6 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
         return urlsMetadata
     }
+
+    data class Metadata(val urlString : String, val suffix : String?)
 }
