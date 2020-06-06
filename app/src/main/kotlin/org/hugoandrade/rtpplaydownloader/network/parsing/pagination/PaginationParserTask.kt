@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.pagination
 
-abstract class PaginationParserTaskBase {
+abstract class PaginationParserTask {
 
     var TAG : String = javaClass.simpleName
 

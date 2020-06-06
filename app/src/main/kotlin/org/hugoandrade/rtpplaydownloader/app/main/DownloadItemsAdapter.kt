@@ -1,7 +1,6 @@
-package org.hugoandrade.rtpplaydownloader.network
+package org.hugoandrade.rtpplaydownloader.app.main
 
 import androidx.databinding.DataBindingUtil
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -11,6 +10,8 @@ import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
@@ -18,15 +19,15 @@ import java.util.*
 
 class DownloadItemsAdapter :
 
-        androidx.recyclerview.widget.RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
+        RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
         DownloadableItem.State.ChangeListener {
 
     private val recyclerViewLock: Any = Object()
-    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
+    private var recyclerView: RecyclerView? = null
 
     private val downloadableItemList: ArrayList<DownloadableItemAction> = ArrayList()
 
-    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
 
         synchronized(recyclerViewLock) {
@@ -36,7 +37,7 @@ class DownloadItemsAdapter :
         startRefreshTimer()
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
 
         synchronized(recyclerViewLock) {
@@ -277,7 +278,7 @@ class DownloadItemsAdapter :
                     downloadableItemList.forEach { item ->
                         run {
                             if (item.item.state == DownloadableItem.State.Start ||
-                                item.item.state == DownloadableItem.State.Downloading ) {
+                                item.item.state == DownloadableItem.State.Downloading) {
                                 item.item.fireDownloadStateChange()
                             }
                         }

@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-abstract class ParsingMultiPartTaskBase : ParsingTaskBase() {
+abstract class ParsingMultiPartTaskBase : ParsingTask() {
 
-    var tasks : ArrayList<ParsingTaskBase> = ArrayList()
+    var tasks : ArrayList<ParsingTask> = ArrayList()
 }

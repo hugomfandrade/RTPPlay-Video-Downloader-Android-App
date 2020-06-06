@@ -10,7 +10,7 @@ import java.net.SocketTimeoutException
 import java.net.URL
 
 @Deprecated(message = "use RTPPlayParsingTaskV3")
-open class RTPPlayParsingTask : ParsingTaskBase() {
+open class RTPPlayParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 

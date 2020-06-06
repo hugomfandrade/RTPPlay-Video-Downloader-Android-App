@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.ActivityBase
+import org.hugoandrade.rtpplaydownloader.app.main.DownloadableItemDetailsDialog
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityArchiveBinding
 import org.hugoandrade.rtpplaydownloader.network.*
 import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel

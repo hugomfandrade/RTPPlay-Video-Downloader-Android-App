@@ -30,9 +30,9 @@ private constructor() {
          */
         private val TAG = VersionUtils::class.java.simpleName
 
-        fun checkIfAppNeedsUpdateFromGooglePlay(context : Context) : ListenableFutureImpl<String> {
+        fun checkIfAppNeedsUpdateFromGooglePlay(context : Context) : ListenableFuture<String> {
 
-            val currentUpdateFuture : ListenableFutureImpl<String> = ListenableFutureImpl()
+            val currentUpdateFuture : ListenableFuture<String> = ListenableFuture()
 
             object : Thread("Look-For-Version-Update-Thread") {
 
@@ -63,9 +63,9 @@ private constructor() {
         private const val appTableName: String =  "RTPPlayAppVersion"
         private const val appTableCurrentVersion: String =  "CurrentVersion"
 
-        fun checkIfAppNeedsUpdateFromAzure(context : Context): ListenableFutureImpl<String> {
+        fun checkIfAppNeedsUpdateFromAzure(context : Context): ListenableFuture<String> {
 
-            val currentUpdateFuture : ListenableFutureImpl<String> = ListenableFutureImpl()
+            val currentUpdateFuture : ListenableFuture<String> = ListenableFuture()
 
             if (!NetworkUtils.isNetworkAvailable(context)) {
                 currentUpdateFuture.failed("no network")
@@ -137,9 +137,9 @@ private constructor() {
         private const val appTableHistoryUrl: String =  "Url"
         private const val appTableHistoryUrlTaskID: String =  "UrlTaskID"
 
-        fun uploadHistory(context : Context, downloadableItem: DownloadableItemAction): ListenableFutureImpl<String> {
+        fun uploadHistory(context : Context, downloadableItem: DownloadableItemAction): ListenableFuture<String> {
 
-            val uploadHistoryFuture : ListenableFutureImpl<String> = ListenableFutureImpl()
+            val uploadHistoryFuture : ListenableFuture<String> = ListenableFuture()
 
             try {
 

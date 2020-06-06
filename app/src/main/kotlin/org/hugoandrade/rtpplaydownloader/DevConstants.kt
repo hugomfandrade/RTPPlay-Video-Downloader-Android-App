@@ -31,6 +31,6 @@ interface DevConstants {
                 "programa/governo-sombra/53c6b3a33004dc006243d5fb/" +
                 "video/5e07229c0cf20719306879c1";
 
-        val url : String? = null
+        val url : String? = url_7
     }
 }

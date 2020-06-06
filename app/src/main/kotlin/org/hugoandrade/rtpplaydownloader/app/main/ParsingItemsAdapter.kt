@@ -1,8 +1,7 @@
-package org.hugoandrade.rtpplaydownloader.network.parsing
+package org.hugoandrade.rtpplaydownloader.app.main
 
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableBoolean
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +9,8 @@ import android.widget.CompoundButton
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingItem
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import kotlin.collections.ArrayList
@@ -90,7 +90,7 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
         return parsingItemList.size + if (showLoadMore || showProgressBar) 1 else 0
     }
 
-    fun add(task: ParsingTaskBase) {
+    fun add(task: ParsingTask) {
         synchronized(parsingItemList) {
             for (parsingItem in parsingItemList) {
                 if (parsingItem.task == task) {
@@ -101,7 +101,7 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
         }
     }
 
-    fun addAndNotify(task: ParsingTaskBase) {
+    fun addAndNotify(task: ParsingTask) {
         synchronized(parsingItemList) {
             for (parsingItem in parsingItemList) {
                 if (parsingItem.task == task) {
@@ -114,7 +114,7 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
         }
     }
 
-    fun remove(task: ParsingTaskBase) {
+    fun remove(task: ParsingTask) {
         synchronized(parsingItemList) {
             for ((index, parsingItem) in parsingItemList.withIndex()) {
                 if (parsingItem.task == task) {
@@ -133,7 +133,7 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
         }
     }
 
-    fun addAllAndNotify(tasks: ArrayList<ParsingTaskBase>) {
+    fun addAllAndNotify(tasks: ArrayList<ParsingTask>) {
         synchronized(parsingItemList) {
             val prevItemCount: Int = itemCount
             tasks.forEach(action = { task ->
@@ -154,7 +154,7 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
         }
     }
 
-    fun addAll(tasks: ArrayList<ParsingTaskBase>) {
+    fun addAll(tasks: ArrayList<ParsingTask>) {
         synchronized(parsingItemList) {
             tasks.forEach(action = { task ->
                 var alreadyInList = false
@@ -171,9 +171,9 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
         }
     }
 
-    fun getSelectedTasks(): ArrayList<ParsingTaskBase> {
+    fun getSelectedTasks(): ArrayList<ParsingTask> {
         synchronized(parsingItemList) {
-            val tasks : ArrayList<ParsingTaskBase> = ArrayList()
+            val tasks : ArrayList<ParsingTask> = ArrayList()
             for (parsingItem in parsingItemList) {
                 if (parsingItem.isSelected.get()) {
                     tasks.add(parsingItem.task)

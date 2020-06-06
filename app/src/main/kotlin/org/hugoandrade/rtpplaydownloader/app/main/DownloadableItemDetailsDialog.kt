@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network
+package org.hugoandrade.rtpplaydownloader.app.main
 
 import android.app.AlertDialog
 import android.content.Context
@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 

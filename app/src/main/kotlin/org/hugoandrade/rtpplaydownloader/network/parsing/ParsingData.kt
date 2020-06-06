@@ -1,18 +1,18 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
 import kotlin.collections.ArrayList
 
-data class ParsingData(val tasks : ArrayList<ParsingTaskBase>,
-                       val paginationTask : PaginationParserTaskBase?) {
+data class ParsingData(val tasks : ArrayList<ParsingTask>,
+                       val paginationTask : PaginationParserTask?) {
 
-    constructor(task : ParsingTaskBase, paginationTask : PaginationParserTaskBase?) :
+    constructor(task : ParsingTask, paginationTask : PaginationParserTask?) :
             this(arrayListOf(task), paginationTask)
 
-    constructor(task : ParsingTaskBase) :
+    constructor(task : ParsingTask) :
             this(arrayListOf(task), null)
 
-    constructor(paginationTask: PaginationParserTaskBase?) :
+    constructor(paginationTask: PaginationParserTask?) :
             this(ArrayList(), paginationTask)
 }

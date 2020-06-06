@@ -9,7 +9,7 @@ import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class SICParsingTask : ParsingTaskBase() {
+class SICParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 

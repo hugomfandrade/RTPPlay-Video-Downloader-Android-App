@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.network.parsing
+package org.hugoandrade.rtpplaydownloader.app.main
 
 import android.app.AlertDialog
 import android.content.Context
@@ -6,13 +6,12 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Handler
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.view.KeyEvent
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
 
 class ParsingDialog(val mContext: Context) {
 
@@ -100,8 +99,8 @@ class ParsingDialog(val mContext: Context) {
         mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
-        val tasks : ArrayList<ParsingTaskBase> = parsingData.tasks
-        val paginationTask: PaginationParserTaskBase? = parsingData.paginationTask
+        val tasks : ArrayList<ParsingTask> = parsingData.tasks
+        val paginationTask: PaginationParserTask? = parsingData.paginationTask
 
         if (tasks.isEmpty()) {
             dismissDialog()
@@ -129,8 +128,8 @@ class ParsingDialog(val mContext: Context) {
         }
     }
 
-    fun showPaginationResult(paginationTask: PaginationParserTaskBase,
-                             tasks: ArrayList<ParsingTaskBase>) {
+    fun showPaginationResult(paginationTask: PaginationParserTask,
+                             tasks: ArrayList<ParsingTask>) {
 
         if (tasks.isEmpty()) {
             dismissDialog()
@@ -147,8 +146,8 @@ class ParsingDialog(val mContext: Context) {
         showPaginationMoreResult(paginationTask, tasks)
     }
 
-    fun showPaginationMoreResult(paginationTask: PaginationParserTaskBase,
-                                 tasks: ArrayList<ParsingTaskBase>) {
+    fun showPaginationMoreResult(paginationTask: PaginationParserTask,
+                                 tasks: ArrayList<ParsingTask>) {
 
         mParsingItemsAdapter.hideProgressBarView()
         mParsingItemsAdapter.addAllAndNotify(tasks)
@@ -209,9 +208,9 @@ class ParsingDialog(val mContext: Context) {
 
     interface OnParsingListener {
         fun onCancelled()
-        fun onDownload(tasks : ArrayList<ParsingTaskBase>)
-        fun onParseEntireSeries(paginationTask : PaginationParserTaskBase)
-        fun onParseMore(paginationTask: PaginationParserTaskBase)
+        fun onDownload(tasks : ArrayList<ParsingTask>)
+        fun onParseEntireSeries(paginationTask : PaginationParserTask)
+        fun onParseMore(paginationTask: PaginationParserTask)
     }
 
     class Builder private constructor(context: Context) {

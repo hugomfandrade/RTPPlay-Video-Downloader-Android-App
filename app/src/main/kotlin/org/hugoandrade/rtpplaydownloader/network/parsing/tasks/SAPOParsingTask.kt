@@ -8,7 +8,7 @@ import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class SAPOParsingTask : ParsingTaskBase() {
+class SAPOParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 

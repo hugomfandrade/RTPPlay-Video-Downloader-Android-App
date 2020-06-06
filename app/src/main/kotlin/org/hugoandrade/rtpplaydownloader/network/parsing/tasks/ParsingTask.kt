@@ -2,7 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
 
-abstract class ParsingTaskBase {
+abstract class ParsingTask {
 
     val TAG : String = javaClass.simpleName
 

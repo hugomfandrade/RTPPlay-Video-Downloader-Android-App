@@ -27,12 +27,9 @@ import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
 import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.*
@@ -488,8 +485,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             parsingDialog?.dismissDialog()
         }
 
-        val future : ParseFuture = mDownloadManager.parseUrl(url)
-        future.addCallback(object : FutureCallback<ParsingData> {
+        val future : ListenableFuture<ParsingData> = mDownloadManager.parseUrl(url)
+        future.addCallback(object : ListenableFuture.Callback<ParsingData> {
 
             override fun onSuccess(result: ParsingData) {
 
@@ -515,8 +512,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         parsingDialog = ParsingDialog.Builder.instance(this)
                 .setOnParsingDialogListener(object : ParsingDialog.OnParsingListener {
 
-                    var paginationFuture : PaginationParseFuture? = null
-                    var paginationMoreFuture : PaginationParseFuture? = null
+                    var paginationFuture : ListenableFuture<ArrayList<ParsingTask>>? = null
+                    var paginationMoreFuture : ListenableFuture<ArrayList<ParsingTask>>? = null
 
                     override fun onCancelled() {
                         future.failed("parsing was cancelled")
@@ -525,7 +522,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         FilenameLockerAdapter.instance.clear()
                     }
 
-                    override fun onDownload(tasks : ArrayList<ParsingTaskBase>) {
+                    override fun onDownload(tasks : ArrayList<ParsingTask>) {
                         tasks.forEach(action = { task ->
                             val filename: String? = task.filename
                             if (filename != null) {
@@ -538,13 +535,13 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         parsingDialog = null
                     }
 
-                    override fun onParseEntireSeries(paginationTask: PaginationParserTaskBase) {
+                    override fun onParseEntireSeries(paginationTask: PaginationParserTask) {
                         FilenameLockerAdapter.instance.clear()
                         parsingDialog?.loading()
                         paginationFuture = mDownloadManager.parsePagination(url, paginationTask)
-                        paginationFuture?.addCallback(object : FutureCallback<ArrayList<ParsingTaskBase>> {
+                        paginationFuture?.addCallback(object : ListenableFuture.Callback<ArrayList<ParsingTask>> {
 
-                            override fun onSuccess(result: ArrayList<ParsingTaskBase>) {
+                            override fun onSuccess(result: ArrayList<ParsingTask>) {
 
                                 runOnUiThread {
                                     parsingDialog?.showPaginationResult(paginationTask, result)
@@ -565,12 +562,12 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                         })
                     }
 
-                    override fun onParseMore(paginationTask: PaginationParserTaskBase) {
+                    override fun onParseMore(paginationTask: PaginationParserTask) {
                         parsingDialog?.loadingMore()
                         paginationMoreFuture = mDownloadManager.parseMore(url, paginationTask)
-                        paginationMoreFuture?.addCallback(object : FutureCallback<ArrayList<ParsingTaskBase>> {
+                        paginationMoreFuture?.addCallback(object : ListenableFuture.Callback<ArrayList<ParsingTask>> {
 
-                            override fun onSuccess(result: ArrayList<ParsingTaskBase>) {
+                            override fun onSuccess(result: ArrayList<ParsingTask>) {
 
                                 runOnUiThread {
                                     parsingDialog?.showPaginationMoreResult(paginationTask, result)
@@ -597,7 +594,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         parsingDialog?.show()
     }
 
-    private fun startDownload(task: ParsingTaskBase) {
+    private fun startDownload(task: ParsingTask) {
         mDownloadManager.download(task)
     }
 

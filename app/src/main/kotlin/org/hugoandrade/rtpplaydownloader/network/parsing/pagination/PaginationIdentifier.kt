@@ -8,7 +8,7 @@ class PaginationIdentifier() {
 
     companion object {
 
-        fun findHost(urlString: String): PaginationParserTaskBase? {
+        fun findHost(urlString: String): PaginationParserTask? {
             for (fileType: PaginationType in PaginationType.values()) {
                 if (fileType.paginationTask.isValid(urlString)) {
                     return when (fileType) {
@@ -21,7 +21,7 @@ class PaginationIdentifier() {
         }
     }
 
-    enum class PaginationType(val paginationTask : PaginationParserTaskBase) {
+    enum class PaginationType(val paginationTask : PaginationParserTask) {
         RTPPlay(RTPPlayPaginationParserTask()),
         SIC(SICPaginationParserTask())
     }

@@ -6,7 +6,7 @@ import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class SICPaginationParserTask : PaginationParserTaskBase() {
+class SICPaginationParserTask : PaginationParserTask() {
 
     private var cacheDoc: Document? = null
 

@@ -1,18 +1,18 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
+import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 
 interface DownloadManagerAPI {
 
     fun attachCallback(viewOps: DownloadManagerViewOps)
 
-    fun parseUrl(url: String): ParseFuture
-    fun parsePagination(url: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture
-    fun parseMore(url: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture
-    fun download(task: ParsingTaskBase)
+    fun parseUrl(url: String): ListenableFuture<ParsingData>
+    fun parsePagination(url: String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingTask>>
+    fun parseMore(url: String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingTask>>
+    fun download(task: ParsingTask)
 
     fun retrieveItemsFromDB()
     fun archive(downloadableItem: DownloadableItem)

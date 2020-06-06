@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException
 import java.net.URL
 import java.nio.charset.Charset
 
-class TVIPlayerParsingTask : ParsingTaskBase() {
+class TVIPlayerParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 

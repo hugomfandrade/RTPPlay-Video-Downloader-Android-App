@@ -104,13 +104,13 @@ class DownloadableItem(var id: Int,// url
         Log.e(TAG, message)
     }
 
-    private val listenerSet : ListenerSet<DownloadableItem.State.ChangeListener>  = ListenerSet()
+    private val listenerSet : ListenerSet<State.ChangeListener>  = ListenerSet()
 
-    fun addDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
+    fun addDownloadStateChangeListener(listener: State.ChangeListener) {
         listenerSet.addListener(listener)
     }
 
-    fun removeDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
+    fun removeDownloadStateChangeListener(listener: State.ChangeListener) {
         listenerSet.removeListener(listener)
     }
 
