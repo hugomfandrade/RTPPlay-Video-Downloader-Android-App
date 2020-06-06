@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import androidx.lifecycle.LiveData
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
@@ -9,6 +10,7 @@ interface DownloadManagerAPI {
 
     fun attachCallback(viewOps: DownloadManagerViewOps)
 
+    fun getItems(): LiveData<ArrayList<DownloadableItemAction>>
     fun parseUrl(url: String): ListenableFuture<ParsingData>
     fun parsePagination(url: String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingTask>>
     fun parseMore(url: String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingTask>>

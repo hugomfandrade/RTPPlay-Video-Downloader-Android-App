@@ -8,6 +8,8 @@ import android.os.Environment
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderIdentifier
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
@@ -37,6 +39,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
     private val TAG = javaClass.simpleName
 
     private val downloadableItems: ArrayList<DownloadableItemAction> = ArrayList()
+    private val downloadableItemsLiveData: MutableLiveData<ArrayList<DownloadableItemAction>> = MutableLiveData()
 
     private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
@@ -57,6 +60,10 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         mDatabaseModel.onCreate(mPersistencePresenterOps)
 
         retrieveItemsFromDB()
+    }
+
+    override fun getItems(): LiveData<ArrayList<DownloadableItemAction>> {
+        return downloadableItemsLiveData
     }
 
     override fun attachCallback(viewOps: DownloadManagerViewOps) {
@@ -143,12 +150,9 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
                 paginationTask?.setPaginationComplete(isPaginationUrlTheSameOfTheOriginalUrl)
 
-                if (parsingTask is ParsingMultiPartTaskBase) {
-                    future.success(ParsingData(parsingTask.tasks, paginationTask))
-                }
-                else {
-                    future.success(ParsingData(parsingTask, paginationTask))
-                }
+                future.success(if (parsingTask is ParsingMultiPartTaskBase)
+                    ParsingData(parsingTask.tasks, paginationTask) else
+                    ParsingData(parsingTask, paginationTask))
             }
         })
 
@@ -439,9 +443,10 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
             action.addActionListener(actionListener)
 
             downloadService?.startDownload(action)
-
+            val downloadableItems = ArrayList<DownloadableItemAction>()
             downloadableItems.add(action)
             downloadableItems.sortedWith(compareBy { it.item.id } )
+
             mViewOps.get()?.displayDownloadableItem(action)
         }
 
@@ -498,18 +503,13 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 }
             }
 
-            mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
-        }
-
-        override fun onDownloadableItemsDeleted(downloadableItems: List<DownloadableItem>) {
-            this@DownloadManager.downloadableItems.clear()
-            mViewOps.get()?.displayDownloadableItems(this@DownloadManager.downloadableItems)
+            downloadableItemsLiveData.postValue(this@DownloadManager.downloadableItems)
         }
 
         override fun onDatabaseReset(wasSuccessfullyDeleted : Boolean) {
 
             downloadableItems.clear()
-            mViewOps.get()?.displayDownloadableItems(downloadableItems)
+            downloadableItemsLiveData.postValue(downloadableItems)
         }
     }
 
@@ -539,6 +539,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 }
             }
 
+            downloadableItemsLiveData.postValue(this@DownloadManager.downloadableItems)
             mViewOps.get()?.displayDownloadableItems(downloadableItems)
         }
 

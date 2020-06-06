@@ -18,6 +18,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import org.hugoandrade.rtpplaydownloader.DevConstants
@@ -61,7 +62,15 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         mDownloadManager = ViewModelProvider(this).get(DownloadManager::class.java)
         mDownloadManager.attachCallback(this)
-        mDownloadManager.retrieveItemsFromDB();
+        mDownloadManager.retrieveItemsFromDB()
+        mDownloadManager.getItems().observe(this, Observer { actions ->
+
+            mDownloadItemsAdapter.clear()
+            mDownloadItemsAdapter.addAll(actions)
+            mDownloadItemsAdapter.notifyDataSetChanged()
+            mDownloadItemsRecyclerView.scrollToPosition(0)
+            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+        })
 
         initializeUI()
     }
@@ -317,17 +326,6 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         }
 
         binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
-    }
-
-    override fun displayDownloadableItems(actions: List<DownloadableItemAction>) {
-
-        runOnUiThread {
-            mDownloadItemsAdapter.clear()
-            mDownloadItemsAdapter.addAll(actions)
-            mDownloadItemsAdapter.notifyDataSetChanged()
-            mDownloadItemsRecyclerView.scrollToPosition(0)
-            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
-        }
     }
 
     override fun displayDownloadableItem(action: DownloadableItemAction) {
