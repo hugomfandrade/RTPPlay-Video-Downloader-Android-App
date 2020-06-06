@@ -2,12 +2,12 @@ package org.hugoandrade.rtpplaydownloader.app.archive
 
 import android.content.Context
 import android.content.Intent
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.support.v7.widget.*
+import androidx.appcompat.widget.*
 import android.view.MenuItem
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.R
@@ -33,7 +33,7 @@ class ArchiveActivity : ActivityBase() {
     private lateinit var binding: ActivityArchiveBinding
 
     private lateinit var mDatabaseModel: DatabaseModel
-    private lateinit var mDownloadItemsRecyclerView: RecyclerView
+    private lateinit var mDownloadItemsRecyclerView: androidx.recyclerview.widget.RecyclerView
     private lateinit var mArchiveItemsAdapter: ArchiveItemsAdapter
 
     private val downloadableItems: ArrayList<DownloadableItem> = ArrayList()
@@ -74,14 +74,14 @@ class ArchiveActivity : ActivityBase() {
             // actionBar.setHomeButtonEnabled(false)
         }
 
-        val simpleItemAnimator : SimpleItemAnimator = DefaultItemAnimator()
+        val simpleItemAnimator : androidx.recyclerview.widget.SimpleItemAnimator = androidx.recyclerview.widget.DefaultItemAnimator()
         simpleItemAnimator.supportsChangeAnimations = false
 
         mDownloadItemsRecyclerView = binding.archiveItemsRecyclerView
         mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
         mDownloadItemsRecyclerView.layoutManager =
-                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) LinearLayoutManager(this)
-                else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
+                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) androidx.recyclerview.widget.LinearLayoutManager(this)
+                else androidx.recyclerview.widget.GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mArchiveItemsAdapter = ArchiveItemsAdapter()
         mArchiveItemsAdapter.setListener(object : ArchiveItemsAdapter.Listener {
 

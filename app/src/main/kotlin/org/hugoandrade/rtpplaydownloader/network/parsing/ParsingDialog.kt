@@ -6,8 +6,8 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Handler
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.view.KeyEvent
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.R
@@ -59,10 +59,10 @@ class ParsingDialog(val mContext: Context) {
 
         mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
         mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
-        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.visibility = View.GONE
-        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.isNestedScrollingEnabled = false
-        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.layoutManager = LinearLayoutManager(mContext)
-        mView?.findViewById<RecyclerView>(R.id.parsing_items)?.adapter = mParsingItemsAdapter
+        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.visibility = View.GONE
+        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.isNestedScrollingEnabled = false
+        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(mContext)
+        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.adapter = mParsingItemsAdapter
 
         mAlertDialog = AlertDialog.Builder(mContext)
                 .setOnKeyListener(DialogInterface.OnKeyListener { _, keyCode, event ->

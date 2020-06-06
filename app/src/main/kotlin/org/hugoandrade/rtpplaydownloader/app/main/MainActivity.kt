@@ -3,17 +3,17 @@ package org.hugoandrade.rtpplaydownloader.app.main
 import android.Manifest
 import android.content.Intent
 import android.content.res.Configuration
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.provider.DocumentsContract
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.widget.*
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.core.view.GravityCompat
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.widget.*
+import androidx.recyclerview.widget.ItemTouchHelper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -21,11 +21,11 @@ import android.view.View
 import android.widget.EditText
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
 import org.hugoandrade.rtpplaydownloader.common.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
-import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
@@ -43,7 +43,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     private var searchView: SearchView? = null
     private lateinit var binding: ActivityMainBinding
 
-    private lateinit var mDownloadItemsRecyclerView: RecyclerView
+    private lateinit var mDownloadItemsRecyclerView: androidx.recyclerview.widget.RecyclerView
     private lateinit var mDownloadItemsAdapter: DownloadItemsAdapter
 
     private lateinit var mDownloadManager: DownloadManager
@@ -73,6 +73,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             mDownloadManager.onConfigurationChanged(this)
         }
 
+        //val model: DownloadManager = ViewModelProvider(this).get(DownloadManager::class.java)
+        // val model: DownloadManager by viewModels()
+
         initializeUI()
     }
 
@@ -82,7 +85,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDrawerToggle?.syncState()
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
+    override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // Pass any configuration change to the drawer toggle
         mDrawerToggle?.onConfigurationChanged(newConfig)
@@ -149,7 +152,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         };
 
         //
-        val editText: EditText? = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)
+        val editText: EditText? = searchView.findViewById(R.id.search_src_text)
         editText?.setTextColor(Color.WHITE)
         editText?.setHintTextColor(Color.parseColor("#90ffffff"))
 
@@ -292,19 +295,19 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         })
 
         binding.drawerLayout.navigationDrawerContent.adapter = drawerAdapter
-        binding.drawerLayout.navigationDrawerContent.layoutManager = LinearLayoutManager(this)
+        binding.drawerLayout.navigationDrawerContent.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
 
         this.mDrawerToggle = drawerToggle
         this.mDrawerAdapter = drawerAdapter
 
-        val simpleItemAnimator : SimpleItemAnimator = DefaultItemAnimator()
+        val simpleItemAnimator : androidx.recyclerview.widget.SimpleItemAnimator = androidx.recyclerview.widget.DefaultItemAnimator()
         simpleItemAnimator.supportsChangeAnimations = false
 
         mDownloadItemsRecyclerView = binding.downloadItemsRecyclerView
         mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
         mDownloadItemsRecyclerView.layoutManager =
-                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) LinearLayoutManager(this)
-                else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
+                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) androidx.recyclerview.widget.LinearLayoutManager(this)
+                else androidx.recyclerview.widget.GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
         if (DevConstants.enableSwipe) {
@@ -312,7 +315,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     0,
                     ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
 
-                override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder): Float {
+                override fun getSwipeThreshold(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder): Float {
                     return super.getSwipeThreshold(viewHolder)
                 }
 
@@ -324,13 +327,13 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     return super.getSwipeVelocityThreshold(defaultValue) * 0.2f
                 }
 
-                override fun onMove(recyclerView: RecyclerView,
-                                    viewHolder1: RecyclerView.ViewHolder,
-                                    viewHolder2: RecyclerView.ViewHolder): Boolean {
+                override fun onMove(recyclerView: androidx.recyclerview.widget.RecyclerView,
+                                    viewHolder1: androidx.recyclerview.widget.RecyclerView.ViewHolder,
+                                    viewHolder2: androidx.recyclerview.widget.RecyclerView.ViewHolder): Boolean {
                     return false
                 }
 
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
+                override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, p: Int) {
                     val position = viewHolder.adapterPosition
                     val downloadableItem = mDownloadItemsAdapter.get(position)
                     if (downloadableItem.isDownloading()) {
@@ -470,7 +473,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         //
         val searchView = this.searchView
-        val editText: EditText? = searchView?.findViewById(android.support.v7.appcompat.R.id.search_src_text)
+        val editText: EditText? = searchView?.findViewById(R.id.search_src_text)
 
         searchView?.setQuery(url, true)
         editText?.setSelection(editText.text.length)

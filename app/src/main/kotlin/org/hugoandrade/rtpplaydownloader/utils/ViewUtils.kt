@@ -5,11 +5,11 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
-import android.support.annotation.ColorRes
-import android.support.annotation.StringRes
-import android.support.annotation.UiThread
-import android.support.design.widget.Snackbar
-import android.support.v4.view.ViewCompat
+import androidx.annotation.ColorRes
+import androidx.annotation.StringRes
+import androidx.annotation.UiThread
+import com.google.android.material.snackbar.Snackbar
+import androidx.core.view.ViewCompat
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Log

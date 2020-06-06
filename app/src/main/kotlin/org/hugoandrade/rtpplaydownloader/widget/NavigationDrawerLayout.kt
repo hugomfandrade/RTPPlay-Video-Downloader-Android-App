@@ -1,9 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.widget
 
 import android.content.Context
-import android.support.design.widget.CoordinatorLayout
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.widget.RecyclerView
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.RecyclerView
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -11,10 +11,10 @@ import android.view.ViewGroup
 import org.hugoandrade.rtpplaydownloader.R
 
 class NavigationDrawerLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyle: Int = 0)
-    : DrawerLayout(context, attrs, defStyle) {
+    : androidx.drawerlayout.widget.DrawerLayout(context, attrs, defStyle) {
 
-    val coordinatorLayout: CoordinatorLayout?
-    val navigationDrawerContent: RecyclerView
+    val coordinatorLayout: androidx.coordinatorlayout.widget.CoordinatorLayout?
+    val navigationDrawerContent: androidx.recyclerview.widget.RecyclerView
 
     init {
         val inflater = getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater

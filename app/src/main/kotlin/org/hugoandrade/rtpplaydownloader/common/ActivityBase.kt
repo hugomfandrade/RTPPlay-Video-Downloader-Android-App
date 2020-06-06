@@ -3,7 +3,7 @@ package org.hugoandrade.rtpplaydownloader.common
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.view.ViewGroup
 import org.hugoandrade.rtpplaydownloader.R

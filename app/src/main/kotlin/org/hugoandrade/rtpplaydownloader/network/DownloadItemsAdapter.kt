@@ -1,8 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import android.databinding.DataBindingUtil
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -18,15 +18,15 @@ import java.util.*
 
 class DownloadItemsAdapter :
 
-        RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
+        androidx.recyclerview.widget.RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
         DownloadableItem.State.ChangeListener {
 
     private val recyclerViewLock: Any = Object()
-    private var recyclerView: RecyclerView? = null
+    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
 
     private val downloadableItemList: ArrayList<DownloadableItemAction> = ArrayList()
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
 
         synchronized(recyclerViewLock) {
@@ -36,7 +36,7 @@ class DownloadItemsAdapter :
         startRefreshTimer()
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
 
         synchronized(recyclerViewLock) {
@@ -223,8 +223,8 @@ class DownloadItemsAdapter :
                     val lm = recyclerView?.layoutManager
 
                     val v: View?
-                    if (lm is LinearLayoutManager) {
-                        val llm : LinearLayoutManager = lm
+                    if (lm is androidx.recyclerview.widget.LinearLayoutManager) {
+                        val llm : androidx.recyclerview.widget.LinearLayoutManager = lm
                         v = llm.findViewByPosition(index)
                     }
                     else {
@@ -233,7 +233,7 @@ class DownloadItemsAdapter :
 
                     if (v != null) {
 
-                        val viewHolder : RecyclerView.ViewHolder? = recyclerView?.getChildViewHolder(v)
+                        val viewHolder : androidx.recyclerview.widget.RecyclerView.ViewHolder? = recyclerView?.getChildViewHolder(v)
 
                         if (viewHolder is ViewHolder) {
                             val holder : ViewHolder = viewHolder
@@ -295,7 +295,7 @@ class DownloadItemsAdapter :
     }
 
     inner class ViewHolder(val binding: DownloadItemBinding) :
-            RecyclerView.ViewHolder(binding.root),
+            androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root),
             View.OnClickListener {
 
         init {

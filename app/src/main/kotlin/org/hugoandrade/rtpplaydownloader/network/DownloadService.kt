@@ -7,8 +7,8 @@ import android.media.MediaScannerConnection
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.support.v4.app.NotificationCompat
-import android.support.v4.content.ContextCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.R

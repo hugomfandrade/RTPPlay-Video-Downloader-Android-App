@@ -1,8 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import android.databinding.DataBindingUtil
-import android.databinding.ObservableBoolean
-import android.support.v7.widget.RecyclerView
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ObservableBoolean
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,17 +15,17 @@ import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import kotlin.collections.ArrayList
 
-class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
+class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>() {
 
     private var showLoadMore: Boolean = false
     private var showProgressBar: Boolean = false
     private val recyclerViewLock: Any = Object()
-    private var recyclerView: RecyclerView? = null
+    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
     private var listener: Listener? = null
 
     private val parsingItemList: ArrayList<ParsingItem> = ArrayList()
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
 
         synchronized(recyclerViewLock) {
@@ -33,7 +33,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
         }
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
 
         synchronized(recyclerViewLock) {
@@ -252,7 +252,7 @@ class ParsingItemsAdapter : RecyclerView.Adapter<ParsingItemsAdapter.ViewHolder>
     inner class ViewHolder(val binding: ParsingItemBinding?,
                            val bindingLoading: ParsingItemLoadingBinding?) :
 
-            RecyclerView.ViewHolder(binding?.root?: bindingLoading?.root ?: View(null)),
+            androidx.recyclerview.widget.RecyclerView.ViewHolder(binding?.root?: bindingLoading?.root ?: View(null)),
             CompoundButton.OnCheckedChangeListener,
             View.OnClickListener {
 

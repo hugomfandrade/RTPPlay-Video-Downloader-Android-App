@@ -2,7 +2,7 @@ package org.hugoandrade.rtpplaydownloader.app.main
 
 import android.app.Activity
 import android.content.Intent
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +11,7 @@ import android.widget.TextView
 import org.hugoandrade.rtpplaydownloader.R
 import java.util.*
 
-class NavigationDrawerAdapter (private val activity: Activity) : RecyclerView.Adapter<NavigationDrawerAdapter.ViewHolder>() {
+class NavigationDrawerAdapter (private val activity: Activity) : androidx.recyclerview.widget.RecyclerView.Adapter<NavigationDrawerAdapter.ViewHolder>() {
 
     companion object {
         private val TAG = NavigationDrawerAdapter::class.java.simpleName
@@ -88,7 +88,7 @@ class NavigationDrawerAdapter (private val activity: Activity) : RecyclerView.Ad
 
     data class QuickAccessItem(val resourceID: Int, val title: String, val url: String) : Item()
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
+    inner class ViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view), View.OnClickListener {
 
         var drawerHeader: View = view.findViewById(R.id.drawer_header)
         var tvHeader: TextView = view.findViewById(R.id.tv_drawer_header)

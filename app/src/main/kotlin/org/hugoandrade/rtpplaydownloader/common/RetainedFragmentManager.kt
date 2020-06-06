@@ -1,9 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.common
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
 import android.util.Log
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import java.lang.ref.WeakReference
@@ -19,7 +19,7 @@ class RetainedFragmentManager
 /**
  * Constructor initializes fields.
  */
-(fragmentManager: FragmentManager,
+(fragmentManager: androidx.fragment.app.FragmentManager,
  /**
   * Name used to identify the RetainedFragment.
   */
@@ -32,7 +32,7 @@ class RetainedFragmentManager
     /**
      * WeakReference to the FragmentManager.
      */
-    private val mFragmentManager: WeakReference<FragmentManager>
+    private val mFragmentManager: WeakReference<androidx.fragment.app.FragmentManager>
 
     /**
      * Reference to the RetainedFragment.
@@ -43,7 +43,7 @@ class RetainedFragmentManager
      * Return the Activity the RetainedFragment is attached to or null
      * if it's not currently attached.
      */
-    val activity: FragmentActivity?
+    val activity: androidx.fragment.app.FragmentActivity?
         get() = mRetainedFragment!!.activity
 
     init {
@@ -62,7 +62,7 @@ class RetainedFragmentManager
             // Find the RetainedFragment on Activity restarts.  The
             // RetainedFragment has no UI so it must be referenced via
             // a tag.
-            val tmpRetainedFragment : Fragment? = mFragmentManager.get()?.findFragmentByTag(mRetainedFragmentTag)
+            val tmpRetainedFragment : androidx.fragment.app.Fragment? = mFragmentManager.get()?.findFragmentByTag(mRetainedFragmentTag)
 
             // A value of null means it's the first time in, so there's
             // extra work to do.
@@ -127,7 +127,7 @@ class RetainedFragmentManager
      * configuration changes.  Plays the role of the "Memento" in the
      * Memento pattern.
      */
-    class RetainedFragment : Fragment() {
+    class RetainedFragment : androidx.fragment.app.Fragment() {
         /**
          * Maps keys to objects.
          */

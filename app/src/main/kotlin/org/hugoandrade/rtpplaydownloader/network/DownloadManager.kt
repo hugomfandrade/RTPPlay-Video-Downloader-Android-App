@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network
 
+import androidx.lifecycle.ViewModel
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -31,7 +32,7 @@ import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
 
-class DownloadManager : DownloadManagerAPI {
+class DownloadManager : ViewModel(), DownloadManagerAPI {
     /**
      * Debugging tag used by the Android logger.
      */
