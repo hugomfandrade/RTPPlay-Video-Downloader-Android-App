@@ -20,6 +20,7 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.widget.ExpandCollapseAnimation
@@ -145,7 +146,7 @@ private constructor() {
         fun hideSoftKeyboard(view: View) {
             val imm = view.context.getSystemService(
                     Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm!!.hideSoftInputFromWindow(view.windowToken, 0)
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
 
         /**
@@ -197,7 +198,7 @@ private constructor() {
 
                 if (childView is ViewGroup) {
                     allViews.addAll(
-                            findViewWithTagRecursively(childView as ViewGroup, tag))
+                            findViewWithTagRecursively(childView, tag))
                 } else {
                     val tagView = childView.tag
                     if (tagView != null && tagView == tag) {
@@ -224,12 +225,12 @@ private constructor() {
             if (root is ImageView) {
                 val name = ViewCompat.getTransitionName(root)
                 return if (TextUtils.equals(name, transitionName))
-                    root as ImageView
+                    root
                 else
                     null
             } else if (root is ViewGroup) {
                 // Search all descendants for a match.
-                val viewGroup = root as ViewGroup
+                val viewGroup = root
                 for (i in 0 until viewGroup.childCount) {
                     val childView = viewGroup.getChildAt(i)
 
@@ -242,7 +243,7 @@ private constructor() {
                     } else if (childView is ImageView) {
                         val name = ViewCompat.getTransitionName(childView)
                         if (TextUtils.equals(name, transitionName)) {
-                            return childView as ImageView
+                            return childView
                         }
                     }
                 }
@@ -291,10 +292,10 @@ private constructor() {
                 window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                window.statusBarColor = activity.resources.getColor(colorRes, null)
+                window.statusBarColor = ContextCompat.getColor(activity, colorRes)
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    window.statusBarColor = activity.resources.getColor(colorRes)
+                    window.statusBarColor = ContextCompat.getColor(activity, colorRes)
                 }
             }
         }
@@ -346,7 +347,7 @@ private constructor() {
         }
 
         fun getColor(context: Context, colorRes: Int): Int {
-            return context.resources.getColor(colorRes)
+            return ContextCompat.getColor(context, colorRes)
         }
 
         fun isLandscape(context: Context): Boolean {

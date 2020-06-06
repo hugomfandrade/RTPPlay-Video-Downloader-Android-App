@@ -1,26 +1,26 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Environment
 import android.os.IBinder
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderIdentifier
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayTSDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.TVIPlayerTSDownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
 import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
@@ -31,8 +31,7 @@ import java.util.*
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
-
-class DownloadManager : ViewModel(), DownloadManagerAPI {
+class DownloadManager(application: Application) : AndroidViewModel(application), DownloadManagerAPI {
     /**
      * Debugging tag used by the Android logger.
      */
@@ -49,43 +48,6 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
 
     private var downloadService: DownloadService.DownloadServiceBinder? = null
 
-    override fun onCreate(viewOps: DownloadManagerViewOps) {
-        mViewOps = WeakReference(viewOps)
-
-        startService()
-
-        mDatabaseModel = object : DatabaseModel(){}
-        mDatabaseModel.onCreate(mPersistencePresenterOps)
-
-        retrieveItemsFromDB()
-    }
-
-    override fun onConfigurationChanged(viewOps: DownloadManagerViewOps) {
-        mViewOps = WeakReference(viewOps)
-
-        mViewOps.get()?.displayDownloadableItems(downloadableItems)
-    }
-
-    override fun onDestroy() {
-        parsingExecutors.shutdownNow()
-        mDatabaseModel.onDestroy()
-
-        stopService()
-    }
-
-    private fun startService() {
-        val context = mViewOps.get()?.getApplicationContext() ?: return
-
-        val serviceIntent = Intent(context, DownloadService::class.java)
-        context.startService(serviceIntent)
-        context.bindService(serviceIntent, mConnection, 0)
-    }
-
-    private fun stopService() {
-        val context = mViewOps.get()?.getApplicationContext() ?: return
-        context.unbindService(mConnection)
-    }
-
     private val mPersistencePresenterOps = object : PersistencePresenterOps {
 
         override fun onDownloadableItemInserted(downloadableItem: DownloadableItem?) {
@@ -94,17 +56,12 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
                 return
             }
 
-            val context = getApplicationContext()
+            val context : Application = getApplication()
             val url = downloadableItem.url
             val mediaUrl = downloadableItem.mediaUrl ?: return
             val filename = downloadableItem.filename ?: return
             val downloadTask = downloadableItem.downloadTask
-            val dirPath = if (context != null) {
-                MediaUtils.getDownloadsDirectory(context)
-            }
-            else {
-                null
-            }
+            val dirPath = MediaUtils.getDownloadsDirectory(context)
             val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
 
             val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask, mediaUrl)) {
@@ -131,13 +88,8 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
 
             val actions : ArrayList<DownloadableItemAction> = ArrayList()
 
-            val context = getApplicationContext()
-            val dirPath = if (context != null) {
-                MediaUtils.getDownloadsDirectory(context)
-            }
-            else {
-                null
-            }
+            val context : Application = getApplication()
+            val dirPath = MediaUtils.getDownloadsDirectory(context)
             val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
 
             for (item in downloadableItems) {
@@ -198,14 +150,6 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
             downloadableItems.clear()
             mViewOps.get()?.displayDownloadableItems(downloadableItems)
         }
-
-        override fun getActivityContext(): Context? {
-            return mViewOps.get()?.getActivityContext()
-        }
-
-        override fun getApplicationContext(): Context? {
-            return mViewOps.get()?.getApplicationContext()
-        }
     }
 
     private val mConnection: ServiceConnection = object : ServiceConnection {
@@ -241,6 +185,41 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
         }
     }
 
+    init {
+        startService()
+
+        mDatabaseModel = object : DatabaseModel(getApplication()){}
+        mDatabaseModel.onCreate(mPersistencePresenterOps)
+
+        retrieveItemsFromDB()
+    }
+
+    override fun attachCallback(viewOps: DownloadManagerViewOps) {
+        mViewOps = WeakReference(viewOps)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+
+        parsingExecutors.shutdownNow()
+        mDatabaseModel.onDestroy()
+
+        stopService()
+    }
+
+    private fun startService() {
+        val context = getApplication<Application>()
+
+        val serviceIntent = Intent(context, DownloadService::class.java)
+        context.startService(serviceIntent)
+        context.bindService(serviceIntent, mConnection, 0)
+    }
+
+    private fun stopService() {
+        val context = getApplication<Application>()
+        context.unbindService(mConnection)
+    }
+
     override fun parseUrl(url: String) : ParseFuture {
 
         val future = ParseFuture(url)
@@ -249,7 +228,7 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
 
             override fun run() {
 
-                if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                     future.failed("no network")
                     return
                 }
@@ -319,7 +298,7 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
 
             override fun run() {
 
-                if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                     future.failed("no network")
                     return
                 }
@@ -360,7 +339,7 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
 
             override fun run() {
 
-                if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                     future.failed("no network")
                     return
                 }
@@ -430,7 +409,7 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
 
             override fun run() {
 
-                if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+                if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                     future.failed("no network")
                     return
                 }
@@ -527,7 +506,7 @@ class DownloadManager : ViewModel(), DownloadManagerAPI {
 
         paginationUrls.forEach(action = { p ->
 
-            if (!NetworkUtils.isNetworkAvailable(checkNotNull(mViewOps.get()).getApplicationContext())) {
+            if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                 return false
             }
 

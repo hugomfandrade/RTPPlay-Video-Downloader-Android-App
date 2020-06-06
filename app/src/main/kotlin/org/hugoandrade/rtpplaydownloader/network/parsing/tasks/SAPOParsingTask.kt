@@ -27,18 +27,17 @@ class SAPOParsingTask : ParsingTaskBase() {
         return true
     }
 
-    override fun isValid(urlString: String) : Boolean {
+    override fun isValid(url: String) : Boolean {
 
-        if (!NetworkUtils.isValidURL(urlString)) {
+        if (!NetworkUtils.isValidURL(url)) {
             return false
         }
 
-        val isFileType: Boolean =
-                urlString.contains("videos.sapo.pt")
+        val isFileType: Boolean = url.contains("videos.sapo.pt")
 
         if (isFileType) {
 
-            val videoFile: String? = getVideoFile(urlString)
+            val videoFile: String? = getVideoFile(url)
 
             return videoFile != null
         }

@@ -42,7 +42,7 @@ class DownloadService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        val databaseModel = object : DatabaseModel(){}
+        val databaseModel = object : DatabaseModel(application){}
         databaseModel.onCreate(mPersistencePresenterOps)
 
         mDatabaseModel = databaseModel
@@ -59,16 +59,7 @@ class DownloadService : Service() {
         return mBinder
     }
 
-    val mPersistencePresenterOps = object : PersistencePresenterOps {
-
-        override fun getActivityContext(): Context? {
-            return this@DownloadService.applicationContext
-        }
-
-        override fun getApplicationContext(): Context? {
-            return this@DownloadService
-        }
-    }
+    val mPersistencePresenterOps = object : PersistencePresenterOps {}
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

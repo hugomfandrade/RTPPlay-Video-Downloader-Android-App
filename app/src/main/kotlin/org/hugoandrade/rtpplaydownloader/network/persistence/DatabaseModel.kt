@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.persistence
 
+import android.app.Application
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -9,7 +10,7 @@ import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.Executors
 
-abstract class DatabaseModel {
+abstract class DatabaseModel(private val application: Application) {
 
     companion object {
         private val TAG = DatabaseModel::class.java.simpleName
@@ -26,7 +27,7 @@ abstract class DatabaseModel {
     fun onCreate(presenter: PersistencePresenterOps) {
         mPresenterOps = WeakReference(presenter)
 
-        dbHelper = mPresenterOps.get()?.getActivityContext()?.let { DatabaseHelper(it) }
+        dbHelper = DatabaseHelper(application)
 
         database = dbHelper?.writableDatabase
     }
@@ -118,14 +119,14 @@ abstract class DatabaseModel {
         }
     }
 
-    fun deleteAllDownloadableItems(downloadableItems: List<DownloadableItem>) {
+    fun deleteDownloadableItems(downloadableItems: List<DownloadableItem>) {
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) return
         persistenceExecutors.execute {
 
             val deletedDownloadableEntries = ArrayList<DownloadableItem>()
 
-            for (deletedDownloadableEntry in deletedDownloadableEntries) {
+            for (deletedDownloadableEntry in downloadableItems) {
                 val nRowsAffected = database?.delete(
                         DownloadableItem.Entry.TABLE_NAME,
                         DownloadableItem.Entry.Cols._ID + " = ?",

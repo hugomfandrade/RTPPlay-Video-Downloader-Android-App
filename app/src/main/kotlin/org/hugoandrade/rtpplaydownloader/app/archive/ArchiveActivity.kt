@@ -7,11 +7,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
-import androidx.appcompat.widget.*
 import android.view.MenuItem
 import android.view.View
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.common.ActivityBase
+import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityArchiveBinding
 import org.hugoandrade.rtpplaydownloader.network.*
 import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
@@ -43,7 +42,7 @@ class ArchiveActivity : ActivityBase() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        mDatabaseModel = object : DatabaseModel(){}
+        mDatabaseModel = object : DatabaseModel(application){}
         mDatabaseModel.onCreate(mPersistencePresenterOps)
 
         initializeUI()
@@ -92,7 +91,7 @@ class ArchiveActivity : ActivityBase() {
                     dialog.show(item)
                 } else {
 
-                    detailsDialog = DownloadableItemDetailsDialog.Builder.instance(getActivityContext())
+                    detailsDialog = DownloadableItemDetailsDialog.Builder.instance(this@ArchiveActivity)
                             .setOnItemDetailsDialogListener(object : DownloadableItemDetailsDialog.OnItemDetailsListener {
                                 override fun onCancelled() {
                                     detailsDialog = null
@@ -155,7 +154,7 @@ class ArchiveActivity : ActivityBase() {
                                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
                                                     .setDataAndType(Uri.parse(filepath), "video/mp4"))
                                         } else {
-                                            ViewUtils.showToast(getActivityContext(), getString(R.string.file_not_found))
+                                            ViewUtils.showToast(this@ArchiveActivity, getString(R.string.file_not_found))
                                         }
                                     } catch (ignored: Exception) {
                                     }
@@ -218,14 +217,6 @@ class ArchiveActivity : ActivityBase() {
             }
 
             displayDownloadableItems(this@ArchiveActivity.downloadableItems)
-        }
-
-        override fun getActivityContext(): Context? {
-            return this@ArchiveActivity
-        }
-
-        override fun getApplicationContext(): Context? {
-            return this@ArchiveActivity.applicationContext
         }
     }
 }

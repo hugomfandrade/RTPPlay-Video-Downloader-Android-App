@@ -1,9 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.persistence
 
-import org.hugoandrade.rtpplaydownloader.common.ContextView
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 
-interface PersistencePresenterOps : ContextView {
+interface PersistencePresenterOps {
 
     fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
         //No-op

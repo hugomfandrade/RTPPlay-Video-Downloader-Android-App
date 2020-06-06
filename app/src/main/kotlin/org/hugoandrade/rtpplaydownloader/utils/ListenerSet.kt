@@ -1,66 +1,67 @@
 package org.hugoandrade.rtpplaydownloader.utils
 
 import java.util.*
-
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class ListenerSet<T> {
 
-    protected val listenerSet: HashSet<T> = HashSet()
-    protected val toAddListenerSet: HashSet<T> = HashSet()
-    protected val toRemoveListenerSet: HashSet<T> = HashSet()
+    private val listenerSet: HashSet<T> = HashSet()
+    private val toAddListenerSet: HashSet<T> = HashSet()
+    private val toRemoveListenerSet: HashSet<T> = HashSet()
 
-    @get:Synchronized
-    @Volatile
-    var isLocked = false
-        private set
+    private val lock = ReentrantReadWriteLock()
 
-    @Synchronized
     fun addListener(listener: T) {
-        if (isLocked) {
-            synchronized(toAddListenerSet) { select(listener).addTo(toAddListenerSet) }
+        if (lock.writeLock().tryLock()) {
+            try {
+                select(listener).addTo(listenerSet)
+            } finally {
+                lock.writeLock().unlock()
+            }
         } else {
-            synchronized(listenerSet) { select(listener).addTo(listenerSet) }
+            select(listener).addTo(toAddListenerSet)
         }
     }
 
-    @Synchronized
     fun removeListener(listener: T) {
-        if (isLocked) {
-            synchronized(toRemoveListenerSet) { select(listener).addTo(toRemoveListenerSet) }
+        if (lock.writeLock().tryLock()) {
+            try {
+                select(listener).removeFrom(listenerSet)
+            } finally {
+                lock.writeLock().unlock()
+            }
         } else {
-            synchronized(listenerSet) { select(listener).removeFrom(listenerSet) }
+            select(listener).addTo(toRemoveListenerSet)
         }
     }
 
-    @Synchronized
     fun get(): Set<T> {
         return listenerSet
     }
 
-    @Synchronized
-    fun lock(): Boolean {
-        if (isLocked) {
-            return false
-        }
-        isLocked = true
-        return true
+    fun lock() {
+        lock.readLock().lock()
     }
 
-    @Synchronized
     fun release() {
-        isLocked = false
-        // populate while locked
-        synchronized(toRemoveListenerSet) {
+        lock.readLock().unlock()
+
+        if (!lock.writeLock().tryLock()) return
+
+        try {
+
+            // populate while locked
             for (t in toRemoveListenerSet) {
-                removeListener(t)
+                select(t).removeFrom(listenerSet)
             }
             toRemoveListenerSet.clear()
-        }
-        synchronized(toAddListenerSet) {
+
             for (t in toAddListenerSet) {
-                addListener(t)
+                select(t).addTo(listenerSet)
             }
             toAddListenerSet.clear()
+        } finally {
+            lock.writeLock().unlock()
         }
     }
 
@@ -68,13 +69,15 @@ class ListenerSet<T> {
         return Edit(listener)
     }
 
-    inner class Edit(private val listener: T) {
-        fun addTo(listenerSet: MutableSet<T>) {
+    private inner class Edit constructor(private val listener: T) {
+
+        fun addTo(listenerSet: HashSet<T>) {
             listenerSet.add(listener)
         }
 
-        fun removeFrom(listenerSet: MutableSet<T>) {
+        fun removeFrom(listenerSet: HashSet<T>) {
             listenerSet.remove(listener)
         }
+
     }
 }

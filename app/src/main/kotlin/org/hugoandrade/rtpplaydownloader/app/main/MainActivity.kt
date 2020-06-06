@@ -3,27 +3,28 @@ package org.hugoandrade.rtpplaydownloader.app.main
 import android.Manifest
 import android.content.Intent
 import android.content.res.Configuration
-import androidx.databinding.DataBindingUtil
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.provider.DocumentsContract
-import androidx.core.view.GravityCompat
-import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.appcompat.widget.*
-import androidx.recyclerview.widget.ItemTouchHelper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.widget.SearchView
+import androidx.core.view.GravityCompat
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
-import org.hugoandrade.rtpplaydownloader.common.ActivityBase
+import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
@@ -35,7 +36,6 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.*
-import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.io.File
 
 class MainActivity : ActivityBase(), DownloadManagerViewOps {
@@ -62,19 +62,9 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val oldDownloadManager = retainedFragmentManager.get<DownloadManager>(DownloadManager::class.java.simpleName)
-
-        if (oldDownloadManager == null) {
-            mDownloadManager = DownloadManager()
-            mDownloadManager.onCreate(this)
-            retainedFragmentManager.put(DownloadManager::class.java.simpleName, mDownloadManager)
-        } else {
-            mDownloadManager = oldDownloadManager
-            mDownloadManager.onConfigurationChanged(this)
-        }
-
-        //val model: DownloadManager = ViewModelProvider(this).get(DownloadManager::class.java)
-        // val model: DownloadManager by viewModels()
+        mDownloadManager = ViewModelProvider(this).get(DownloadManager::class.java)
+        mDownloadManager.attachCallback(this)
+        mDownloadManager.retrieveItemsFromDB();
 
         initializeUI()
     }
@@ -114,40 +104,35 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         })
         searchView.setOnCloseListener {
             val drawerLayout = binding.drawerLayout
-            if (drawerLayout != null) {
-                mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-            }
+            mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
             false
         }
         searchView.setOnSearchClickListener {
-            val drawerLayout = binding.drawerLayout
-            if (drawerLayout != null) {
-                mDrawerToggle?.onDrawerSlide(drawerLayout, 1f)
+            val b: ActivityMainBinding = binding ?: return@setOnSearchClickListener
+            val drawerLayout = b.drawerLayout
+            mDrawerToggle?.onDrawerSlide(drawerLayout, 1f)
 
-                /*
-                ValueAnimator anim = ValueAnimator.ofFloat(start, end);
-                anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                        float slideOffset = (Float) valueAnimator.getAnimatedValue();
-                        toolbarDrawerToggle.onDrawerSlide(drawerLayout, slideOffset);
-                    }
-                });
-                anim.setInterpolator(new DecelerateInterpolator());
-                // You can change this duration to more closely match that of the default animation.
-                anim.setDuration(500);
-                anim.start();
-                 */
-            }
+            /*
+            ValueAnimator anim = ValueAnimator.ofFloat(start, end);
+            anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                    float slideOffset = (Float) valueAnimator.getAnimatedValue();
+                    toolbarDrawerToggle.onDrawerSlide(drawerLayout, slideOffset);
+                }
+            });
+            anim.setInterpolator(new DecelerateInterpolator());
+            // You can change this duration to more closely match that of the default animation.
+            anim.setDuration(500);
+            anim.start();
+             */
         }
 
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 searchView.isIconified = true
                 val drawerLayout = binding.drawerLayout
-                if (drawerLayout != null) {
-                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-                }
+                mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
             }
         };
 
@@ -178,9 +163,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             if (searchView != null && !searchView.isIconified) {
                 searchView.isIconified = true
                 val drawerLayout = binding.drawerLayout
-                if (drawerLayout != null) {
-                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-                }
+                mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
                 return true
             }
         }
@@ -188,14 +171,6 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         if (drawerToggle != null && drawerToggle.onOptionsItemSelected(item)) return true
 
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        if (!isChangingConfigurations) {
-            mDownloadManager.onDestroy()
-        }
     }
 
     override fun onBackPressed() {
@@ -206,9 +181,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             if (searchView != null && !searchView.isIconified) {
                 searchView.isIconified = true
                 val drawerLayout = binding.drawerLayout
-                if (drawerLayout != null) {
-                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-                }
+                mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
             } else {
                 super.onBackPressed()
             }
@@ -384,7 +357,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             }
             else {
 
-                detailsDialog = DownloadableItemDetailsDialog.Builder.instance(getActivityContext())
+                detailsDialog = DownloadableItemDetailsDialog.Builder.instance(this@MainActivity)
                         .setOnItemDetailsDialogListener(object : DownloadableItemDetailsDialog.OnItemDetailsListener {
                             override fun onCancelled() {
                                 detailsDialog = null
@@ -444,7 +417,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                                         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
                                                 .setDataAndType(Uri.parse(filepath), "video/mp4"))
                                     } else {
-                                        ViewUtils.showToast(getActivityContext(), getString(R.string.file_not_found))
+                                        ViewUtils.showToast(this@MainActivity, getString(R.string.file_not_found))
                                     }
                                 } catch (ignored: Exception) { }
                             }
@@ -528,7 +501,8 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             override fun onFailed(errorMessage: String) {
 
                 runOnUiThread {
-                    val message = "Unable to parse $errorMessage"
+                    val
+                            message = "Unable to parse $errorMessage"
 
                     ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse))
 
@@ -665,7 +639,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 // upload history
                 val action = uploadHistoryMap[downloadableItem.id]?: return
 
-                VersionUtils.uploadHistory(getActivityContext(), action)
+                VersionUtils.uploadHistory(this@MainActivity, action)
             }
         }
     }

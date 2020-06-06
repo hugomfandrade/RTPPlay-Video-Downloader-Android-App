@@ -115,7 +115,6 @@ class DownloadableItem(var id: Int,// url
     }
 
     internal fun fireDownloadStateChange() {
-        while (listenerSet.isLocked){}
         listenerSet.lock()
         listenerSet.get().forEach(action = { it.onDownloadStateChange(this@DownloadableItem) })
         listenerSet.release()

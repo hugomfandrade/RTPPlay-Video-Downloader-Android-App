@@ -7,9 +7,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationPa
 
 interface DownloadManagerAPI {
 
-    fun onCreate(viewOps: DownloadManagerViewOps)
-    fun onConfigurationChanged(viewOps: DownloadManagerViewOps)
-    fun onDestroy()
+    fun attachCallback(viewOps: DownloadManagerViewOps)
 
     fun parseUrl(url: String): ParseFuture
     fun parsePagination(url: String, paginationTask: PaginationParserTaskBase): PaginationParseFuture

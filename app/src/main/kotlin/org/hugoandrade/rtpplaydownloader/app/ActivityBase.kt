@@ -1,7 +1,6 @@
-package org.hugoandrade.rtpplaydownloader.common
+package org.hugoandrade.rtpplaydownloader.app
 
 import android.content.BroadcastReceiver
-import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
@@ -11,18 +10,12 @@ import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 
-abstract class ActivityBase : AppCompatActivity(), ContextView {
+abstract class ActivityBase : AppCompatActivity() {
 
     /**
      * Debugging tag used by the Android logger.
      */
     protected var TAG = javaClass.simpleName
-
-    /**
-     * Used to retain the objects between runtime
-     * configuration changes.
-     */
-    val retainedFragmentManager = RetainedFragmentManager(this.supportFragmentManager, TAG)
 
     /**
      * Network UI/UX
@@ -44,9 +37,6 @@ abstract class ActivityBase : AppCompatActivity(), ContextView {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (retainedFragmentManager.firstTimeIn()) {
-            // no-ops
-        }
         initializeNetworkFooter()
     }
 
@@ -93,18 +83,4 @@ abstract class ActivityBase : AppCompatActivity(), ContextView {
     }
 
     protected fun onNetworkStateChanged(isAvailable: Boolean) {}
-
-    /**
-     * Return the Activity context.
-     */
-    override fun getActivityContext(): Context {
-        return this
-    }
-
-    /**
-     * Return the Application context.
-     */
-    override fun getApplicationContext(): Context {
-        return super.getApplicationContext()
-    }
 }

@@ -12,7 +12,7 @@ class EmptyParsingTask : ParsingTaskBase() {
         return false
     }
 
-    override fun isValid(urlString: String) : Boolean {
+    override fun isValid(url: String) : Boolean {
 
         return false
     }
