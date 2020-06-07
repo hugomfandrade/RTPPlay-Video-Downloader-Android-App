@@ -2,6 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.persistence
 
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 
+@Deprecated(message = "user room instead")
 interface PersistencePresenterOps {
 
     fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {

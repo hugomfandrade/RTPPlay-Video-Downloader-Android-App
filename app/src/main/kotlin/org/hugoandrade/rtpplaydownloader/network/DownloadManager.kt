@@ -21,8 +21,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationPa
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTaskBase
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
-import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
-import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
+import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
@@ -45,19 +44,16 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
     private val parsingExecutors = Executors.newFixedThreadPool(DevConstants.nParsingThreads)
 
-    private var mDatabaseModel: DatabaseModel
+    private var mDatabaseModel: DownloadableItemRepository
 
     private var downloadService: DownloadService.DownloadServiceBinder? = null
-
-    private val mPersistencePresenterOps = PersistencePresenterImpl()
 
     private val mConnection: ServiceConnection = ServiceConnectionImpl()
 
     init {
         startService()
 
-        mDatabaseModel = object : DatabaseModel(getApplication()){}
-        mDatabaseModel.onCreate(mPersistencePresenterOps)
+        mDatabaseModel = DownloadableItemRepository(getApplication())
 
         retrieveItemsFromDB()
     }
@@ -74,7 +70,6 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         super.onCleared()
 
         parsingExecutors.shutdownNow()
-        mDatabaseModel.onDestroy()
 
         stopService()
     }
@@ -297,18 +292,130 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         val filename = task.filename?: return
         val thumbnailUrl = task.thumbnailUrl
 
-        val item = DownloadableItem(url, mediaUrl, thumbnailUrl, filename)
+        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = filename)
         item.downloadTask = ParsingIdentifier.findType(task)?.name
 
-        mDatabaseModel.insertDownloadableItem(item)
+        val future = mDatabaseModel.insertDownloadableItem(item)
+        future.addCallback(object : ListenableFuture.Callback<DownloadableItem> {
+            override fun onFailed(errorMessage: String) {
+                Log.e(TAG, errorMessage)
+            }
+
+            override fun onSuccess(result: DownloadableItem) {
+
+                val downloadableItem = result
+                val context : Application = getApplication()
+                val url = downloadableItem.url
+                val mediaUrl = downloadableItem.mediaUrl ?: return
+                val filename = downloadableItem.filename ?: return
+                val downloadTask = downloadableItem.downloadTask
+                val dirPath = MediaUtils.getDownloadsDirectory(context)
+                val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+
+                val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask, mediaUrl)) {
+                    DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                    DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                    DownloaderIdentifier.DownloadType.RTPTSFiles -> {
+                        if (filename.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                        else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                    }
+                    null -> return
+                }
+
+                val action = DownloadableItemAction(downloadableItem, downloaderTask)
+                action.addActionListener(actionListener)
+
+                downloadService?.startDownload(action)
+
+                val downloadableItems = ArrayList<DownloadableItemAction>()
+                downloadableItems.add(action)
+                downloadableItems.sortedWith(compareBy { it.item.id } )
+
+                mViewOps.get()?.displayDownloadableItem(action)
+            }
+
+        })
     }
 
     override fun retrieveItemsFromDB() {
-        mDatabaseModel.retrieveAllDownloadableItems()
+
+        val future = mDatabaseModel.retrieveAllDownloadableItems()
+        future.addCallback(object : ListenableFuture.Callback<List<DownloadableItem>> {
+            override fun onFailed(errorMessage: String) {
+                Log.e(TAG, errorMessage)
+            }
+
+            override fun onSuccess(result: List<DownloadableItem>) {
+
+                val downloadableItems = result
+                val actions : ArrayList<DownloadableItemAction> = ArrayList()
+                val context : Application = getApplication()
+                val dirPath = MediaUtils.getDownloadsDirectory(context)
+                val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+
+                for (item in downloadableItems) {
+
+                    synchronized(this@DownloadManager.downloadableItems) {
+                        val listItems = this@DownloadManager.downloadableItems
+
+
+                        var contains = false
+                        // add if not already in list
+                        for (i in listItems.size - 1 downTo 0) {
+                            if (listItems[i].item.id == item.id) {
+                                contains = true
+                                break
+                            }
+                        }
+
+                        if (!contains) {
+
+                            val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask, item.mediaUrl?: "")) {
+                                DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "",  dir, item.filename ?: "", item)
+                                DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
+                                DownloaderIdentifier.DownloadType.RTPTSFiles ->  {
+                                    val mediaUrl = item.mediaUrl
+                                    if (mediaUrl != null && mediaUrl.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, item.filename ?: "", item)
+                                    else  RTPPlayTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
+                                }
+                                null -> null
+                            }
+
+                            if (task != null) {
+
+                                val action = DownloadableItemAction(item, task)
+                                action.addActionListener(actionListener)
+                                actions.add(action)
+                                if (action.item.state == DownloadableItem.State.Downloading) {
+                                    action.item.state = DownloadableItem.State.Failed
+                                }
+                                listItems.add(action)
+                                listItems.sortedWith(compareBy { it.item.id })
+
+                                mViewOps.get()?.displayDownloadableItem(action)
+                            }
+                        }
+                    }
+                }
+
+                downloadableItemsLiveData.postValue(this@DownloadManager.downloadableItems)
+            }
+
+        })
     }
 
     override fun emptyDB() {
-        mDatabaseModel.deleteAllDownloadableItem()
+        val future = mDatabaseModel.deleteAllDownloadableItem()
+        future.addCallback(object : ListenableFuture.Callback<Boolean> {
+            override fun onFailed(errorMessage: String) {
+                Log.e(TAG, errorMessage)
+            }
+
+            override fun onSuccess(result: Boolean) {
+                downloadableItems.clear()
+                downloadableItemsLiveData.postValue(downloadableItems)
+            }
+        })
     }
 
     override fun archive(downloadableItem: DownloadableItem) {
@@ -413,106 +520,6 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         }
     }
 
-    inner class PersistencePresenterImpl : PersistencePresenterOps {
-
-        override fun onDownloadableItemInserted(downloadableItem: DownloadableItem?) {
-            if (downloadableItem == null) {
-                Log.e(TAG, "failed to insert")
-                return
-            }
-
-            val context : Application = getApplication()
-            val url = downloadableItem.url
-            val mediaUrl = downloadableItem.mediaUrl ?: return
-            val filename = downloadableItem.filename ?: return
-            val downloadTask = downloadableItem.downloadTask
-            val dirPath = MediaUtils.getDownloadsDirectory(context)
-            val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-
-            val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask, mediaUrl)) {
-                DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
-                DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
-                DownloaderIdentifier.DownloadType.RTPTSFiles -> {
-                    if (filename.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
-                    else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
-                }
-                null -> return
-            }
-
-            val action = DownloadableItemAction(downloadableItem, downloaderTask)
-            action.addActionListener(actionListener)
-
-            downloadService?.startDownload(action)
-            val downloadableItems = ArrayList<DownloadableItemAction>()
-            downloadableItems.add(action)
-            downloadableItems.sortedWith(compareBy { it.item.id } )
-
-            mViewOps.get()?.displayDownloadableItem(action)
-        }
-
-        override fun onDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
-
-            val actions : ArrayList<DownloadableItemAction> = ArrayList()
-
-            val context : Application = getApplication()
-            val dirPath = MediaUtils.getDownloadsDirectory(context)
-            val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-
-            for (item in downloadableItems) {
-
-                synchronized(this@DownloadManager.downloadableItems) {
-                    val listItems = this@DownloadManager.downloadableItems
-
-
-                    var contains = false
-                    // add if not already in list
-                    for (i in listItems.size - 1 downTo 0) {
-                        if (listItems[i].item.id == item.id) {
-                            contains = true
-                            break
-                        }
-                    }
-
-                    if (!contains) {
-
-                        val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask, item.mediaUrl?: "")) {
-                            DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "",  dir, item.filename ?: "", item)
-                            DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
-                            DownloaderIdentifier.DownloadType.RTPTSFiles ->  {
-                                val mediaUrl = item.mediaUrl
-                                if (mediaUrl != null && mediaUrl.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, item.filename ?: "", item)
-                                else  RTPPlayTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
-                            }
-                            null -> null
-                        }
-
-                        if (task != null) {
-
-                            val action = DownloadableItemAction(item, task)
-                            action.addActionListener(actionListener)
-                            actions.add(action)
-                            if (action.item.state == DownloadableItem.State.Downloading) {
-                                action.item.state = DownloadableItem.State.Failed
-                            }
-                            listItems.add(action)
-                            listItems.sortedWith(compareBy { it.item.id })
-
-                            mViewOps.get()?.displayDownloadableItem(action)
-                        }
-                    }
-                }
-            }
-
-            downloadableItemsLiveData.postValue(this@DownloadManager.downloadableItems)
-        }
-
-        override fun onDatabaseReset(wasSuccessfullyDeleted : Boolean) {
-
-            downloadableItems.clear()
-            downloadableItemsLiveData.postValue(downloadableItems)
-        }
-    }
-
     inner class ServiceConnectionImpl : ServiceConnection {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -524,7 +531,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
             // populate with items which are being downloaded
             for (itemAction in activeItemActions) {
 
-                synchronized(this@DownloadManager.downloadableItems) {
+                synchronized(downloadableItems) {
                     val listItems = this@DownloadManager.downloadableItems
                     for (i in listItems.size - 1 downTo 0) {
                         if (listItems[i].item.id == itemAction.item.id) {
@@ -539,8 +546,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 }
             }
 
-            downloadableItemsLiveData.postValue(this@DownloadManager.downloadableItems)
-            mViewOps.get()?.displayDownloadableItems(downloadableItems)
+            downloadableItemsLiveData.postValue(downloadableItems)
         }
 
         override fun onServiceDisconnected(className: ComponentName) {

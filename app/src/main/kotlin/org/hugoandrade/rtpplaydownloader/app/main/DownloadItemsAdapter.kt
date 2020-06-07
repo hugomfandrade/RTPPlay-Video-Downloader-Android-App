@@ -152,16 +152,16 @@ class DownloadItemsAdapter :
     }
 
     fun add(downloadableItem: DownloadableItemAction) {
+        val id = downloadableItem.item.id ?: -1
         synchronized(downloadableItemList) {
 
             if (!downloadableItemList.contains(downloadableItem)) {
                 var pos = 0
-                while(pos < downloadableItemList.size &&
-                        downloadableItem.item.id <
-                        downloadableItemList[pos].item.id) {
+                var posID = if (downloadableItemList.isEmpty()) 0 else downloadableItemList[pos].item.id ?: -1
+                while(pos < downloadableItemList.size && id < posID) {
                     pos++
+                    posID = downloadableItemList[pos].item.id ?: -1
                 }
-                downloadableItem.item.addDownloadStateChangeListener(this)
                 downloadableItemList.add(pos, downloadableItem)
                 notifyItemInserted(pos)
                 notifyItemRangeChanged(pos, itemCount)

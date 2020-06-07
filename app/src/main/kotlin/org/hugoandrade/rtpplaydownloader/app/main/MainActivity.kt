@@ -65,6 +65,10 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDownloadManager.retrieveItemsFromDB()
         mDownloadManager.getItems().observe(this, Observer { actions ->
 
+            for (action in actions) {
+                System.err.println(":: " + action.item.id + " - " + action.item.filename)
+            }
+
             mDownloadItemsAdapter.clear()
             mDownloadItemsAdapter.addAll(actions)
             mDownloadItemsAdapter.notifyDataSetChanged()
@@ -114,8 +118,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             false
         }
         searchView.setOnSearchClickListener {
-            val b: ActivityMainBinding = binding ?: return@setOnSearchClickListener
-            val drawerLayout = b.drawerLayout
+            val drawerLayout = binding.drawerLayout
             mDrawerToggle?.onDrawerSlide(drawerLayout, 1f)
 
             /*
@@ -331,7 +334,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     override fun displayDownloadableItem(action: DownloadableItemAction) {
         action.addActionListener(actionListener)
 
-        uploadHistoryMap[action.item.id] = action
+        uploadHistoryMap[action.item.id ?: -1] = action
 
         action.item.addDownloadStateChangeListener(changeListener)
 

@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.Executors
 
+@Deprecated(message = "user room instead")
 abstract class DatabaseModel(private val application: Application) {
 
     companion object {
@@ -105,7 +106,6 @@ abstract class DatabaseModel(private val application: Application) {
                 cursor.moveToFirst()
                 while (!cursor.isAfterLast) {
                     val downloadableEntry = DownloadableItemParser.parse(cursor)
-                    downloadableItem.id = downloadableEntry.id
                     cursor.close()
                     d = downloadableEntry
                     break

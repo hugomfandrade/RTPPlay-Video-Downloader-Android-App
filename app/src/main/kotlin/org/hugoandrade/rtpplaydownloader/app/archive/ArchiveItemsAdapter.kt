@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.app.archive
 
 import androidx.databinding.DataBindingUtil
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -16,30 +15,11 @@ import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import java.util.*
 
-class ArchiveItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>() {
-
-    private val recyclerViewLock: Any = Object()
-    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
+class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>() {
 
     private val downloadableItemList: ArrayList<DownloadableItem> = ArrayList()
 
     private var listener: Listener? = null
-
-    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-
-        synchronized(recyclerViewLock) {
-            this.recyclerView = recyclerView
-        }
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-
-        synchronized(recyclerViewLock) {
-            this.recyclerView = null
-        }
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater: LayoutInflater = LayoutInflater.from(parent.context)
@@ -60,7 +40,7 @@ class ArchiveItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Ar
 
         // THUMBNAIL
 
-        val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
+        val dir : File? = holder.itemView.context.getExternalFilesDir(null)
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
         ImageHolder.Builder()
@@ -135,6 +115,11 @@ class ArchiveItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Ar
         return downloadableItemList.size
     }
 
+    fun setItems(items: List<DownloadableItem>) {
+        clear()
+        addAll(items)
+    }
+
     fun addAll(downloadableItems: List<DownloadableItem>) {
         for (downloadableItem in downloadableItems) {
             add(downloadableItem)
@@ -142,19 +127,20 @@ class ArchiveItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Ar
     }
 
     fun add(downloadableItem: DownloadableItem) {
+        val id = downloadableItem.id ?: -1
         synchronized(downloadableItemList) {
 
             if (!downloadableItemList.contains(downloadableItem)) {
                 var pos = 0
+                var posID = if (downloadableItemList.isEmpty()) 0 else downloadableItemList[pos].id ?: -1
                 while(pos < downloadableItemList.size &&
-                        downloadableItem.id <
-                        downloadableItemList[pos].id) {
+                        id < posID) {
                     pos++
+                    posID = downloadableItemList[pos].id ?: -1
                 }
                 downloadableItemList.add(pos, downloadableItem)
                 notifyItemInserted(pos)
                 notifyItemRangeChanged(pos, itemCount)
-                recyclerView?.scrollToPosition(0)
             }
         }
     }
@@ -178,50 +164,6 @@ class ArchiveItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Ar
         }
     }
 
-    private fun internalNotifyItemChanged(index: Int) {
-        synchronized(recyclerViewLock) {
-            recyclerView?.post {
-                if (recyclerView == null) {
-                    notifyItemChanged(index)
-                } else {
-                    val lm = recyclerView?.layoutManager
-
-                    val v: View?
-                    if (lm is androidx.recyclerview.widget.LinearLayoutManager) {
-                        val llm : androidx.recyclerview.widget.LinearLayoutManager = lm
-                        v = llm.findViewByPosition(index)
-                    }
-                    else {
-                        v = null
-                    }
-
-                    if (v != null) {
-
-                        val viewHolder : androidx.recyclerview.widget.RecyclerView.ViewHolder? = recyclerView?.getChildViewHolder(v)
-
-                        if (viewHolder is ViewHolder) {
-                            val holder : ViewHolder = viewHolder
-                            while (recyclerView?.isComputingLayout == true) { }
-
-                            // var m = holder.hashCode().toString() + ": updating what was at (" + index.toString() + ") " + holder.binding.downloadItemTitleTextView.text.toString()
-                            onBindViewHolder(holder, index)
-                            // m = m + " and now is " + holder.binding.downloadItemTitleTextView.text.toString()
-                            // android.util.Log.e(javaClass.simpleName, m)
-                        } else {
-                            // update here
-                            // android.util.Log.e(javaClass.simpleName, "viewholder not found of $index")
-                            notifyItemChanged(index)
-                        }
-                    } else {
-                        // update here
-                        // android.util.Log.e(javaClass.simpleName, "view not found of $index")
-                        notifyItemChanged(index)
-                    }
-                }
-            }
-        }
-    }
-
     interface Listener {
         fun onItemClicked(item : DownloadableItem)
     }
@@ -231,7 +173,7 @@ class ArchiveItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Ar
     }
 
     inner class ViewHolder(val binding: DownloadItemBinding) :
-            androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root),
+            RecyclerView.ViewHolder(binding.root),
             View.OnClickListener {
 
         init {

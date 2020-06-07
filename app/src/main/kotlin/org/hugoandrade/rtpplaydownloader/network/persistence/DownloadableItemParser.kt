@@ -5,6 +5,7 @@ import android.database.Cursor
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem.Entry
 
+@Deprecated(message = "user room instead")
 class DownloadableItemParser
 
 /**

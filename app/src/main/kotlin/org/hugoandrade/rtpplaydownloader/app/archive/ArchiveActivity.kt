@@ -7,23 +7,26 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
+import androidx.recyclerview.widget.RecyclerView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.app.main.DownloadableItemDetailsDialog
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityArchiveBinding
 import org.hugoandrade.rtpplaydownloader.network.*
-import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
-import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
+import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 class ArchiveActivity : ActivityBase() {
 
     companion object {
-        private val TAG = ArchiveActivity::class.java.simpleName
 
         fun makeIntent(context: Context) : Intent {
             return Intent(context, ArchiveActivity::class.java)
@@ -32,23 +35,43 @@ class ArchiveActivity : ActivityBase() {
 
     private lateinit var binding: ActivityArchiveBinding
 
-    private lateinit var mDatabaseModel: DatabaseModel
-    private lateinit var mDownloadItemsRecyclerView: androidx.recyclerview.widget.RecyclerView
-    private lateinit var mArchiveItemsAdapter: ArchiveItemsAdapter
+    private lateinit var mDatabaseModel: DownloadableItemRepository
+    private lateinit var mArchivedItemsRecyclerView: RecyclerView
+    private lateinit var mArchivedItemsAdapter: ArchiveItemsAdapter
 
-    private val downloadableItems: ArrayList<DownloadableItem> = ArrayList()
+    private val downloadableItems: ConcurrentHashMap<Int, DownloadableItem> = ConcurrentHashMap()
 
     private var detailsDialog : DownloadableItemDetailsDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        mDatabaseModel = object : DatabaseModel(application){}
-        mDatabaseModel.onCreate(mPersistencePresenterOps)
+        mDatabaseModel = DownloadableItemRepository(application)
 
         initializeUI()
 
-        mDatabaseModel.retrieveArchivedDownloadableItems()
+        val future = mDatabaseModel.retrieveArchivedDownloadableItems()
+        future.addCallback(object : ListenableFuture.Callback<List<DownloadableItem>> {
+            override fun onFailed(errorMessage: String) {
+                Log.e(TAG, errorMessage)
+                Toast.makeText(this@ArchiveActivity, "Failed to get Archived Items", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onSuccess(result: List<DownloadableItem>) {
+
+                synchronized(this@ArchiveActivity.downloadableItems) {
+
+                    for (item in result) {
+                        downloadableItems.putIfAbsent(item.id ?: -1, item)
+                    }
+                }
+
+                val listItems = downloadableItems.values.toList()
+                listItems.sortedWith(compareBy { it.id })
+
+                displayDownloadableItems(listItems)
+            }
+        })
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -77,13 +100,13 @@ class ArchiveActivity : ActivityBase() {
         val simpleItemAnimator : androidx.recyclerview.widget.SimpleItemAnimator = androidx.recyclerview.widget.DefaultItemAnimator()
         simpleItemAnimator.supportsChangeAnimations = false
 
-        mDownloadItemsRecyclerView = binding.archiveItemsRecyclerView
-        mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
-        mDownloadItemsRecyclerView.layoutManager =
+        mArchivedItemsRecyclerView = binding.archiveItemsRecyclerView
+        mArchivedItemsRecyclerView.itemAnimator = simpleItemAnimator
+        mArchivedItemsRecyclerView.layoutManager =
                 if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) androidx.recyclerview.widget.LinearLayoutManager(this)
                 else androidx.recyclerview.widget.GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
-        mArchiveItemsAdapter = ArchiveItemsAdapter()
-        mArchiveItemsAdapter.setListener(object : ArchiveItemsAdapter.Listener {
+        mArchivedItemsAdapter = ArchiveItemsAdapter()
+        mArchivedItemsAdapter.setListener(object : ArchiveItemsAdapter.Listener {
 
             override fun onItemClicked(item: DownloadableItem) {
                 val dialog = detailsDialog
@@ -105,8 +128,8 @@ class ArchiveActivity : ActivityBase() {
                                     item.isArchived = false
                                     mDatabaseModel.updateDownloadableEntry(item)
 
-                                    mArchiveItemsAdapter.remove(item)
-                                    binding.emptyListViewGroup.visibility = if (mArchiveItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+                                    mArchivedItemsAdapter.remove(item)
+                                    binding.emptyListViewGroup.visibility = if (mArchivedItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
                                 }
 
                                 override fun onRedirect(item: DownloadableItem) {
@@ -167,57 +190,18 @@ class ArchiveActivity : ActivityBase() {
                 }
             }
         })
-        mDownloadItemsRecyclerView.adapter = mArchiveItemsAdapter
+        mArchivedItemsRecyclerView.adapter = mArchivedItemsAdapter
 
-        binding.emptyListViewGroup.visibility = if (mArchiveItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+        binding.emptyListViewGroup.visibility = if (mArchivedItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
     }
 
     private fun displayDownloadableItems(items: List<DownloadableItem>) {
 
         runOnUiThread {
-            mArchiveItemsAdapter.clear()
-            mArchiveItemsAdapter.addAll(items)
-            mArchiveItemsAdapter.notifyDataSetChanged()
-            mDownloadItemsRecyclerView.scrollToPosition(0)
-            binding.emptyListViewGroup.visibility = if (mArchiveItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
-        }
-    }
-
-    private fun displayDownloadableItem(item: DownloadableItem) {
-
-        runOnUiThread {
-            mArchiveItemsAdapter.add(item)
-            binding.emptyListViewGroup.visibility = if (mArchiveItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
-        }
-    }
-
-    private val mPersistencePresenterOps = object : PersistencePresenterOps {
-
-        override fun onArchivedDownloadableItemsRetrieved(downloadableItems: List<DownloadableItem>) {
-
-            for (item in downloadableItems) {
-
-                synchronized(this@ArchiveActivity.downloadableItems) {
-                    val listItems = this@ArchiveActivity.downloadableItems
-
-
-                    var contains = false
-                    // add if not already in list
-                    for (i in listItems.size - 1 downTo 0) {
-                        if (listItems[i].id == item.id) {
-                            contains = true
-                            break
-                        }
-                    }
-
-                    if (!contains) {
-                        listItems.add(item)
-                        listItems.sortedWith(compareBy { it.id })
-                    }
-                }
-            }
-
-            displayDownloadableItems(this@ArchiveActivity.downloadableItems)
+            mArchivedItemsAdapter.setItems(items)
+            mArchivedItemsAdapter.notifyDataSetChanged()
+            mArchivedItemsRecyclerView.scrollToPosition(0)
+            binding.emptyListViewGroup.visibility = if (mArchivedItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }
 }
