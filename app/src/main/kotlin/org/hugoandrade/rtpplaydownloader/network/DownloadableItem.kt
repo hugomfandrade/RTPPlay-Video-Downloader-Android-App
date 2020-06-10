@@ -27,8 +27,7 @@ class DownloadableItem(@PrimaryKey(autoGenerate = true) @ColumnInfo(name = "_id"
 
     companion object {
 
-        @Suppress("PrivatePropertyName")
-        private val TAG : String = "DownloadableItem"
+        const val TAG : String = "DownloadableItem"
 
         const val DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS : Long = 1000 // 1second
     }
@@ -124,26 +123,6 @@ class DownloadableItem(@PrimaryKey(autoGenerate = true) @ColumnInfo(name = "_id"
         listenerSet.lock()
         listenerSet.get().forEach(action = { it.onDownloadStateChange(this@DownloadableItem) })
         listenerSet.release()
-    }
-
-
-    object Entry {
-
-        const val TABLE_NAME = "DownloadableItem"
-
-        object Cols {
-            const val _ID = "_id"
-            const val URL = "Url"
-            const val MEDIA_URL = "MediaUrl"
-            const val THUMBNAIL_URL = "Thumbnail"
-            const val FILENAME = "FileName"
-            const val FILEPATH = "FilePath"
-            const val FILESIZE = "FileSize"
-            const val STAGE = "Stage"
-            const val IS_ARCHIVED = "IsArchived"
-            const val DOWNLOAD_MESSAGE = "DownloadMessage"
-            const val DOWNLOAD_TASK = "DownloadTask"
-        }
     }
 
     enum class State {

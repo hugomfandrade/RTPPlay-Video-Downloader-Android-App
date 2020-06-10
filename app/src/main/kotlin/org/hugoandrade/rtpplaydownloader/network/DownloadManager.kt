@@ -26,7 +26,6 @@ import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
 import java.lang.RuntimeException
-import java.lang.ref.WeakReference
 import java.util.concurrent.*
 import kotlin.collections.ArrayList
 
@@ -39,8 +38,6 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
     private val downloadableItems: ArrayList<DownloadableItemAction> = ArrayList()
     private val downloadableItemsLiveData: MutableLiveData<ArrayList<DownloadableItemAction>> = MutableLiveData()
-
-    private lateinit var mViewOps: WeakReference<DownloadManagerViewOps>
 
     private val parsingExecutors = Executors.newFixedThreadPool(DevConstants.nParsingThreads)
 
@@ -60,10 +57,6 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
     override fun getItems(): LiveData<ArrayList<DownloadableItemAction>> {
         return downloadableItemsLiveData
-    }
-
-    override fun attachCallback(viewOps: DownloadManagerViewOps) {
-        mViewOps = WeakReference(viewOps)
     }
 
     override fun onCleared() {
@@ -251,13 +244,13 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 }
             }
         }
-        
+
         parsingExecutors.submit(task)
 
         return future
     }
 
-    fun parseUrlWithoutPagination(url: String) : Callable<ParsingData> {
+    private fun parseUrlWithoutPagination(url: String) : Callable<ParsingData> {
 
         return Callable<ParsingData> {
             if (!NetworkUtils.isNetworkAvailable(getApplication())) {
@@ -286,19 +279,28 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         }
     }
 
-    override fun download(task: ParsingTask)  {
-        val url = task.url?: return
-        val mediaUrl = task.mediaUrl?: return
-        val filename = task.filename?: return
+    override fun download(task: ParsingTask): ListenableFuture<DownloadableItemAction>  {
+        val future = ListenableFuture<DownloadableItemAction>()
+
+        val url = task.url
+        val mediaUrl = task.mediaUrl
+        val filename = task.filename
         val thumbnailUrl = task.thumbnailUrl
+        if (url == null || mediaUrl == null || filename == null) {
+
+            if (url == null) future.failed("url not defined")
+            if (mediaUrl == null) future.failed("media url not defined")
+            if (filename == null) future.failed("filename not defined")
+            return future
+        }
 
         val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = filename)
         item.downloadTask = ParsingIdentifier.findType(task)?.name
 
-        val future = mDatabaseModel.insertDownloadableItem(item)
-        future.addCallback(object : ListenableFuture.Callback<DownloadableItem> {
+        val databaseFuture = mDatabaseModel.insertDownloadableItem(item)
+        databaseFuture.addCallback(object : ListenableFuture.Callback<DownloadableItem> {
             override fun onFailed(errorMessage: String) {
-                Log.e(TAG, errorMessage)
+                future.failed(errorMessage)
             }
 
             override fun onSuccess(result: DownloadableItem) {
@@ -331,10 +333,11 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 downloadableItems.add(action)
                 downloadableItems.sortedWith(compareBy { it.item.id } )
 
-                mViewOps.get()?.displayDownloadableItem(action)
+                future.success(action)
             }
-
         })
+
+        return future
     }
 
     override fun retrieveItemsFromDB() {
@@ -391,8 +394,6 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                                 }
                                 listItems.add(action)
                                 listItems.sortedWith(compareBy { it.item.id })
-
-                                mViewOps.get()?.displayDownloadableItem(action)
                             }
                         }
                     }

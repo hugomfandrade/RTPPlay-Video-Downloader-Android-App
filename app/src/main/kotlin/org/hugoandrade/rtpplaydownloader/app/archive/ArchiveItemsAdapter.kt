@@ -107,12 +107,12 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
         holder.binding.resumeDownloadImageView.visibility = View.GONE
     }
 
-    fun get(index: Int): DownloadableItem {
-        return downloadableItemList[index]
-    }
-
     override fun getItemCount(): Int {
         return downloadableItemList.size
+    }
+
+    fun get(index: Int): DownloadableItem {
+        return downloadableItemList[index]
     }
 
     fun setItems(items: List<DownloadableItem>) {

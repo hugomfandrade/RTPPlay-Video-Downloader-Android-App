@@ -17,22 +17,16 @@ import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import java.util.*
 
-class DownloadItemsAdapter :
+class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(), DownloadableItem.State.ChangeListener {
 
-        RecyclerView.Adapter<DownloadItemsAdapter.ViewHolder>(),
-        DownloadableItem.State.ChangeListener {
-
-    private val recyclerViewLock: Any = Object()
     private var recyclerView: RecyclerView? = null
 
-    private val downloadableItemList: ArrayList<DownloadableItemAction> = ArrayList()
+    private val downloadableItemList: LinkedList<DownloadableItemAction> = LinkedList()
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
 
-        synchronized(recyclerViewLock) {
-            this.recyclerView = recyclerView
-        }
+        this.recyclerView = recyclerView
 
         startRefreshTimer()
     }
@@ -40,9 +34,7 @@ class DownloadItemsAdapter :
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
 
-        synchronized(recyclerViewLock) {
-            this.recyclerView = null
-        }
+        this.recyclerView = null
 
         stopRefreshTimer()
     }
@@ -58,16 +50,17 @@ class DownloadItemsAdapter :
         val downloadableItemAction: DownloadableItemAction = downloadableItemList[position]
         val downloadableItem: DownloadableItem = downloadableItemAction.item
 
-        if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
-            (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
+        val downloadItemTitleTextView = holder.binding.downloadItemTitleTextView as TextView
+        if (downloadItemTitleTextView.text.toString() != downloadableItem.filename) {
+            downloadItemTitleTextView.text = downloadableItem.filename
         }
-        if (!holder.binding.downloadItemTitleTextView.isSelected) {
-            holder.binding.downloadItemTitleTextView.isSelected = true
+        if (!downloadItemTitleTextView.isSelected) {
+            downloadItemTitleTextView.isSelected = true
         }
 
         // THUMBNAIL
 
-        val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
+        val dir : File? = holder.itemView.context?.getExternalFilesDir(null)
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
         ImageHolder.Builder()
@@ -145,115 +138,94 @@ class DownloadItemsAdapter :
         return downloadableItemList.size
     }
 
+    fun set(items: List<DownloadableItemAction>) {
+        clear()
+        addAll(items)
+    }
+
     fun addAll(downloadableItems: List<DownloadableItemAction>) {
         for (downloadableItem in downloadableItems) {
-            add(downloadableItem)
+            doAdd(downloadableItem)
         }
+        notifyDataSetChanged()
     }
 
     fun add(downloadableItem: DownloadableItemAction) {
-        val id = downloadableItem.item.id ?: -1
-        synchronized(downloadableItemList) {
 
-            if (!downloadableItemList.contains(downloadableItem)) {
-                var pos = 0
-                var posID = if (downloadableItemList.isEmpty()) 0 else downloadableItemList[pos].item.id ?: -1
-                while(pos < downloadableItemList.size && id < posID) {
-                    pos++
-                    posID = downloadableItemList[pos].item.id ?: -1
-                }
-                downloadableItemList.add(pos, downloadableItem)
-                notifyItemInserted(pos)
-                notifyItemRangeChanged(pos, itemCount)
-                recyclerView?.scrollToPosition(0)
-            }
+        val pos = doAdd(downloadableItem);
+
+        if (pos != -1) {
+            notifyItemInserted(pos)
+            notifyItemRangeChanged(pos, itemCount)
         }
     }
 
     fun clear() {
-        synchronized(downloadableItemList) {
-            for (i in downloadableItemList.size - 1 downTo 0) {
-                remove(downloadableItemList[i])
-            }
+        for (i in downloadableItemList.size - 1 downTo 0) {
+            doRemove(downloadableItemList[i])
         }
+        notifyDataSetChanged()
     }
 
     fun remove(downloadableItem: DownloadableItemAction) {
-        synchronized(downloadableItemList) {
-            downloadableItem.item.removeDownloadStateChangeListener(this)
-            if (downloadableItemList.contains(downloadableItem)) {
-                val index: Int = downloadableItemList.indexOf(downloadableItem)
-                downloadableItemList.remove(downloadableItem)
-                notifyItemRemoved(index)
-                notifyItemRangeChanged(index, itemCount)
-            }
+        val index = doRemove(downloadableItem)
+
+        if (index != -1) {
+            notifyItemRemoved(index)
+            notifyItemRangeChanged(index, itemCount)
         }
     }
 
     fun remove(downloadableItem: DownloadableItem) {
-        synchronized(downloadableItemList) {
+        findAction(downloadableItem)?.let { remove(it) }
+    }
+
+    private fun doAdd(downloadableItem: DownloadableItemAction): Int {
+
+        if (!downloadableItemList.contains(downloadableItem)) {
+            var pos = 0
+
+            // put in right position
+            val id = downloadableItem.item.id
+            var currentID = if (downloadableItemList.isEmpty()) 0 else downloadableItemList[pos].item.id
+            while(pos < downloadableItemList.size && id < currentID) {
+                pos++
+                currentID = downloadableItemList[pos].item.id
+            }
+
+            downloadableItem.addDownloadStateChangeListener(this)
+            downloadableItemList.add(pos, downloadableItem)
+            return pos;
+        }
+
+        return -1
+    }
+
+    private fun doRemove(downloadableItem: DownloadableItemAction): Int {
+        val index: Int = downloadableItemList.indexOf(downloadableItem)
+
+        if (index != -1) {
             downloadableItem.removeDownloadStateChangeListener(this)
-            for (itemAction in downloadableItemList) {
-                if (itemAction.item == downloadableItem) {
-                    val index: Int = downloadableItemList.indexOf(itemAction)
-                    downloadableItemList.removeAt(index)
-                    notifyItemRemoved(index)
-                    notifyItemRangeChanged(index, itemCount)
-                    break
-                }
+            downloadableItemList.remove(downloadableItem)
+        }
+
+        return index
+    }
+
+    private fun findAction(downloadableItem: DownloadableItem): DownloadableItemAction? {
+        for (itemAction in downloadableItemList) {
+            if (itemAction.item == downloadableItem) {
+                return itemAction
             }
         }
+        return null
     }
 
     override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-        synchronized(downloadableItemList) {
-            downloadableItemList.forEachIndexed { index, item ->
-                if (item.item == downloadableItem) {
-                    internalNotifyItemChanged(index)
-                }
-            }
-        }
-    }
-
-    private fun internalNotifyItemChanged(index: Int) {
-        synchronized(recyclerViewLock) {
-            recyclerView?.post {
-                if (recyclerView == null) {
+        downloadableItemList.forEachIndexed { index, item ->
+            if (item.item == downloadableItem) {
+                recyclerView?.post {
                     notifyItemChanged(index)
-                } else {
-                    val lm = recyclerView?.layoutManager
-
-                    val v: View?
-                    if (lm is androidx.recyclerview.widget.LinearLayoutManager) {
-                        val llm : androidx.recyclerview.widget.LinearLayoutManager = lm
-                        v = llm.findViewByPosition(index)
-                    }
-                    else {
-                        v = null
-                    }
-
-                    if (v != null) {
-
-                        val viewHolder : androidx.recyclerview.widget.RecyclerView.ViewHolder? = recyclerView?.getChildViewHolder(v)
-
-                        if (viewHolder is ViewHolder) {
-                            val holder : ViewHolder = viewHolder
-                            while (recyclerView?.isComputingLayout == true) { }
-
-                            // var m = holder.hashCode().toString() + ": updating what was at (" + index.toString() + ") " + holder.binding.downloadItemTitleTextView.text.toString()
-                            onBindViewHolder(holder, index)
-                            // m = m + " and now is " + holder.binding.downloadItemTitleTextView.text.toString()
-                            // android.util.Log.e(javaClass.simpleName, m)
-                        } else {
-                            // update here
-                            // android.util.Log.e(javaClass.simpleName, "viewholder not found of $index")
-                            notifyItemChanged(index)
-                        }
-                    } else {
-                        // update here
-                        // android.util.Log.e(javaClass.simpleName, "view not found of $index")
-                        notifyItemChanged(index)
-                    }
                 }
             }
         }
@@ -296,7 +268,7 @@ class DownloadItemsAdapter :
     }
 
     inner class ViewHolder(val binding: DownloadItemBinding) :
-            androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root),
+            RecyclerView.ViewHolder(binding.root),
             View.OnClickListener {
 
         init {

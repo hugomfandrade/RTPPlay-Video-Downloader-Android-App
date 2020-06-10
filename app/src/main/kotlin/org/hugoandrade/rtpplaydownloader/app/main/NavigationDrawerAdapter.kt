@@ -88,7 +88,7 @@ class NavigationDrawerAdapter (private val activity: Activity) : androidx.recycl
 
     data class QuickAccessItem(val resourceID: Int, val title: String, val url: String) : Item()
 
-    inner class ViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view), View.OnClickListener {
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view), View.OnClickListener {
 
         var drawerHeader: View = view.findViewById(R.id.drawer_header)
         var tvHeader: TextView = view.findViewById(R.id.tv_drawer_header)
