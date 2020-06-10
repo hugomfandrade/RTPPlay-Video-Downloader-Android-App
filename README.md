@@ -1,21 +1,21 @@
 # RTP Play Video Downloader App
+An Android app which allows users to download videos and podcasts from RTPPlay, TVIPlayer and SIC, manage them locally, and keep a local history of the user's activity.
 
-CalendarView is a calendar widget for displaying and selecting dates, and for adding and selecting events from specific dates.
+Apart from the functionality of the app, this project enables me to experience the Kotlin programming language, and is used to put the latest architecural principles, guidelines and tools from Android into practice.
 
-The appearance of this widget is configurable (more specifications below). The user can interact with it by tapping on the desired date and scrolling/flinging the calendar to the desired date.
+Initially, the base project followed an MVP architecture with a local SQLite database implementation, while using the original Android Support Library. Currently:
+- an MVVM pattern replaced the more verbose MV
+- the introduction of the Room library provided an abstracion layer that enabled to remove most of the SQLite implementation code.
+- AndroidX replaced the no longer supported Support Library
 
-The CalendarView widget is wrapped in a Android Library module and can be included in one's project by including it as a dependency.
+## Demo
+Once you select an URL from your browser or the native apps of the platforms, the link can be shared to the this app and, if compatible, the app will parse the media file and download it.
 
-An Android app was developed to show a few use-cases of the this widget and it can be watched [here](https://www.youtube.com/watch?v=YHEubAQNBcs).
+A demo video displaying the functionality of the app can be found here [https://www.youtube.com/watch?v=mJwxJ1Oad3Y]. 
 
-## Screenshots
+![](art/demo-gif.gif)
 
-![](https://github.com/hugomfandrade/CalendarView-Widget/blob/master/art/CalendarView_default.gif)
-
-![](https://github.com/hugomfandrade/CalendarView-Widget/blob/master/art/CalendarView_toolbar.gif?raw=true)
-
-![](https://github.com/hugomfandrade/CalendarView-Widget/blob/master/art/CalendarView_mini_popup.gif?raw=true)
-
-![](https://github.com/hugomfandrade/CalendarView-Widget/blob/master/art/CalendarView_with_events.gif?raw=true)
-
-## XML Attributes
+### Screenshot
+|  ![](art/screenshot-01.png)  |  ![](art/screenshot-03.png)  |  ![](art/screenshot-04.png)  |
+|:----------------------------:|:----------------------------:|:----------------------------:|
+|  ![](art/screenshot-05.png)  |  ![](art/screenshot-06.png)  |  ![](art/screenshot-07.png)  | 
