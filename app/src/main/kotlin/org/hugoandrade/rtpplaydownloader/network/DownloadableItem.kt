@@ -1,46 +1,53 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.util.Log
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenerSet
 import java.io.File
 
-class DownloadableItem(var id: Int,// url
-                       val url: String,
-                       val mediaUrl: String?,// name
-                       val thumbnailUrl: String?,
-                       val filename: String?,// local
-                       var filepath: String?,
-                       var filesize: Long?,// url
-                       var state: State?,
-                       var isArchived: Boolean?,
-                       var downloadTask: String?,
-                       var downloadMessage: String?) :
+@Entity(tableName = "DownloadableItem")
+class DownloadableItem(@PrimaryKey(autoGenerate = true) @ColumnInfo(name = "_id") val id: Int = 0,// url
+                       @ColumnInfo(name = "Url") val url: String,
+                       @ColumnInfo(name = "MediaUrl") val mediaUrl: String?,// name
+                       @ColumnInfo(name = "Thumbnail") val thumbnailUrl: String?,
+                       @ColumnInfo(name = "FileName") val filename: String?,// local
+                       @ColumnInfo(name = "FilePath") var filepath: String? = null,
+                       @ColumnInfo(name = "FileSize") var filesize: Long? = 0,// url
+                       @ColumnInfo(name = "Stage") var state: State? = null,
+                       @ColumnInfo(name = "IsArchived") var isArchived: Boolean? = false,
+                       @ColumnInfo(name = "DownloadTask") var downloadTask: String? = null,
+                       @ColumnInfo(name = "DownloadMessage") var downloadMessage: String? = null) :
 
         DownloaderTask.Listener {
 
-    @Suppress("PrivatePropertyName")
-    private val TAG : String = javaClass.simpleName
-
     companion object {
+
+        const val TAG : String = "DownloadableItem"
+
         const val DOWNLOAD_SPEED_CALCULATION_TIMESPAN_IN_MILLIS : Long = 1000 // 1second
     }
 
+    @Ignore private val listenerSet : ListenerSet<State.ChangeListener>  = ListenerSet()
+
     // run time
-    var downloadingSpeed : Float = 0f // Per Second
-    var remainingTime : Long = 0 // In Millis
-    var progress : Float = 0f
-    var progressSize : Long = 0
-    private var oldTimestamp = System.currentTimeMillis()
-    private var oldDownloadSize: Long = 0L
+    @Ignore var downloadingSpeed : Float = 0f // Per Second
+    @Ignore var remainingTime : Long = 0 // In Millis
+    @Ignore var progress : Float = 0f
+    @Ignore var progressSize : Long = 0
+    @Ignore private var oldTimestamp = System.currentTimeMillis()
+    @Ignore private var oldDownloadSize: Long = 0L
 
-    constructor(url: String,
-                mediaUrl: String,
-                thumbnailUrl: String?,
-                filename: String) :
-            this(-1, url, mediaUrl, thumbnailUrl, filename, null, 0, null, false, null, null)
-
+    init {
+        this.filesize = filesize?: 0L
+        this.state = state ?: State.Start
+        this.progress = if (this.state == State.End) 1f else 0f
+        this.isArchived = isArchived ?: false
+    }
 
     override fun onProgress(downloadedSize: Long, totalSize : Long) {
         this.state = State.Downloading
@@ -104,48 +111,18 @@ class DownloadableItem(var id: Int,// url
         Log.e(TAG, message)
     }
 
-    private val listenerSet : ListenerSet<DownloadableItem.State.ChangeListener>  = ListenerSet()
-
-    fun addDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
+    fun addDownloadStateChangeListener(listener: State.ChangeListener) {
         listenerSet.addListener(listener)
     }
 
-    fun removeDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
+    fun removeDownloadStateChangeListener(listener: State.ChangeListener) {
         listenerSet.removeListener(listener)
     }
 
     internal fun fireDownloadStateChange() {
-        while (listenerSet.isLocked){}
         listenerSet.lock()
         listenerSet.get().forEach(action = { it.onDownloadStateChange(this@DownloadableItem) })
         listenerSet.release()
-    }
-
-    init {
-        this.filesize = filesize?: 0L
-        this.state = state ?: State.Start
-        this.progress = if (this.state == State.End) 1f else 0f
-        this.isArchived = isArchived ?: false
-    }
-
-
-    object Entry {
-
-        const val TABLE_NAME = "DownloadableItem"
-
-        object Cols {
-            const val _ID = "_id"
-            const val URL = "Url"
-            const val MEDIA_URL = "MediaUrl"
-            const val THUMBNAIL_URL = "Thumbnail"
-            const val FILENAME = "FileName"
-            const val FILEPATH = "FilePath"
-            const val FILESIZE = "FileSize"
-            const val STAGE = "Stage"
-            const val IS_ARCHIVED = "IsArchived"
-            const val DOWNLOAD_MESSAGE = "DownloadMessage"
-            const val DOWNLOAD_TASK = "DownloadTask"
-        }
     }
 
     enum class State {

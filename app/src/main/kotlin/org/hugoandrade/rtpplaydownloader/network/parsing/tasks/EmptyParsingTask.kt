@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-class EmptyParsingTask : ParsingTaskBase() {
+class EmptyParsingTask : ParsingTask() {
 
     override fun getMediaFileName(url: String, videoFile: String?): String {
 
@@ -12,7 +12,7 @@ class EmptyParsingTask : ParsingTaskBase() {
         return false
     }
 
-    override fun isValid(urlString: String) : Boolean {
+    override fun isValid(url: String) : Boolean {
 
         return false
     }

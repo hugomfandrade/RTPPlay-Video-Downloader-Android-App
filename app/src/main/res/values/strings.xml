@@ -3,8 +3,6 @@
 
     <string name="no_network_connection" >No Network Connection</string>
 
-    <string name="write_external_storage_permission" >External Storage permission is required to save the video files in the Movies folder.</string>
-
     <string name="ok" >OK</string>
 
     <string name="cancel">cancel</string>

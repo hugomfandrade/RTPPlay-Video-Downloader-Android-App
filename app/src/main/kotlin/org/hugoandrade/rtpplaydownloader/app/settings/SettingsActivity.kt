@@ -7,9 +7,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.preference.Preference
-import android.support.v7.preference.PreferenceFragmentCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import android.view.MenuItem
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
@@ -67,7 +67,7 @@ class SettingsActivity : AppCompatActivity() {
 
             val context = activity as Context
 
-            val filePicker = findPreference(getString(R.string.key_directory_name))
+            val filePicker : Preference = findPreference(getString(R.string.key_directory_name)) ?: return
             filePicker.setDefaultValue(MediaUtils.getDownloadsDirectory(context))
             filePicker.summary = MediaUtils.getDownloadsDirectory(context).toString().replace("/storage/emulated/0", "")
             filePicker.onPreferenceClickListener = Preference.OnPreferenceClickListener {

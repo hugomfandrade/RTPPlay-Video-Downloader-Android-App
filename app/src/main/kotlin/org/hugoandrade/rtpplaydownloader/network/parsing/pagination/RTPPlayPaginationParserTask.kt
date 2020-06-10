@@ -6,7 +6,7 @@ import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
 
-class RTPPlayPaginationParserTask : PaginationParserTaskBase() {
+class RTPPlayPaginationParserTask : PaginationParserTask() {
 
     private var cacheDoc: Document? = null
     private var cachePage: Int = 1

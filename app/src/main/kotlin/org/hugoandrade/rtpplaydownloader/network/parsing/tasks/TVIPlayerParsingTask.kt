@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException
 import java.net.URL
 import java.nio.charset.Charset
 
-class TVIPlayerParsingTask : ParsingTaskBase() {
+class TVIPlayerParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 
@@ -31,17 +31,17 @@ class TVIPlayerParsingTask : ParsingTaskBase() {
         return true
     }
 
-    override fun isValid(urlString: String) : Boolean {
+    override fun isValid(url: String) : Boolean {
 
-        if (!NetworkUtils.isValidURL(urlString)) {
+        if (!NetworkUtils.isValidURL(url)) {
             return false
         }
 
-        val isFileType: Boolean = urlString.contains("tviplayer.iol.pt")
+        val isFileType: Boolean = url.contains("tviplayer.iol.pt")
 
         if (isFileType) {
 
-            val videoFile: String? = getM3U8File(urlString)
+            val videoFile: String? = getM3U8File(url)
 
             return videoFile != null
         }

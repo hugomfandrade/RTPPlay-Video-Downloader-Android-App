@@ -9,7 +9,7 @@ import org.jsoup.select.Elements
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class SICParsingTask : ParsingTaskBase() {
+class SICParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 
@@ -29,23 +29,23 @@ class SICParsingTask : ParsingTaskBase() {
         return true
     }
 
-    override fun isValid(urlString: String) : Boolean {
+    override fun isValid(url: String) : Boolean {
 
-        if (!NetworkUtils.isValidURL(urlString)) {
+        if (!NetworkUtils.isValidURL(url)) {
             return false
         }
 
         val isFileType: Boolean =
-                urlString.contains("sicradical.sapo.pt") ||
-                urlString.contains("sicradical.pt") ||
-                urlString.contains("sicnoticias.sapo.pt") ||
-                urlString.contains("sicnoticias.pt") ||
-                urlString.contains("sic.sapo.pt") ||
-                urlString.contains("sic.pt")
+                url.contains("sicradical.sapo.pt") ||
+                url.contains("sicradical.pt") ||
+                url.contains("sicnoticias.sapo.pt") ||
+                url.contains("sicnoticias.pt") ||
+                url.contains("sic.sapo.pt") ||
+                url.contains("sic.pt")
 
         if (isFileType) {
 
-            val videoFile: String? = getVideoFile(urlString)
+            val videoFile: String? = getVideoFile(url)
 
             return videoFile != null
         }

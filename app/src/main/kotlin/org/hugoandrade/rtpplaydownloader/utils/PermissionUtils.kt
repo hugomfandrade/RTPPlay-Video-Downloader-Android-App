@@ -6,9 +6,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.support.design.widget.Snackbar
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
+import com.google.android.material.snackbar.Snackbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import android.view.View
 import android.view.ViewGroup
 import org.hugoandrade.rtpplaydownloader.R
@@ -38,17 +38,60 @@ private constructor() {
          * RequestListener ID used in permission request calls.
          */
         private const val REQUEST_WRITE_STORAGE = 1
+        private const val REQUEST_CODE_DEFAULT = 2
 
         fun requestPermission(activity: Activity, permission: String) {
-            val locationPermission = hasGrantedPermission(activity, permission)
 
-            // Permission has not been granted.
-            if (!locationPermission) {
-                requestPermission(
-                        activity,
-                        permission,
-                        activity.findViewById<View>(android.R.id.content) as ViewGroup)
+            val permissionGranted = hasGrantedPermission(activity, permission)
+
+            if (permissionGranted) return
+
+            if (permission == Manifest.permission.WRITE_EXTERNAL_STORAGE) {
+                ActivityCompat.requestPermissions(activity, arrayOf(permission), REQUEST_WRITE_STORAGE)
             }
+            else {
+                ActivityCompat.requestPermissions(activity, arrayOf(permission), REQUEST_CODE_DEFAULT)
+            }
+        }
+
+        fun hasGrantedPermissionAndRequestIfNeeded(activity: Activity, permission: String): Boolean {
+
+            val permissionGranted = hasGrantedPermission(activity, permission)
+
+            // if it does not have permission
+            if (!permissionGranted) {
+
+                if (permission == Manifest.permission.WRITE_EXTERNAL_STORAGE) {
+                    // show dialog explaining why
+                    PermissionDialog.Builder.instance(activity)
+                            .setOnPermissionDialog(object : PermissionDialog.OnPermissionListener {
+                                override fun onAllowed(wasAllowed: Boolean) {
+                                    if (wasAllowed) {
+                                        requestPermission(activity, permission)
+                                    }
+                                }
+                            })
+                            .create()
+                            .show()
+                }
+                else {
+
+                    var shouldRequestPermission = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
+
+                    if (shouldRequestPermission) {
+                        val layout = activity.findViewById<View>(android.R.id.content) as ViewGroup
+                        Snackbar.make(layout, "Please enable permission '$permission'", Snackbar.LENGTH_LONG)
+                                .setAction(R.string.ok) {
+                                    requestPermission(activity, permission)
+                                }
+                                .show()
+                    }
+                    else {
+                        requestPermission(activity, permission)
+                    }
+                }
+            }
+            return permissionGranted
         }
 
         fun hasGrantedPermission(context: Context, permission: String): Boolean {
@@ -95,52 +138,6 @@ private constructor() {
             } else {
                 // Signal that we did not handle the permissions.
                 return false
-            }
-        }
-
-
-        /**
-         * Requests the fine location permission.
-         * If the permission has been denied previously, a SnackBar
-         * will prompt the user to grant the permission, otherwise
-         * it is requested directly.
-         */
-        private fun requestPermission(activity: Activity,
-                                      permission: String,
-                                      layout: ViewGroup) {
-
-            var shouldRequestPermission = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
-
-            // Request anyway;
-            shouldRequestPermission = false
-
-            if (shouldRequestPermission) {
-                // Provide an additional rationale to the user if the permission
-                // was not granted and the user would benefit from additional
-                // context for the use of the permission. For example if the user
-                // has previously denied the permission.
-                val snackbar = Snackbar.make(
-                        layout,
-                        R.string.write_external_storage_permission,
-                        Snackbar.LENGTH_INDEFINITE)
-
-                snackbar.setAction(
-                        R.string.ok,
-                        View.OnClickListener {
-                            ActivityCompat.requestPermissions(
-                                    activity,
-                                    arrayOf(permission),
-                                    REQUEST_WRITE_STORAGE)
-                        })
-
-                snackbar.show()
-
-            } else {
-                // Permission has not been granted yet. Request it directly.
-                ActivityCompat.requestPermissions(
-                        activity,
-                        arrayOf(permission),
-                        REQUEST_WRITE_STORAGE)
             }
         }
     }

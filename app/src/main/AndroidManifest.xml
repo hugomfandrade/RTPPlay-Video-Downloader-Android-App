@@ -27,7 +27,8 @@
             android:exported="true"
             android:permission="android.permission.FOREGROUND_SERVICE" />
 
-        <activity android:name=".app.main.MainActivity"
+        <activity
+            android:name=".app.main.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTask"
             android:theme="@style/AppTheme.Main">
@@ -41,18 +42,20 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
-        <activity android:name=".app.archive.ArchiveActivity"
+
+        <activity
+            android:name=".app.archive.ArchiveActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTask"
             android:label="@string/archive"
-            android:theme="@style/AppTheme.Archive">
-        </activity>
-        <activity android:name=".app.settings.SettingsActivity"
+            android:theme="@style/AppTheme.Archive" />
+
+        <activity
+            android:name=".app.settings.SettingsActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTask"
-            android:label="@string/archive"
-            android:theme="@style/AppTheme.Archive">
-        </activity>
+            android:label="@string/settings"
+            android:theme="@style/AppTheme.Archive" />
 
     </application>
 

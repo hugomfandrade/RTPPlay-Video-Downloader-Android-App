@@ -1,8 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import android.databinding.ObservableBoolean
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import androidx.databinding.ObservableBoolean
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 
-data class ParsingItem(val task : ParsingTaskBase, val isSelected : ObservableBoolean) {
+data class ParsingItem(val task : ParsingTask, val isSelected : ObservableBoolean) {
 
 }

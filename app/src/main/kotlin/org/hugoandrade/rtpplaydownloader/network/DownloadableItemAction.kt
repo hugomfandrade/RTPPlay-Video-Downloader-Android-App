@@ -89,4 +89,12 @@ class DownloadableItemAction(val item : DownloadableItem,
         fun onPlay(action : DownloadableItemAction)
         fun onRefresh(action: DownloadableItemAction)
     }
+
+    fun addDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
+        item.addDownloadStateChangeListener(listener)
+    }
+
+    fun removeDownloadStateChangeListener(listener: DownloadableItem.State.ChangeListener) {
+        item.removeDownloadStateChangeListener(listener)
+    }
 }

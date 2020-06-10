@@ -8,7 +8,7 @@ class ParsingIdentifier() {
 
     companion object {
 
-        fun findHost(url: String): ParsingTaskBase? {
+        fun findHost(url: String): ParsingTask? {
             for (fileType: FileType in FileType.values()) {
                 if (fileType.parsingTask.isValid(url)) {
                     return when (fileType) {
@@ -24,7 +24,7 @@ class ParsingIdentifier() {
             return null
         }
 
-        fun findType(task: ParsingTaskBase): FileType? {
+        fun findType(task: ParsingTask): FileType? {
             if (task is RTPPlayParsingMultiPartTask) return FileType.RTPPlayMultiPart
             if (task is RTPPlayParsingTask ||
                     task is RTPPlayParsingTaskV2 ||
@@ -38,7 +38,7 @@ class ParsingIdentifier() {
 
     }
 
-    enum class FileType(var parsingTask: ParsingTaskBase) {
+    enum class FileType(var parsingTask: ParsingTask) {
         RTPPlayMultiPart(RTPPlayParsingMultiPartTask()),
         RTPPlay(RTPPlayParsingTaskCompat()),
         SIC(SICParsingTask()),

@@ -3,44 +3,45 @@ package org.hugoandrade.rtpplaydownloader.app.main
 import android.Manifest
 import android.content.Intent
 import android.content.res.Configuration
-import android.databinding.DataBindingUtil
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.provider.DocumentsContract
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.widget.*
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.widget.SearchView
+import androidx.core.view.GravityCompat
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
-import org.hugoandrade.rtpplaydownloader.common.ActivityBase
+import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
 import org.hugoandrade.rtpplaydownloader.network.*
-import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParseFuture
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingDialog
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParseFuture
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTaskBase
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.*
-import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.io.File
 
-class MainActivity : ActivityBase(), DownloadManagerViewOps {
+class MainActivity : ActivityBase() {
 
-    private var searchView: SearchView? = null
+    private lateinit var searchView: SearchView
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var mDownloadItemsRecyclerView: RecyclerView
@@ -62,16 +63,16 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val oldDownloadManager = retainedFragmentManager.get<DownloadManager>(DownloadManager::class.java.simpleName)
+        mDownloadManager = ViewModelProvider(this).get(DownloadManager::class.java)
+        mDownloadManager.retrieveItemsFromDB()
+        mDownloadManager.getItems().observe(this, Observer { actions ->
 
-        if (oldDownloadManager == null) {
-            mDownloadManager = DownloadManager()
-            mDownloadManager.onCreate(this)
-            retainedFragmentManager.put(DownloadManager::class.java.simpleName, mDownloadManager)
-        } else {
-            mDownloadManager = oldDownloadManager
-            mDownloadManager.onConfigurationChanged(this)
-        }
+            actions.forEach{ action -> action.addActionListener(actionListener)}
+            mDownloadItemsAdapter.set(actions)
+            mDownloadItemsAdapter.notifyDataSetChanged()
+            mDownloadItemsRecyclerView.scrollToPosition(0)
+            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+        })
 
         initializeUI()
     }
@@ -82,7 +83,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         mDrawerToggle?.syncState()
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
+    override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // Pass any configuration change to the drawer toggle
         mDrawerToggle?.onConfigurationChanged(newConfig)
@@ -92,16 +93,12 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         menuInflater.inflate(R.menu.menu_main, menu)
 
         // set up SearchView
-        val searchView = menu.findItem(R.id.app_search_bar).actionView as SearchView
-        this.searchView = searchView
-
+        searchView = menu.findItem(R.id.app_search_bar).actionView as SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
 
             override fun onQueryTextSubmit(p0: String?): Boolean {
-                val searchView = this@MainActivity.searchView
-                if (searchView != null) {
-                    doDownload(searchView.query.toString())
-                }
+                doDownload(searchView.query.toString())
+                iconifySearchView()
                 return false
             }
 
@@ -110,54 +107,29 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             }
         })
         searchView.setOnCloseListener {
-            val drawerLayout = binding.drawerLayout
-            if (drawerLayout != null) {
-                mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-            }
+            mDrawerToggle?.onDrawerSlide(binding.drawerLayout, 0f)
             false
         }
         searchView.setOnSearchClickListener {
-            val drawerLayout = binding.drawerLayout
-            if (drawerLayout != null) {
-                mDrawerToggle?.onDrawerSlide(drawerLayout, 1f)
-
-                /*
-                ValueAnimator anim = ValueAnimator.ofFloat(start, end);
-                anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                        float slideOffset = (Float) valueAnimator.getAnimatedValue();
-                        toolbarDrawerToggle.onDrawerSlide(drawerLayout, slideOffset);
-                    }
-                });
-                anim.setInterpolator(new DecelerateInterpolator());
-                // You can change this duration to more closely match that of the default animation.
-                anim.setDuration(500);
-                anim.start();
-                 */
+            mDrawerToggle?.onDrawerSlide(binding.drawerLayout, 1f)
+        }
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                iconifySearchView()
             }
         }
 
-        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                searchView.isIconified = true
-                val drawerLayout = binding.drawerLayout
-                if (drawerLayout != null) {
-                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-                }
-            }
-        };
-
         //
-        val editText: EditText? = searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)
+        val editText: EditText? = searchView.findViewById(R.id.search_src_text)
         editText?.setTextColor(Color.WHITE)
         editText?.setHintTextColor(Color.parseColor("#90ffffff"))
 
         //
         val devUrl: String? = DevConstants.url
         if (devUrl != null) {
-            searchView.setQuery(devUrl, true)
+            searchView.setQuery(devUrl, false)
             editText?.setSelection(editText.text.length)
+            searchView.isIconified = false
         } else {
             ViewUtils.hideSoftKeyboardAndClearFocus(searchView)
         }
@@ -171,13 +143,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         val drawerToggle = mDrawerToggle
 
         if (item.itemId == android.R.id.home) {
-            val searchView = this.searchView
-            if (searchView != null && !searchView.isIconified) {
-                searchView.isIconified = true
-                val drawerLayout = binding.drawerLayout
-                if (drawerLayout != null) {
-                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-                }
+            if (!iconifySearchView()) {
                 return true
             }
         }
@@ -187,28 +153,17 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        if (!isChangingConfigurations) {
-            mDownloadManager.onDestroy()
-        }
-    }
-
     override fun onBackPressed() {
+        // close if drawer is open
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            val searchView = this.searchView
-            if (searchView != null && !searchView.isIconified) {
-                searchView.isIconified = true
-                val drawerLayout = binding.drawerLayout
-                if (drawerLayout != null) {
-                    mDrawerToggle?.onDrawerSlide(drawerLayout, 0f)
-                }
-            } else {
-                super.onBackPressed()
-            }
+        }
+        // iconify search view if showing
+        else if (!iconifySearchView()) {
+        }
+        // back press
+        else {
+            super.onBackPressed()
         }
     }
 
@@ -297,24 +252,18 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         this.mDrawerToggle = drawerToggle
         this.mDrawerAdapter = drawerAdapter
 
-        val simpleItemAnimator : SimpleItemAnimator = DefaultItemAnimator()
+        val simpleItemAnimator = DefaultItemAnimator()
         simpleItemAnimator.supportsChangeAnimations = false
 
         mDownloadItemsRecyclerView = binding.downloadItemsRecyclerView
         mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
         mDownloadItemsRecyclerView.layoutManager =
-                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) LinearLayoutManager(this)
-                else GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
+                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) androidx.recyclerview.widget.LinearLayoutManager(this)
+                else androidx.recyclerview.widget.GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
         if (DevConstants.enableSwipe) {
-            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-                    0,
-                    ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
-
-                override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder): Float {
-                    return super.getSwipeThreshold(viewHolder)
-                }
+            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
 
                 override fun getSwipeEscapeVelocity(defaultValue: Float): Float {
                     return super.getSwipeEscapeVelocity(defaultValue) * 5
@@ -324,9 +273,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                     return super.getSwipeVelocityThreshold(defaultValue) * 0.2f
                 }
 
-                override fun onMove(recyclerView: RecyclerView,
-                                    viewHolder1: RecyclerView.ViewHolder,
-                                    viewHolder2: RecyclerView.ViewHolder): Boolean {
+                override fun onMove(recyclerView: RecyclerView, viewHolder1: RecyclerView.ViewHolder, viewHolder2: RecyclerView.ViewHolder): Boolean {
                     return false
                 }
 
@@ -346,18 +293,19 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
         binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
     }
 
-    override fun displayDownloadableItems(actions: List<DownloadableItemAction>) {
-
-        runOnUiThread {
-            mDownloadItemsAdapter.clear()
-            mDownloadItemsAdapter.addAll(actions)
-            mDownloadItemsAdapter.notifyDataSetChanged()
-            mDownloadItemsRecyclerView.scrollToPosition(0)
-            binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+    /**
+     * tries to iconify search view, and syncs with toggle. returns the previous iconified state
+     */
+    private fun iconifySearchView(): Boolean {
+        val wasIconified = searchView.isIconified
+        if (!wasIconified) {
+            searchView.isIconified = true
+            mDrawerToggle?.onDrawerSlide(binding.drawerLayout, 0f)
         }
+        return wasIconified
     }
 
-    override fun displayDownloadableItem(action: DownloadableItemAction) {
+    private fun displayDownloadableItem(action: DownloadableItemAction) {
         action.addActionListener(actionListener)
 
         uploadHistoryMap[action.item.id] = action
@@ -366,13 +314,14 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
         runOnUiThread {
             mDownloadItemsAdapter.add(action)
+            binding.downloadItemsRecyclerView.scrollToPosition(0)
             binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         }
     }
 
     private val actionListener: DownloadableItemAction.Listener = object : DownloadableItemAction.Listener {
-        override fun onPlay(action: DownloadableItemAction) {
 
+        override fun onPlay(action: DownloadableItemAction) {
 
             val dialog = detailsDialog
 
@@ -381,7 +330,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             }
             else {
 
-                detailsDialog = DownloadableItemDetailsDialog.Builder.instance(getActivityContext())
+                detailsDialog = DownloadableItemDetailsDialog.Builder.instance(this@MainActivity)
                         .setOnItemDetailsDialogListener(object : DownloadableItemDetailsDialog.OnItemDetailsListener {
                             override fun onCancelled() {
                                 detailsDialog = null
@@ -441,7 +390,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                                         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
                                                 .setDataAndType(Uri.parse(filepath), "video/mp4"))
                                     } else {
-                                        ViewUtils.showToast(getActivityContext(), getString(R.string.file_not_found))
+                                        ViewUtils.showToast(this@MainActivity, getString(R.string.file_not_found))
                                     }
                                 } catch (ignored: Exception) { }
                             }
@@ -460,22 +409,19 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
     private fun extractActionSendIntentAndUpdateUI(intent: Intent?) {
         if (intent == null) return
 
-        val action: String = intent.action?: return
+        val action: String = intent.action ?: return
 
         if (action != Intent.ACTION_SEND || !intent.hasExtra(Intent.EXTRA_TEXT)) return
 
-        val url: String = intent.getStringExtra(Intent.EXTRA_TEXT)?: return
+        val url: String = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
 
         intent.removeExtra(Intent.EXTRA_TEXT)
 
         //
-        val searchView = this.searchView
-        val editText: EditText? = searchView?.findViewById(android.support.v7.appcompat.R.id.search_src_text)
+        val editText: EditText? = searchView.findViewById(R.id.search_src_text)
 
-        searchView?.setQuery(url, true)
+        searchView.setQuery(url, true)
         editText?.setSelection(editText.text.length)
-
-        doDownload(url)
     }
 
     private var parsingDialog : ParsingDialog? = null
@@ -483,37 +429,23 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
 
     @Synchronized
     private fun doDownload(url: String) {
+        Log.e(TAG, "doDownload " + Thread.currentThread().getStackTrace()[2].methodName)
+        Log.e(TAG, "doDownload " + Thread.currentThread().getStackTrace()[3].methodName)
+        Log.e(TAG, "doDownload " + Thread.currentThread().getStackTrace()[4].methodName)
 
-        if (!PermissionUtils.hasGrantedPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            PermissionDialog.Builder.instance(this)
-                    .setOnPermissionDialog(object : PermissionDialog.OnPermissionListener {
-                        override fun onAllowed(wasAllowed: Boolean) {
-                            if (wasAllowed) {
-                                val activity = this@MainActivity
-                                PermissionUtils.requestPermission(
-                                        activity,
-                                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                            } else {
-                                // onBackPressed()
-                            }
-                        }
-                    })
-                    .create()
-                    .show()
-            return
-        }
+        if (!PermissionUtils.hasGrantedPermissionAndRequestIfNeeded(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) return
 
         val isParsing : Boolean = parsingDialog?.isShowing() ?: false
 
         if (isParsing) {
             return
         }
-        else {
-            parsingDialog?.dismissDialog()
-        }
 
-        val future : ParseFuture = mDownloadManager.parseUrl(url)
-        future.addCallback(object : FutureCallback<ParsingData> {
+        // dismiss previous instance
+        parsingDialog?.dismissDialog()
+
+        val future : ListenableFuture<ParsingData> = mDownloadManager.parseUrl(url)
+        future.addCallback(object : ListenableFuture.Callback<ParsingData> {
 
             override fun onSuccess(result: ParsingData) {
 
@@ -535,116 +467,112 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
             }
         })
 
-        parsingDialog = ParsingDialog.Builder.instance(this)
-                .setOnParsingDialogListener(object : ParsingDialog.OnParsingListener {
+        val parsingDialogListener = object : ParsingDialog.OnParsingListener {
 
-                    var paginationFuture : PaginationParseFuture? = null
-                    var paginationMoreFuture : PaginationParseFuture? = null
+            var paginationFuture : ListenableFuture<ArrayList<ParsingTask>>? = null
+            var paginationMoreFuture : ListenableFuture<ArrayList<ParsingTask>>? = null
 
-                    override fun onCancelled() {
-                        future.failed("parsing was cancelled")
-                        paginationFuture?.failed("parsing was cancelled")
-                        paginationMoreFuture?.failed("parsing was cancelled")
-                        FilenameLockerAdapter.instance.clear()
+            override fun onCancelled() {
+                future.failed("parsing was cancelled")
+                paginationFuture?.failed("parsing was cancelled")
+                paginationMoreFuture?.failed("parsing was cancelled")
+                FilenameLockerAdapter.instance.clear()
+            }
+
+            override fun onDownload(tasks : ArrayList<ParsingTask>) {
+                tasks.forEach(action = { task ->
+                    val filename: String? = task.filename
+                    if (filename != null) {
+                        FilenameLockerAdapter.instance.putUnremovable(filename)
                     }
-
-                    override fun onDownload(tasks : ArrayList<ParsingTaskBase>) {
-                        tasks.forEach(action = { task ->
-                            val filename: String? = task.filename
-                            if (filename != null) {
-                                FilenameLockerAdapter.instance.putUnremovable(filename)
-                            }
-                            startDownload(task)
-                        })
-
-                        parsingDialog?.dismissDialog()
-                        parsingDialog = null
-                    }
-
-                    override fun onParseEntireSeries(paginationTask: PaginationParserTaskBase) {
-                        FilenameLockerAdapter.instance.clear()
-                        parsingDialog?.loading()
-                        paginationFuture = mDownloadManager.parsePagination(url, paginationTask)
-                        paginationFuture?.addCallback(object : FutureCallback<ArrayList<ParsingTaskBase>> {
-
-                            override fun onSuccess(result: ArrayList<ParsingTaskBase>) {
-
-                                runOnUiThread {
-                                    parsingDialog?.showPaginationResult(paginationTask, result)
-                                }
-                            }
-
-                            override fun onFailed(errorMessage: String) {
-
-                                runOnUiThread {
-                                    val message = "Unable to parse pagination: $errorMessage"
-
-                                    ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
-
-                                    parsingDialog?.dismissDialog()
-                                    parsingDialog = null
-                                }
-                            }
-                        })
-                    }
-
-                    override fun onParseMore(paginationTask: PaginationParserTaskBase) {
-                        parsingDialog?.loadingMore()
-                        paginationMoreFuture = mDownloadManager.parseMore(url, paginationTask)
-                        paginationMoreFuture?.addCallback(object : FutureCallback<ArrayList<ParsingTaskBase>> {
-
-                            override fun onSuccess(result: ArrayList<ParsingTaskBase>) {
-
-                                runOnUiThread {
-                                    parsingDialog?.showPaginationMoreResult(paginationTask, result)
-                                }
-                            }
-
-                            override fun onFailed(errorMessage: String) {
-
-                                runOnUiThread {
-                                    val message = "Unable to parse more pagination: $errorMessage"
-
-                                    ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
-
-                                    parsingDialog?.dismissDialog()
-                                    parsingDialog = null
-                                }
-                            }
-                        })
-
-                    }
-
+                    startDownload(task)
                 })
-                .create()
-        parsingDialog?.show()
-    }
 
-    private fun startDownload(task: ParsingTaskBase) {
-        mDownloadManager.download(task)
-    }
+                parsingDialog?.dismissDialog()
+                parsingDialog = null
+            }
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>,
-                                            grantResults: IntArray) {
-        PermissionUtils.onRequestPermissionsResult(this,
-                requestCode,
-                permissions,
-                grantResults,
-                object : PermissionUtils.OnRequestPermissionsResultCallback {
-                    override fun onRequestPermissionsResult(permissionType: String, wasPermissionGranted: Boolean) {
-                        when (permissionType) {
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE -> if (wasPermissionGranted) {
-                                val searchView = this@MainActivity.searchView
-                                if (searchView != null) {
-                                    doDownload(searchView.query.toString())
-                                }
-                            } else {
-                                // onBackPressed()
-                            }
+            override fun onParseEntireSeries(paginationTask: PaginationParserTask) {
+                FilenameLockerAdapter.instance.clear()
+                parsingDialog?.loading()
+                paginationFuture = mDownloadManager.parsePagination(url, paginationTask)
+                paginationFuture?.addCallback(object : ListenableFuture.Callback<ArrayList<ParsingTask>> {
+
+                    override fun onSuccess(result: ArrayList<ParsingTask>) {
+
+                        runOnUiThread {
+                            parsingDialog?.showPaginationResult(paginationTask, result)
+                        }
+                    }
+
+                    override fun onFailed(errorMessage: String) {
+
+                        runOnUiThread {
+                            val message = "Unable to parse pagination: $errorMessage"
+
+                            ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
+
+                            parsingDialog?.dismissDialog()
+                            parsingDialog = null
                         }
                     }
                 })
+            }
+
+            override fun onParseMore(paginationTask: PaginationParserTask) {
+                parsingDialog?.loadingMore()
+                paginationMoreFuture = mDownloadManager.parseMore(url, paginationTask)
+                paginationMoreFuture?.addCallback(object : ListenableFuture.Callback<ArrayList<ParsingTask>> {
+
+                    override fun onSuccess(result: ArrayList<ParsingTask>) {
+
+                        runOnUiThread {
+                            parsingDialog?.showPaginationMoreResult(paginationTask, result)
+                        }
+                    }
+
+                    override fun onFailed(errorMessage: String) {
+
+                        runOnUiThread {
+                            val message = "Unable to parse more pagination: $errorMessage"
+
+                            ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
+
+                            parsingDialog?.dismissDialog()
+                            parsingDialog = null
+                        }
+                    }
+                })
+
+            }
+        }
+
+        parsingDialog = ParsingDialog.Builder.instance(this)
+                .setOnParsingDialogListener(parsingDialogListener)
+                .create()
+
+        parsingDialog?.show()
+    }
+
+    private fun startDownload(task: ParsingTask) {
+        val future = mDownloadManager.download(task)
+        future.addCallback(object : ListenableFuture.Callback<DownloadableItemAction> {
+            override fun onFailed(errorMessage: String) {
+                Log.e(TAG, errorMessage)
+            }
+
+            override fun onSuccess(result: DownloadableItemAction) {
+                displayDownloadableItem(result)
+            }
+        })
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        val permission = Manifest.permission.WRITE_EXTERNAL_STORAGE
+        if (permissions.contains(permission) && PermissionUtils.hasGrantedPermission(this, permission)) {
+
+            doDownload(searchView.query.toString())
+        }
     }
 
     private val changeListener = object : DownloadableItem.State.ChangeListener {
@@ -662,7 +590,7 @@ class MainActivity : ActivityBase(), DownloadManagerViewOps {
                 // upload history
                 val action = uploadHistoryMap[downloadableItem.id]?: return
 
-                VersionUtils.uploadHistory(getActivityContext(), action)
+                VersionUtils.uploadHistory(this@MainActivity, action)
             }
         }
     }

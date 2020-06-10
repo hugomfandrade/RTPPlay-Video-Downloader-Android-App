@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-class RTPPlayParsingTaskCompat : ParsingTaskBase() {
+class RTPPlayParsingTaskCompat : ParsingTask() {
 
     val v1 = RTPPlayParsingTask()
     val v2 = RTPPlayParsingTaskV2()
@@ -10,7 +10,7 @@ class RTPPlayParsingTaskCompat : ParsingTaskBase() {
 
         this.url = url
 
-        val task : ParsingTaskBase = when {
+        val task : ParsingTask = when {
             v3.parseMediaFile(url) -> v3
             v2.parseMediaFile(url) -> v2
             v1.parseMediaFile(url) -> v1

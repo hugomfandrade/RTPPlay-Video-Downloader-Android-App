@@ -1,19 +1,17 @@
 package org.hugoandrade.rtpplaydownloader.network
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.support.v4.app.NotificationCompat
-import android.support.v4.content.ContextCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import org.hugoandrade.rtpplaydownloader.DevConstants
-import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.persistence.DatabaseModel
-import org.hugoandrade.rtpplaydownloader.network.persistence.PersistencePresenterOps
+import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
+import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.util.*
 import java.util.concurrent.Executors
@@ -37,13 +35,12 @@ class DownloadService : Service() {
 
     private val mBinder = DownloadServiceBinder()
 
-    private lateinit var mDatabaseModel: DatabaseModel
+    private lateinit var mDatabaseModel: DownloadableItemRepository
 
     override fun onCreate() {
         super.onCreate()
 
-        val databaseModel = object : DatabaseModel(){}
-        databaseModel.onCreate(mPersistencePresenterOps)
+        val databaseModel = DownloadableItemRepository(application)
 
         mDatabaseModel = databaseModel
     }
@@ -51,23 +48,11 @@ class DownloadService : Service() {
     override fun onDestroy() {
         super.onDestroy()
 
-        mDatabaseModel.onDestroy()
         downloadExecutors.shutdown()
     }
 
     override fun onBind(intent: Intent): IBinder {
         return mBinder
-    }
-
-    val mPersistencePresenterOps = object : PersistencePresenterOps {
-
-        override fun getActivityContext(): Context? {
-            return this@DownloadService.applicationContext
-        }
-
-        override fun getApplicationContext(): Context? {
-            return this@DownloadService
-        }
     }
 
     private fun createNotificationChannel() {
@@ -191,7 +176,7 @@ class DownloadService : Service() {
     private val downloadMap : LinkedHashMap<Int, DownloadableItemAction> = LinkedHashMap()
 
     private fun start(downloadableItemAction: DownloadableItemAction) {
-        val itemID: Int = downloadableItemAction.item.id
+        val itemID: Int = downloadableItemAction.item.id ?: -1
 
         if (downloadMap.containsKey(downloadableItemAction.item.id)) return
 
@@ -247,7 +232,6 @@ class DownloadService : Service() {
     private val changeListener = object : DownloadableItem.State.ChangeListener {
 
         override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
-            val itemID: Int = downloadableItem.id
 
             if (downloadableItem.state == DownloadableItem.State.End ||
                     downloadableItem.state == DownloadableItem.State.Failed) {
