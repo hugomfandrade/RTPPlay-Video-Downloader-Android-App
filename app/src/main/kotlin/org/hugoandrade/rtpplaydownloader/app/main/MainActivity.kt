@@ -98,6 +98,7 @@ class MainActivity : ActivityBase() {
 
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 doDownload(searchView.query.toString())
+                iconifySearchView()
                 return false
             }
 
