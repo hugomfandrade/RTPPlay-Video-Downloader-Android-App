@@ -2,26 +2,24 @@ package org.hugoandrade.rtpplaydownloader.app.archive
 
 import android.content.Context
 import android.content.Intent
-import androidx.databinding.DataBindingUtil
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.DocumentsContract
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.app.main.DownloadableItemDetailsDialog
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityArchiveBinding
-import org.hugoandrade.rtpplaydownloader.network.*
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
-import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 class ArchiveActivity : ActivityBase() {
@@ -103,8 +101,8 @@ class ArchiveActivity : ActivityBase() {
         mArchivedItemsRecyclerView = binding.archiveItemsRecyclerView
         mArchivedItemsRecyclerView.itemAnimator = simpleItemAnimator
         mArchivedItemsRecyclerView.layoutManager =
-                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) androidx.recyclerview.widget.LinearLayoutManager(this)
-                else androidx.recyclerview.widget.GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
+                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) LinearLayoutManager(this)
+                else GridLayoutManager(this, if (ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 3 else 2)
         mArchivedItemsAdapter = ArchiveItemsAdapter()
         mArchivedItemsAdapter.setListener(object : ArchiveItemsAdapter.Listener {
 
@@ -123,7 +121,7 @@ class ArchiveActivity : ActivityBase() {
 
                                 override fun onArchive(item: DownloadableItem) {
 
-                                    detailsDialog?.dismissDialog()
+                                    detailsDialog?.dismiss()
 
                                     item.isArchived = false
                                     mDatabaseModel.updateDownloadableEntry(item)
@@ -134,54 +132,23 @@ class ArchiveActivity : ActivityBase() {
 
                                 override fun onRedirect(item: DownloadableItem) {
 
-                                    detailsDialog?.dismissDialog()
+                                    detailsDialog?.dismiss()
 
-                                    try {
-                                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
-                                        startActivity(browserIntent)
-                                    } catch (e: Exception) {
-                                    }
+                                    MediaUtils.openUrl(this@ArchiveActivity, item)
                                 }
 
                                 override fun onShowInFolder(item: DownloadableItem) {
 
-                                    detailsDialog?.dismissDialog()
+                                    detailsDialog?.dismiss()
 
-                                    try {
-                                        val dir = Uri.parse(File(item.filepath).parentFile.absolutePath + File.separator)
-
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-                                            intent.addCategory(Intent.CATEGORY_DEFAULT)
-
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, dir)
-                                            }
-
-                                            intent.putExtra("android.content.extra.SHOW_ADVANCED", true)
-                                            startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
-                                        } else {
-                                            val intent = Intent(Intent.ACTION_GET_CONTENT)
-                                            intent.setDataAndType(dir, "*/*")
-                                            startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
-                                        }
-                                    } catch (e: Exception) { }
+                                    MediaUtils.showInFolderIntent(this@ArchiveActivity, item)
                                 }
 
                                 override fun onPlay(item: DownloadableItem) {
 
-                                    detailsDialog?.dismissDialog()
+                                    detailsDialog?.dismiss()
 
-                                    try {
-                                        val filepath = item.filepath
-                                        if (MediaUtils.doesMediaFileExist(item)) {
-                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
-                                                    .setDataAndType(Uri.parse(filepath), "video/mp4"))
-                                        } else {
-                                            ViewUtils.showToast(this@ArchiveActivity, getString(R.string.file_not_found))
-                                        }
-                                    } catch (ignored: Exception) {
-                                    }
+                                    MediaUtils.play(this@ArchiveActivity, item)
                                 }
 
                             })

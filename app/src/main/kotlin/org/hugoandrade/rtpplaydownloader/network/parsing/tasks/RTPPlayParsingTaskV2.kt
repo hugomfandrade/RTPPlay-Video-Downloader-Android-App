@@ -5,6 +5,7 @@ import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
+import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.URL
 
@@ -33,7 +34,7 @@ open class RTPPlayParsingTaskV2 : RTPPlayParsingTask() {
 
         try {
             doc = Jsoup.connect(url).timeout(10000).get()
-        } catch (ignored: SocketTimeoutException) {
+        } catch (ignored: IOException) {
             return null
         }
 

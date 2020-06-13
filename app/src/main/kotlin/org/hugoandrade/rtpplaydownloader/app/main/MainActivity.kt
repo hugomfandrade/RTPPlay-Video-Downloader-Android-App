@@ -5,10 +5,8 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.provider.DocumentsContract
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -20,24 +18,24 @@ import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
-import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
-import org.hugoandrade.rtpplaydownloader.network.*
+import org.hugoandrade.rtpplaydownloader.network.DownloadManager
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.utils.*
-import java.io.File
+import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
+import org.hugoandrade.rtpplaydownloader.utils.VersionUtils
+import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 class MainActivity : ActivityBase() {
 
@@ -258,8 +256,8 @@ class MainActivity : ActivityBase() {
         mDownloadItemsRecyclerView = binding.downloadItemsRecyclerView
         mDownloadItemsRecyclerView.itemAnimator = simpleItemAnimator
         mDownloadItemsRecyclerView.layoutManager =
-                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) androidx.recyclerview.widget.LinearLayoutManager(this)
-                else androidx.recyclerview.widget.GridLayoutManager(this, if (!ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 2 else 3)
+                if (!ViewUtils.isTablet(this) && ViewUtils.isPortrait(this)) LinearLayoutManager(this)
+                else GridLayoutManager(this, if (ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 3 else 2)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
         if (DevConstants.enableSwipe) {
@@ -338,7 +336,7 @@ class MainActivity : ActivityBase() {
 
                             override fun onArchive(item: DownloadableItem) {
 
-                                detailsDialog?.dismissDialog()
+                                detailsDialog?.dismiss()
 
                                 mDownloadManager.archive(item)
                                 mDownloadItemsAdapter.remove(item)
@@ -347,52 +345,23 @@ class MainActivity : ActivityBase() {
 
                             override fun onRedirect(item: DownloadableItem) {
 
-                                detailsDialog?.dismissDialog()
+                                detailsDialog?.dismiss()
 
-                                try {
-                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
-                                    startActivity(browserIntent)
-                                } catch (e: Exception) { }
+                                MediaUtils.openUrl(this@MainActivity, item)
                             }
 
                             override fun onShowInFolder(item: DownloadableItem) {
 
-                                detailsDialog?.dismissDialog()
+                                detailsDialog?.dismiss()
 
-                                try {
-                                    val dir = Uri.parse(File(item.filepath).parentFile.absolutePath + File.separator)
-
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                                        intent.addCategory(Intent.CATEGORY_DEFAULT)
-
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, dir)
-                                        }
-
-                                        intent.putExtra("android.content.extra.SHOW_ADVANCED", true)
-                                        startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
-                                    } else {
-                                        val intent = Intent(Intent.ACTION_GET_CONTENT)
-                                        intent.setDataAndType(dir, "*/*")
-                                        startActivity(Intent.createChooser(intent, getString(R.string.open_folder)))
-                                    }
-                                } catch (e: Exception) { }
+                                MediaUtils.showInFolderIntent(this@MainActivity, item)
                             }
 
                             override fun onPlay(item: DownloadableItem) {
 
-                                detailsDialog?.dismissDialog()
+                                detailsDialog?.dismiss()
 
-                                try {
-                                    val filepath = action.item.filepath
-                                    if (MediaUtils.doesMediaFileExist(action.item)) {
-                                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
-                                                .setDataAndType(Uri.parse(filepath), "video/mp4"))
-                                    } else {
-                                        ViewUtils.showToast(this@MainActivity, getString(R.string.file_not_found))
-                                    }
-                                } catch (ignored: Exception) { }
+                                MediaUtils.play(this@MainActivity, item)
                             }
 
                         })
@@ -442,7 +411,7 @@ class MainActivity : ActivityBase() {
         }
 
         // dismiss previous instance
-        parsingDialog?.dismissDialog()
+        parsingDialog?.dismiss()
 
         val future : ListenableFuture<ParsingData> = mDownloadManager.parseUrl(url)
         future.addCallback(object : ListenableFuture.Callback<ParsingData> {
@@ -461,7 +430,7 @@ class MainActivity : ActivityBase() {
 
                     ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse))
 
-                    parsingDialog?.dismissDialog()
+                    parsingDialog?.dismiss()
                     parsingDialog = null
                 }
             }
@@ -473,6 +442,7 @@ class MainActivity : ActivityBase() {
             var paginationMoreFuture : ListenableFuture<ArrayList<ParsingTask>>? = null
 
             override fun onCancelled() {
+                // Toast.makeText(this@MainActivity, "ON CANCELLED", Toast.LENGTH_LONG).show()
                 future.failed("parsing was cancelled")
                 paginationFuture?.failed("parsing was cancelled")
                 paginationMoreFuture?.failed("parsing was cancelled")
@@ -488,7 +458,7 @@ class MainActivity : ActivityBase() {
                     startDownload(task)
                 })
 
-                parsingDialog?.dismissDialog()
+                parsingDialog?.dismiss()
                 parsingDialog = null
             }
 
@@ -512,7 +482,7 @@ class MainActivity : ActivityBase() {
 
                             ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
 
-                            parsingDialog?.dismissDialog()
+                            parsingDialog?.dismiss()
                             parsingDialog = null
                         }
                     }
@@ -538,7 +508,7 @@ class MainActivity : ActivityBase() {
 
                             ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
 
-                            parsingDialog?.dismissDialog()
+                            parsingDialog?.dismiss()
                             parsingDialog = null
                         }
                     }

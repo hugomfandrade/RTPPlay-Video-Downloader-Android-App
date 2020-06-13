@@ -10,6 +10,7 @@ import com.google.gson.JsonObject
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceJsonTable
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
+import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.net.MalformedURLException

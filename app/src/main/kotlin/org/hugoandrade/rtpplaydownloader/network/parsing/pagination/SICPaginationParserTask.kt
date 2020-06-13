@@ -1,8 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.pagination
 
-import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.URL
 
@@ -36,7 +37,7 @@ class SICPaginationParserTask : PaginationParserTask() {
 
                 try {
                     doc = Jsoup.connect(urlString).timeout(10000).get()
-                } catch (ignored: SocketTimeoutException) {
+                } catch (ignored: IOException) {
                     return false
                 }
 
@@ -117,7 +118,7 @@ class SICPaginationParserTask : PaginationParserTask() {
 
                 try {
                     doc = Jsoup.connect(urlString).timeout(10000).get()
-                } catch (ignored: SocketTimeoutException) {
+                } catch (ignored: IOException) {
                     return paginationUrl
                 }
 

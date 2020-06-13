@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.view.ViewGroup
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 

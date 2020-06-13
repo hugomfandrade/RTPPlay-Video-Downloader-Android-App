@@ -4,6 +4,7 @@ import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.io.IOException
 import java.net.SocketTimeoutException
 
 class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
@@ -50,7 +51,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
             try {
                 doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
+            } catch (ignored: IOException) {
                 return false
             }
 
@@ -95,7 +96,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
             try {
                 doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
+            } catch (ignored: IOException) {
                 return urlsMetadata
             }
 

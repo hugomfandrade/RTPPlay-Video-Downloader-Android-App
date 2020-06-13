@@ -24,7 +24,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
-import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import java.lang.RuntimeException
 import java.util.concurrent.*
 import kotlin.collections.ArrayList

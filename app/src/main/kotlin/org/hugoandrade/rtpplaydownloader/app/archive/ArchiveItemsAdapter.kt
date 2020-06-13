@@ -132,12 +132,13 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
 
             if (!downloadableItemList.contains(downloadableItem)) {
                 var pos = 0
-                var posID = if (downloadableItemList.isEmpty()) 0 else downloadableItemList[pos].id ?: -1
-                while(pos < downloadableItemList.size &&
-                        id < posID) {
+                var currentID = if (downloadableItemList.isEmpty()) 0 else downloadableItemList[pos].id
+                while(pos < downloadableItemList.size && id < currentID) {
                     pos++
-                    posID = downloadableItemList[pos].id ?: -1
+                    if (pos >= downloadableItemList.size) break
+                    currentID = downloadableItemList[pos].id
                 }
+
                 downloadableItemList.add(pos, downloadableItem)
                 notifyItemInserted(pos)
                 notifyItemRangeChanged(pos, itemCount)

@@ -1,10 +1,11 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.URL
 
@@ -51,7 +52,7 @@ class SAPOParsingTask : ParsingTask() {
 
             try {
                 doc = Jsoup.connect(urlString).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
+            } catch (ignored: IOException) {
                 return null
             }
 
@@ -102,7 +103,7 @@ class SAPOParsingTask : ParsingTask() {
 
             try {
                 doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
+            } catch (ignored: IOException) {
                 return videoFile ?: url
             }
 

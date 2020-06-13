@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.utils
+package org.hugoandrade.rtpplaydownloader.network.utils
 
 import android.content.BroadcastReceiver
 import android.content.Context

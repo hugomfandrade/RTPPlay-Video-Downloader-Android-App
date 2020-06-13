@@ -4,6 +4,7 @@ import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
+import java.io.IOException
 import java.net.SocketTimeoutException
 
 class RTPPlayUtils
@@ -51,7 +52,7 @@ private constructor() {
 
                 try {
                     doc = Jsoup.connect(srcUrl).timeout(10000).get()
-                } catch (ignored: SocketTimeoutException) {
+                } catch (ignored: IOException) {
                     return mediaFileUrl ?: srcUrl
                 }
 
@@ -106,7 +107,7 @@ private constructor() {
 
                 try {
                     doc = Jsoup.connect(srcUrl).timeout(10000).get()
-                } catch (ignored: SocketTimeoutException) {
+                } catch (ignored: IOException) {
                     return null
                 }
 

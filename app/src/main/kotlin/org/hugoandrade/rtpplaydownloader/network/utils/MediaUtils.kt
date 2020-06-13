@@ -1,10 +1,17 @@
 package org.hugoandrade.rtpplaydownloader.network.utils
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
+import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
+import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.io.File
 import java.text.Normalizer
 import kotlin.math.ln
@@ -195,6 +202,51 @@ private constructor() {
                 (progress - oldProgress).toFloat() * 1000f / (timestamp - oldTimestamp).toFloat()
             } else {
                 0f
+            }
+        }
+
+        fun showInFolderIntent(context: Context, item: DownloadableItem) {
+
+            try {
+                val dir = Uri.parse(File(item.filepath).parentFile.absolutePath + File.separator)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    intent.addCategory(Intent.CATEGORY_DEFAULT)
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, dir)
+                    }
+
+                    intent.putExtra("android.content.extra.SHOW_ADVANCED", true)
+                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.open_folder)))
+                } else {
+                    val intent = Intent(Intent.ACTION_GET_CONTENT)
+                    intent.setDataAndType(dir, "*/*")
+                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.open_folder)))
+                }
+
+            } catch (e: Exception) { }
+        }
+
+        fun openUrl(context: Context, item: DownloadableItem) {
+
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(item.url)))
+            } catch (e: Exception) { }
+        }
+
+        fun play(context: Context, item: DownloadableItem) {
+
+            try {
+                val filepath = item.filepath
+                if (doesMediaFileExist(item)) {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+                            .setDataAndType(Uri.parse(filepath), "video/mp4"))
+                } else {
+                    ViewUtils.showToast(context, context.getString(R.string.file_not_found))
+                }
+            } catch (ignored: Exception) {
             }
         }
     }
