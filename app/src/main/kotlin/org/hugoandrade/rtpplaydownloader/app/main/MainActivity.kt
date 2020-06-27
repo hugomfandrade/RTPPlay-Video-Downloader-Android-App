@@ -61,6 +61,8 @@ class MainActivity : ActivityBase() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        initializeUI()
+
         mDownloadManager = ViewModelProvider(this).get(DownloadManager::class.java)
         mDownloadManager.retrieveItemsFromDB()
         mDownloadManager.getItems().observe(this, Observer { actions ->
@@ -71,8 +73,6 @@ class MainActivity : ActivityBase() {
             mDownloadItemsRecyclerView.scrollToPosition(0)
             binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
         })
-
-        initializeUI()
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -182,10 +182,7 @@ class MainActivity : ActivityBase() {
         // between the sliding drawer and the action bar app icon
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the sliding drawer and the action bar app icon
-        val drawerToggle = object : ActionBarDrawerToggle(this,
-                binding.drawerLayout,
-                R.string.drawer_open,
-                R.string.drawer_close) {
+        val drawerToggle = object : ActionBarDrawerToggle(this, binding.drawerLayout, R.string.drawer_open, R.string.drawer_close) {
             /**
              * Called when a drawer has settled in a completely closed state.
              */
@@ -197,11 +194,10 @@ class MainActivity : ActivityBase() {
                 }
             }
 
-            /**
-             * Called when a drawer has settled in a completely open state.
-             */
-            override fun onDrawerOpened(drawerView: View) {
-                super.onDrawerOpened(drawerView)
+            override fun onDrawerStateChanged(newState: Int) {
+                super.onDrawerStateChanged(newState)
+
+                iconifySearchView()
             }
         }
         binding.drawerLayout.addDrawerListener(drawerToggle)
@@ -231,12 +227,12 @@ class MainActivity : ActivityBase() {
                         }
                     }
                     else if (drawerItem is NavigationDrawerAdapter.OptionItem) {
-                        try {
-                            mPendingRunnable = Runnable {
+                        mPendingRunnable = Runnable {
+                            try {
                                 startActivity(drawerItem.intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        } catch (e: Exception) {
-
                         }
                     }
                 }
@@ -260,33 +256,31 @@ class MainActivity : ActivityBase() {
                 else GridLayoutManager(this, if (ViewUtils.isTablet(this) && !ViewUtils.isPortrait(this)) 3 else 2)
         mDownloadItemsAdapter = DownloadItemsAdapter()
         mDownloadItemsRecyclerView.adapter = mDownloadItemsAdapter
-        if (DevConstants.enableSwipe) {
-            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)) {
 
-                override fun getSwipeEscapeVelocity(defaultValue: Float): Float {
-                    return super.getSwipeEscapeVelocity(defaultValue) * 5
-                }
+            override fun getSwipeEscapeVelocity(defaultValue: Float): Float {
+                return super.getSwipeEscapeVelocity(defaultValue) * 5
+            }
 
-                override fun getSwipeVelocityThreshold(defaultValue: Float): Float {
-                    return super.getSwipeVelocityThreshold(defaultValue) * 0.2f
-                }
+            override fun getSwipeVelocityThreshold(defaultValue: Float): Float {
+                return super.getSwipeVelocityThreshold(defaultValue) * 0.2f
+            }
 
-                override fun onMove(recyclerView: RecyclerView, viewHolder1: RecyclerView.ViewHolder, viewHolder2: RecyclerView.ViewHolder): Boolean {
-                    return false
-                }
+            override fun onMove(recyclerView: RecyclerView, viewHolder1: RecyclerView.ViewHolder, viewHolder2: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
 
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
-                    val position = viewHolder.adapterPosition
-                    val downloadableItem = mDownloadItemsAdapter.get(position)
-                    if (downloadableItem.isDownloading()) {
-                        downloadableItem.cancel()
-                    }
-                    mDownloadManager.archive(downloadableItem.item)
-                    mDownloadItemsAdapter.remove(downloadableItem)
-                    binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, p: Int) {
+                val position = viewHolder.adapterPosition
+                val downloadableItem = mDownloadItemsAdapter.get(position)
+                if (downloadableItem.isDownloading()) {
+                    downloadableItem.cancel()
                 }
-            }).attachToRecyclerView(mDownloadItemsRecyclerView)
-        }
+                mDownloadManager.archive(downloadableItem.item)
+                mDownloadItemsAdapter.remove(downloadableItem)
+                binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
+            }
+        }).attachToRecyclerView(mDownloadItemsRecyclerView)
 
         binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
     }
@@ -298,6 +292,8 @@ class MainActivity : ActivityBase() {
         val wasIconified = searchView.isIconified
         if (!wasIconified) {
             searchView.isIconified = true
+            ViewUtils.hideSoftKeyboard(searchView)
+            invalidateOptionsMenu()
             mDrawerToggle?.onDrawerSlide(binding.drawerLayout, 0f)
         }
         return wasIconified
@@ -398,9 +394,6 @@ class MainActivity : ActivityBase() {
 
     @Synchronized
     private fun doDownload(url: String) {
-        Log.e(TAG, "doDownload " + Thread.currentThread().getStackTrace()[2].methodName)
-        Log.e(TAG, "doDownload " + Thread.currentThread().getStackTrace()[3].methodName)
-        Log.e(TAG, "doDownload " + Thread.currentThread().getStackTrace()[4].methodName)
 
         if (!PermissionUtils.hasGrantedPermissionAndRequestIfNeeded(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) return
 

@@ -23,10 +23,6 @@
                 android:layout_height="match_parent"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                <include
-                    android:id="@+id/tv_no_network_connection"
-                    layout="@layout/layout_no_network_connection" />
-
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/download_items_recycler_view"
                     android:layout_width="match_parent"
@@ -54,6 +50,10 @@
                         android:textColor="#BFBFBF"/>
 
                 </LinearLayout>
+
+                <include
+                    android:id="@+id/tv_no_network_connection"
+                    layout="@layout/layout_no_network_connection" />
 
             </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
