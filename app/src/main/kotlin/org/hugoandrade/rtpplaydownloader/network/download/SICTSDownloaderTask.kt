@@ -2,7 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import android.util.Log
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV2
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV2
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -10,15 +10,20 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.collections.ArrayList
 
-open class RTPPlayTSDownloaderTask(private val url : String?,
-                                   private val mediaUrl : String,
-                                   private val dirPath : String,
-                                   private val filename : String,
-                                   private val listener : Listener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
+open class SICTSDownloaderTask(private val url : String?,
+                               private val mediaUrl : String,
+                               private val dirPath : String,
+                               private val filename : String,
+                               private val listener : Listener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
 
     override val TAG : String = javaClass.simpleName
+
+    private val m3u8Validator = object : TSUtils.Validator<String>{
+        override fun isValid(o: String): Boolean {
+            return o.contains(".m3u8")
+        }
+    }
 
     override fun downloadMediaFile() {
 
@@ -40,19 +45,21 @@ open class RTPPlayTSDownloaderTask(private val url : String?,
 
             val m3u8: String = mediaUrl
             val baseUrl: String = m3u8.substring(0, m3u8.lastIndexOf("/") + 1)
+            var playlist = TSUtils.getM3U8Playlist(m3u8, m3u8Validator)
 
-            var tsUrls = TSUtils.getTSUrls(m3u8)
-
-            // try reparse
-            if (tsUrls.isEmpty() && url != null) {
+            if (playlist == null && url != null) {
+                // try reparse
                 Log.d(TAG, "try reparse $url")
-                val parsingTask = RTPPlayParsingTaskV2()
+                val parsingTask = SICParsingTaskV2()
                 parsingTask.parseMediaFile(url)
                 val parsingMediaUrl = parsingTask.mediaUrl
                 if (parsingMediaUrl != null) {
-                    tsUrls = TSUtils.getTSUrls(parsingMediaUrl)
+                    playlist = TSUtils.getM3U8Playlist(parsingMediaUrl, m3u8Validator)
                 }
             }
+
+            val playlistUrl = baseUrl + playlist
+            val tsUrls = TSUtils.getTSUrls(playlistUrl)
 
             if (tsUrls.isEmpty()) {
                 listener.downloadFailed("failed to get ts files")

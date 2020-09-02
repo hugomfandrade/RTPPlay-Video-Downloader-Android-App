@@ -7,10 +7,9 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.io.IOException
-import java.net.SocketTimeoutException
 import java.net.URL
 
-class SICParsingTask : ParsingTask() {
+open class SICParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 
@@ -54,12 +53,12 @@ class SICParsingTask : ParsingTask() {
         return false
     }
 
-    private fun getVideoFile(urlString: String): String? {
+    open fun getVideoFile(url: String): String? {
         try {
             val doc: Document?
 
             try {
-                doc = Jsoup.connect(urlString).timeout(10000).get()
+                doc = Jsoup.connect(url).timeout(10000).get()
             } catch (ignored: IOException) {
                 return null
             }
@@ -77,8 +76,8 @@ class SICParsingTask : ParsingTask() {
                         if (src.isEmpty() || type.isEmpty()) continue
 
                         val location : String = when {
-                            urlString.contains("http://") -> "http:"
-                            urlString.contains("https://") -> "https:"
+                            url.contains("http://") -> "http:"
+                            url.contains("https://") -> "https:"
                             else -> ""
                         }
 

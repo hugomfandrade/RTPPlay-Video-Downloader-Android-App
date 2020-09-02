@@ -56,6 +56,9 @@ dependencies {
 
     // azure
     implementation 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
+
+    // test
+    testImplementation 'junit:junit:4.12'
 }
 
 repositories {

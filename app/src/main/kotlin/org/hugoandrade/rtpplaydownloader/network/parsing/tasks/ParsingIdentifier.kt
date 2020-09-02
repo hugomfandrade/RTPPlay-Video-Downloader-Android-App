@@ -15,7 +15,7 @@ class ParsingIdentifier() {
                         // search for multi-part before rtp play
                         FileType.RTPPlayMultiPart -> RTPPlayParsingMultiPartTask()
                         FileType.RTPPlay -> RTPPlayParsingTaskCompat()
-                        FileType.SIC -> SICParsingTask()
+                        FileType.SIC -> SICParsingTaskCompat()
                         FileType.SAPO -> SAPOParsingTask()
                         FileType.TVIPlayer -> TVIPlayerParsingTask()
                     }
@@ -30,7 +30,9 @@ class ParsingIdentifier() {
                     task is RTPPlayParsingTaskV2 ||
                     task is RTPPlayParsingTaskV3 ||
                     task is RTPPlayParsingTaskCompat) return FileType.RTPPlay
-            if (task is SICParsingTask) return FileType.SIC
+            if (task is SICParsingTask
+                    || task is SICParsingTaskV2
+                    || task is SICParsingTaskCompat) return FileType.SIC
             if (task is SAPOParsingTask) return FileType.SAPO
             if (task is TVIPlayerParsingTask) return FileType.TVIPlayer
             return null
@@ -41,7 +43,7 @@ class ParsingIdentifier() {
     enum class FileType(var parsingTask: ParsingTask) {
         RTPPlayMultiPart(RTPPlayParsingMultiPartTask()),
         RTPPlay(RTPPlayParsingTaskCompat()),
-        SIC(SICParsingTask()),
+        SIC(SICParsingTaskCompat()),
         SAPO(SAPOParsingTask()),
         TVIPlayer(TVIPlayerParsingTask())
     }

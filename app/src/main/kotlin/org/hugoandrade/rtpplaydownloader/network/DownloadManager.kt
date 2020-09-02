@@ -11,10 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import org.hugoandrade.rtpplaydownloader.DevConstants
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderIdentifier
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayTSDownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.TVIPlayerTSDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
@@ -321,6 +318,10 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                         if (filename.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
                         else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
                     }
+                    DownloaderIdentifier.DownloadType.SICTSFiles -> {
+                        if (filename.endsWith("net_wide")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                        else  SICTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                    }
                     null -> return
                 }
 
@@ -380,6 +381,11 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                                     val mediaUrl = item.mediaUrl
                                     if (mediaUrl != null && mediaUrl.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, item.filename ?: "", item)
                                     else  RTPPlayTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
+                                }
+                                DownloaderIdentifier.DownloadType.SICTSFiles ->  {
+                                    val mediaUrl = item.mediaUrl
+                                    if (mediaUrl != null && mediaUrl.endsWith("net_wide")) DownloaderTask(mediaUrl, dir, item.filename ?: "", item)
+                                    else  SICTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
                                 }
                                 null -> null
                             }
