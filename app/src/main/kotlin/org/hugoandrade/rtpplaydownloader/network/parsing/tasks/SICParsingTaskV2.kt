@@ -48,4 +48,8 @@ open class SICParsingTaskV2 : SICParsingTask() {
 
         return null
     }
+
+    override fun getMediaFileName(url: String, videoFile: String?): String {
+        return super.getMediaFileName(url, videoFile) + ".ts"
+    }
 }

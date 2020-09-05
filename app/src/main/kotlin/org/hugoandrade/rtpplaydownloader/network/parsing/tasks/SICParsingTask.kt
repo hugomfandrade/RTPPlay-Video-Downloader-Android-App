@@ -93,7 +93,7 @@ open class SICParsingTask : ParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(url: String, videoFile: String?): String {
+    override open fun getMediaFileName(url: String, videoFile: String?): String {
 
         try {
             val doc: Document?

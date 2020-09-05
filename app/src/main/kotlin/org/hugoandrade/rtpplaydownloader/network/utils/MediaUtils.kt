@@ -2,14 +2,11 @@ package org.hugoandrade.rtpplaydownloader.network.utils
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
-import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.io.File

@@ -16,7 +16,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTaskBase
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
@@ -135,7 +135,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
                 paginationTask?.setPaginationComplete(isPaginationUrlTheSameOfTheOriginalUrl)
 
-                future.success(if (parsingTask is ParsingMultiPartTaskBase)
+                future.success(if (parsingTask is ParsingMultiPartTask)
                     ParsingData(parsingTask.tasks, paginationTask) else
                     ParsingData(parsingTask, paginationTask))
             }
@@ -444,7 +444,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
             return false
         }
 
-        val tasks : ArrayList<ParsingTask> = if (parsingTask is ParsingMultiPartTaskBase) {
+        val tasks : ArrayList<ParsingTask> = if (parsingTask is ParsingMultiPartTask) {
             parsingTask.tasks
         }
         else {
@@ -482,7 +482,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 return false
             }
 
-            if (paginationParsingTask is ParsingMultiPartTaskBase) {
+            if (paginationParsingTask is ParsingMultiPartTask) {
                 paginationParsingTask.tasks.forEach { t ->
                     val paginationVideoFileName = t.mediaUrl ?: return false
                     paginationVideoFileNames.add(paginationVideoFileName)

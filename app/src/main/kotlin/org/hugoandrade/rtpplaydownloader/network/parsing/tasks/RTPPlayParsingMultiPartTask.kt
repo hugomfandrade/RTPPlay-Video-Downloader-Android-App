@@ -5,9 +5,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.io.IOException
-import java.net.SocketTimeoutException
 
-class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
+class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
 
     override fun getMediaFileName(url: String, videoFile: String?): String {
         // do nothing

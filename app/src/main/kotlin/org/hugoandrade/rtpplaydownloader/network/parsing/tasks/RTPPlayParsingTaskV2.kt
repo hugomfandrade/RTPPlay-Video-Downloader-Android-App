@@ -1,32 +1,15 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 import java.io.IOException
-import java.net.SocketTimeoutException
-import java.net.URL
 
 open class RTPPlayParsingTaskV2 : RTPPlayParsingTask() {
 
-    override fun parseMediaFile(url: String): Boolean {
-
-        this.url = url
-        this.mediaUrl = getM3U8File(url) ?: return false
-        this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
-        this.thumbnailUrl = getThumbnailPath(url)
-
-        try {
-            URL(mediaUrl)
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
-
-        return true
+    override fun getVideoFile(url: String): String? {
+        return getM3U8File(url)
     }
 
     private fun getM3U8File(url: String): String? {
