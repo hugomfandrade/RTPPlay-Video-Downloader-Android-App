@@ -32,6 +32,7 @@ class ParsingIdentifier() {
                     task is RTPPlayParsingTaskCompat) return FileType.RTPPlay
             if (task is SICParsingTask
                     || task is SICParsingTaskV2
+                    || task is SICParsingTaskV3
                     || task is SICParsingTaskCompat) return FileType.SIC
             if (task is SAPOParsingTask) return FileType.SAPO
             if (task is TVIPlayerParsingTask) return FileType.TVIPlayer

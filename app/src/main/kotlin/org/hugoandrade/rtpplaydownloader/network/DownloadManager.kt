@@ -308,8 +308,8 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 val mediaUrl = downloadableItem.mediaUrl ?: return
                 val filename = downloadableItem.filename ?: return
                 val downloadTask = downloadableItem.downloadTask
-                val dirPath = MediaUtils.getDownloadsDirectory(context)
-                val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+                val dirPath = MediaUtils.getDownloadsDirectory(context) ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+                val dir = dirPath.toString()
 
                 val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask, mediaUrl)) {
                     DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
@@ -354,13 +354,13 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 val downloadableItems = result
                 val actions : ArrayList<DownloadableItemAction> = ArrayList()
                 val context : Application = getApplication()
-                val dirPath = MediaUtils.getDownloadsDirectory(context)
-                val dir = dirPath?.toString() ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+                val dirPath = MediaUtils.getDownloadsDirectory(context) ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+                val dir = dirPath.toString()
 
-                for (item in downloadableItems) {
+                synchronized(this@DownloadManager.downloadableItems) {
+                    val listItems = this@DownloadManager.downloadableItems
 
-                    synchronized(this@DownloadManager.downloadableItems) {
-                        val listItems = this@DownloadManager.downloadableItems
+                    for (item in downloadableItems) {
 
 
                         var contains = false

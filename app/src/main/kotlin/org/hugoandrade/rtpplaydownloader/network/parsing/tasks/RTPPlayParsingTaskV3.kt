@@ -5,7 +5,6 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 import java.io.IOException
-import java.net.SocketTimeoutException
 
 open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
 

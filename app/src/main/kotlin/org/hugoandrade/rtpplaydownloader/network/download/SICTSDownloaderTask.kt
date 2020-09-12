@@ -2,7 +2,9 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import android.util.Log
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV2
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV3
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -24,6 +26,8 @@ open class SICTSDownloaderTask(private val url : String?,
             return o.contains(".m3u8")
         }
     }
+
+    private val retryParsingTasks : List<ParsingTask> = listOf(SICParsingTaskV2(), SICParsingTaskV3())
 
     override fun downloadMediaFile() {
 
@@ -50,11 +54,16 @@ open class SICTSDownloaderTask(private val url : String?,
             if (playlist == null && url != null) {
                 // try reparse
                 Log.d(TAG, "try reparse $url")
-                val parsingTask = SICParsingTaskV2()
-                parsingTask.parseMediaFile(url)
-                val parsingMediaUrl = parsingTask.mediaUrl
-                if (parsingMediaUrl != null) {
-                    playlist = TSUtils.getM3U8Playlist(parsingMediaUrl, m3u8Validator)
+
+                for (parsingTask in retryParsingTasks) {
+                    parsingTask.parseMediaFile(url)
+                    val parsingMediaUrl = parsingTask.mediaUrl
+                    if (parsingMediaUrl != null) {
+                        playlist = TSUtils.getM3U8Playlist(parsingMediaUrl, m3u8Validator)
+                    }
+                    if (playlist != null) {
+                        break
+                    }
                 }
             }
 

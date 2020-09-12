@@ -4,12 +4,14 @@ class SICParsingTaskCompat : ParsingTask() {
 
     val v1 = SICParsingTask()
     val v2 = SICParsingTaskV2()
+    val v3 = SICParsingTaskV3()
 
     override fun parseMediaFile(url: String): Boolean {
 
         this.url = url
 
         val task : ParsingTask = when {
+            v3.parseMediaFile(url) -> v3
             v2.parseMediaFile(url) -> v2
             v1.parseMediaFile(url) -> v1
             else -> return false
@@ -24,6 +26,7 @@ class SICParsingTaskCompat : ParsingTask() {
 
     override fun isValid(url: String) : Boolean {
 
+        if (v3.isValid(url)) return true
         if (v2.isValid(url)) return true
         if (v1.isValid(url)) return true
 
