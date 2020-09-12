@@ -29,14 +29,19 @@ private constructor() {
         const val sharedPreferencesName = "org.hugoandrade.rtpplaydownloader"
         const val directoryKey = "org.hugoandrade.rtpplaydownloader.directoryKey"
 
-        fun getDownloadsDirectory(context: Context) : Uri? {
+        // private val defaultDir : File = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+        private fun getDefaultDir() : File {
+            return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+        }
+
+        fun getDownloadsDirectory(context: Context) : Uri {
 
             try {
                 return Uri.parse(context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE)
-                        .getString(directoryKey, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()))
+                        .getString(directoryKey, getDefaultDir().toString()))
             }
             catch (e : Exception) {
-                return Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES))
+                return Uri.fromFile(getDefaultDir())
             }
         }
 
@@ -102,6 +107,7 @@ private constructor() {
                     .replace('\\', '.')
                     .replace('|', '.')
                     .replace('/', '.')
+                    .replace(',', '.')
                     .replace(".|.", ".")
                     .replace(' ', '.')
             filename = Normalizer.normalize(filename, Normalizer.Form.NFKD)
@@ -113,8 +119,7 @@ private constructor() {
         }
 
         fun getUniqueFilename(filename : String) : String  {
-            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            return getUniqueFilename(File(storagePath, filename))
+            return getUniqueFilename(File(getDefaultDir().toString(), filename))
         }
 
         fun getUniqueFilename(file : File) : String  {
@@ -130,11 +135,15 @@ private constructor() {
         }
 
         fun getUniqueFilenameAndLock(filename : String) : String  {
-            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            return getUniqueFilenameAndLock(File(storagePath, filename))
+            val defaultDirPath = getDefaultDir().toString()
+            return getUniqueFilenameAndLock(defaultDirPath, filename)
         }
 
-        fun getUniqueFilenameAndLock(file : File) : String  {
+        fun getUniqueFilenameAndLock(dirPath : String, filename : String) : String  {
+            return getUniqueFilenameAndLock(File(dirPath, filename))
+        }
+
+        private fun getUniqueFilenameAndLock(file : File) : String  {
             return if (!doesMediaFileExist(file) && FilenameLockerAdapter.instance.put(file.name))
                 file.name
             else

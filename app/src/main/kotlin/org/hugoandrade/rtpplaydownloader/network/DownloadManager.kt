@@ -130,6 +130,8 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                     return
                 }
 
+                parsingTask.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), parsingTask.filename?: "")
+
                 val isPaginationUrlTheSameOfTheOriginalUrl : Boolean =
                         isPaginationUrlTheSameOfTheOriginalUrl(url, parsingTask, paginationTask)
 
@@ -249,7 +251,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
     private fun parseUrlWithoutPagination(url: String) : Callable<ParsingData> {
 
-        return Callable<ParsingData> {
+        return Callable {
             if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                 throw RuntimeException("no network")
             }
@@ -260,17 +262,15 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 throw RuntimeException("is not a valid website")
             }
 
-            val parsingTask: ParsingTask? = ParsingIdentifier.findHost(url)
-
-            if (parsingTask == null) {
-                throw RuntimeException("could not find host")
-            }
+            val parsingTask: ParsingTask = ParsingIdentifier.findHost(url) ?: throw RuntimeException("could not find host")
 
             val parsing : Boolean = parsingTask.parseMediaFile(url)
 
             if (!parsing) {
                 throw RuntimeException("could not find filetype")
             }
+
+            parsingTask.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), parsingTask.filename?: "")
 
             ParsingData(parsingTask, null)
         }
@@ -308,7 +308,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 val mediaUrl = downloadableItem.mediaUrl ?: return
                 val filename = downloadableItem.filename ?: return
                 val downloadTask = downloadableItem.downloadTask
-                val dirPath = MediaUtils.getDownloadsDirectory(context) ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+                val dirPath = MediaUtils.getDownloadsDirectory(context)
                 val dir = dirPath.toString()
 
                 val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask, mediaUrl)) {
@@ -354,7 +354,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 val downloadableItems = result
                 val actions : ArrayList<DownloadableItemAction> = ArrayList()
                 val context : Application = getApplication()
-                val dirPath = MediaUtils.getDownloadsDirectory(context) ?: Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+                val dirPath = MediaUtils.getDownloadsDirectory(context)
                 val dir = dirPath.toString()
 
                 synchronized(this@DownloadManager.downloadableItems) {
@@ -481,6 +481,8 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
             if (!parsing) {
                 return false
             }
+
+            paginationParsingTask.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), paginationParsingTask.filename?: "")
 
             if (paginationParsingTask is ParsingMultiPartTask) {
                 paginationParsingTask.tasks.forEach { t ->

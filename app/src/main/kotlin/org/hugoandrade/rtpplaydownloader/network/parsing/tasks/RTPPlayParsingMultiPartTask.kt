@@ -1,6 +1,5 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -30,7 +29,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
                     val lastDot = originalFilename.lastIndexOf(".")
                     val preFilename = originalFilename.substring(0, lastDot)
                     val extFilename = originalFilename.substring(lastDot, originalFilename.length)
-                    task.filename = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
+                    task.filename = "$preFilename.$part$extFilename"
                 }
                 tasks.add(task)
             }

@@ -15,7 +15,7 @@ class SAPOParsingTask : ParsingTask() {
 
         this.url = url
         mediaUrl = getVideoFile(url) ?: return false
-        filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        filename = getMediaFileName(url, mediaUrl)
 
         try {
             URL(mediaUrl)

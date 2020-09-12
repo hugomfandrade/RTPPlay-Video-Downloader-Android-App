@@ -32,7 +32,6 @@ private constructor() {
                 val s = Scanner(chunkListUrl.openStream())
                 while (s.hasNext()) {
                     val line: String = s.next()
-                    System.err.println("l - " + line)
                     if (validator.isValid(line)) return line
                 }
             } catch (ignored: java.lang.Exception) {

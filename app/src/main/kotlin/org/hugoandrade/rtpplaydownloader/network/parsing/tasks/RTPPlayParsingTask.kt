@@ -1,13 +1,11 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 import java.io.IOException
-import java.net.SocketTimeoutException
 import java.net.URL
 
 @Deprecated(message = "use RTPPlayParsingTaskV3")
@@ -17,7 +15,7 @@ open class RTPPlayParsingTask : ParsingTask() {
 
         this.url = url
         this.mediaUrl = getVideoFile(url) ?: return false
-        this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        this.filename = getMediaFileName(url, mediaUrl)
         this.thumbnailUrl = getThumbnailPath(url)
 
         try {

@@ -15,7 +15,7 @@ open class SICParsingTask : ParsingTask() {
 
         this.url = url
         this.mediaUrl = getVideoFile(url) ?: return false
-        this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        this.filename = getMediaFileName(url, mediaUrl)
         this.thumbnailUrl = getThumbnailPath(url)
 
         try {
@@ -53,7 +53,7 @@ open class SICParsingTask : ParsingTask() {
         return false
     }
 
-    open fun getVideoFile(url: String): String? {
+    protected open fun getVideoFile(url: String): String? {
         try {
             val doc: Document?
 
