@@ -9,6 +9,10 @@ import java.io.IOException
 open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
 
     override fun getVideoFile(url: String): String? {
+        return getM3U8File(url)
+    }
+
+    private fun getM3U8File(url: String): String? {
         val doc: Document
 
         try {
@@ -18,7 +22,9 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
         }
 
         try {
+
             val scriptElements = doc.getElementsByTag("script") ?: return null
+
 
             for (scriptElement in scriptElements.iterator()) {
 
@@ -26,31 +32,17 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
 
                     val scriptText: String = dataNode.wholeData
 
-                    if (!scriptText.contains("RTPPlayer")) continue
+                    if (!scriptText.contains("RTPPlayer({")) continue
 
                     try {
 
-                        val rtpPlayerSubString: String = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "RTPPlayer({"), scriptText.lastIndexOf("})"))
+                        val rtpPlayerSubString: String = scriptText
 
-                        if (rtpPlayerSubString.indexOf(".mp4") >= 0) {  // is video file
-
-                            if (rtpPlayerSubString.indexOf("fileKey: \"") >= 0) {
-
-                                val link: String = rtpPlayerSubString.substring(
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey: \""),
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","))
-
-
-                                return "https://streaming-ondemand.rtp.pt$link"
-                            }
-
-                        } else if (rtpPlayerSubString.indexOf(".mp3") >= 0) { // is audio file
-
-                            if (rtpPlayerSubString.indexOf("file: \"") >= 0) {
-
+                        for (i in arrayOf("file: \"", "file : \"")) {
+                            if (rtpPlayerSubString.indexOf(i) >= 0) {
                                 return rtpPlayerSubString.substring(
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "file: \""),
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "file: \"") + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","))
+                                        ParsingUtils.indexOfEx(rtpPlayerSubString, i),
+                                        ParsingUtils.indexOfEx(rtpPlayerSubString, i) + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, i)).indexOf("\","))
 
                             }
                         }

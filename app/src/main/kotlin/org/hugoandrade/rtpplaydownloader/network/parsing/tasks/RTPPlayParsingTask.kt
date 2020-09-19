@@ -8,7 +8,7 @@ import org.jsoup.nodes.Document
 import java.io.IOException
 import java.net.URL
 
-@Deprecated(message = "use RTPPlayParsingTaskV3")
+@Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {

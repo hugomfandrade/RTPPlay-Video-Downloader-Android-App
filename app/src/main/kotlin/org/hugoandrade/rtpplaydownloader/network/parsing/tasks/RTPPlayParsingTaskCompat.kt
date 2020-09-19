@@ -2,9 +2,9 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 class RTPPlayParsingTaskCompat : ParsingTask() {
 
-    val v1 = RTPPlayParsingTask()
-    val v2 = RTPPlayParsingTaskV2()
-    val v3 = RTPPlayParsingTaskV3()
+    private val v1 = RTPPlayParsingTask()
+    private val v2 = RTPPlayParsingTaskV2()
+    private val v3 = RTPPlayParsingTaskV3()
 
     override fun parseMediaFile(url: String): Boolean {
 

@@ -18,11 +18,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    dataBinding {
-        enabled = true
-    }
     sourceSets {
         main.java.srcDirs += "src/main/kotlin"
+    }
+    buildFeatures {
+        dataBinding = true
     }
 }
 

@@ -9,6 +9,7 @@ import org.jsoup.select.Elements
 import java.io.IOException
 import java.net.URL
 
+@Deprecated(message = "use a more recent SIC parser")
 open class SICParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {

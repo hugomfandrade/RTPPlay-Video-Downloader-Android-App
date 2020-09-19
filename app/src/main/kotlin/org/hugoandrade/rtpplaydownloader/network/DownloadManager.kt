@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Environment
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -22,6 +21,7 @@ import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRep
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
+import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import java.util.concurrent.*
 import kotlin.collections.ArrayList
@@ -302,39 +302,25 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
             override fun onSuccess(result: DownloadableItem) {
 
-                val downloadableItem = result
-                val context : Application = getApplication()
-                val url = downloadableItem.url
-                val mediaUrl = downloadableItem.mediaUrl ?: return
-                val filename = downloadableItem.filename ?: return
-                val downloadTask = downloadableItem.downloadTask
-                val dirPath = MediaUtils.getDownloadsDirectory(context)
-                val dir = dirPath.toString()
+                val dirPath = MediaUtils.getDownloadsDirectory(getApplication())
 
-                val downloaderTask: DownloaderTask = when(DownloaderIdentifier.findHost(downloadTask, mediaUrl)) {
-                    DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
-                    DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
-                    DownloaderIdentifier.DownloadType.RTPTSFiles -> {
-                        if (filename.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
-                        else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
-                    }
-                    DownloaderIdentifier.DownloadType.SICTSFiles -> {
-                        if (filename.endsWith("net_wide")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
-                        else  SICTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
-                    }
-                    null -> return
+                try {
+                    val downloaderTask = DownloaderIdentifier.findTask(dirPath, result)
+
+                    val action = DownloadableItemAction(result, downloaderTask)
+                    action.addActionListener(actionListener)
+
+                    downloadService?.startDownload(action)
+
+                    val downloadableItems = ArrayList<DownloadableItemAction>()
+                    downloadableItems.add(action)
+                    downloadableItems.sortedWith(compareBy { it.item.id })
+
+                    future.success(action)
                 }
-
-                val action = DownloadableItemAction(downloadableItem, downloaderTask)
-                action.addActionListener(actionListener)
-
-                downloadService?.startDownload(action)
-
-                val downloadableItems = ArrayList<DownloadableItemAction>()
-                downloadableItems.add(action)
-                downloadableItems.sortedWith(compareBy { it.item.id } )
-
-                future.success(action)
+                catch (e : IllegalArgumentException) {
+                    future.failed("failed to get downloaderTask")
+                }
             }
         })
 
@@ -353,9 +339,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
                 val downloadableItems = result
                 val actions : ArrayList<DownloadableItemAction> = ArrayList()
-                val context : Application = getApplication()
-                val dirPath = MediaUtils.getDownloadsDirectory(context)
-                val dir = dirPath.toString()
+                val dirPath = MediaUtils.getDownloadsDirectory(getApplication())
 
                 synchronized(this@DownloadManager.downloadableItems) {
                     val listItems = this@DownloadManager.downloadableItems
@@ -374,23 +358,8 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
 
                         if (!contains) {
 
-                            val task: DownloaderTask? = when(DownloaderIdentifier.findHost(item.downloadTask, item.mediaUrl?: "")) {
-                                DownloaderIdentifier.DownloadType.FullFile -> DownloaderTask(item.mediaUrl ?: "",  dir, item.filename ?: "", item)
-                                DownloaderIdentifier.DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
-                                DownloaderIdentifier.DownloadType.RTPTSFiles ->  {
-                                    val mediaUrl = item.mediaUrl
-                                    if (mediaUrl != null && mediaUrl.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, item.filename ?: "", item)
-                                    else  RTPPlayTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
-                                }
-                                DownloaderIdentifier.DownloadType.SICTSFiles ->  {
-                                    val mediaUrl = item.mediaUrl
-                                    if (mediaUrl != null && mediaUrl.endsWith("net_wide")) DownloaderTask(mediaUrl, dir, item.filename ?: "", item)
-                                    else  SICTSDownloaderTask(item.url, item.mediaUrl ?: "", dir, item.filename ?: "", item)
-                                }
-                                null -> null
-                            }
-
-                            if (task != null) {
+                            try {
+                                val task = DownloaderIdentifier.findTask(dirPath, item)
 
                                 val action = DownloadableItemAction(item, task)
                                 action.addActionListener(actionListener)
@@ -400,6 +369,10 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                                 }
                                 listItems.add(action)
                                 listItems.sortedWith(compareBy { it.item.id })
+                            }
+                            catch (e : IllegalArgumentException) {
+                                Log.e(TAG, "failed to get downloaderTask")
+                                e.printStackTrace()
                             }
                         }
                     }

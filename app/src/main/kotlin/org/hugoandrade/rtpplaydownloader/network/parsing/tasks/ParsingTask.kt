@@ -20,5 +20,5 @@ abstract class ParsingTask {
 
     abstract fun parseMediaFile(url: String): Boolean
 
-    abstract fun getMediaFileName(url: String, videoFile: String?): String
+    protected abstract fun getMediaFileName(url: String, videoFile: String?): String
 }

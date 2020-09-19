@@ -172,7 +172,7 @@ class ParsingUnitTest {
 
         if (!isUrl) throw RuntimeException("is not a valid website")
 
-        val parsingTask = RTPPlayParsingTaskV3()
+        val parsingTask = RTPPlayParsingTaskV2()
         parsingTask.parseMediaFile(url)
 
         val mediaUrl : String? = parsingTask.mediaUrl

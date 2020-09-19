@@ -1,7 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
-import android.util.Log
+import android.net.Uri
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier.FileType
+import java.lang.RuntimeException
 
 class DownloaderIdentifier() {
 
@@ -31,6 +33,30 @@ class DownloaderIdentifier() {
                 }
             }
             return DownloadType.FullFile
+        }
+
+        @Throws(IllegalAccessException::class)
+        fun findTask(dirPath: Uri, downloadableItem: DownloadableItem): DownloaderTask {
+
+            val url = downloadableItem.url
+            val mediaUrl = downloadableItem.mediaUrl ?: throw IllegalAccessException("mediaUrl not found")
+            val filename = downloadableItem.filename ?: throw IllegalAccessException("filename not found")
+            val downloadTask = downloadableItem.downloadTask
+            val dir = dirPath.toString()
+
+            return when(findHost(downloadTask, mediaUrl)) {
+                DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                DownloadType.RTPTSFiles -> {
+                    if (filename.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                    else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                }
+                DownloadType.SICTSFiles -> {
+                    if (filename.endsWith("net_wide")) DownloaderTask(mediaUrl, dir, filename, downloadableItem)
+                    else  SICTSDownloaderTask(url, mediaUrl, dir, filename, downloadableItem)
+                }
+                null -> throw IllegalAccessException("downloaderTask not found")
+            }
         }
     }
 

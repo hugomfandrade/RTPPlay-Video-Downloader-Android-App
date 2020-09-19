@@ -23,7 +23,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
 
             if (task.isValid(metadata.urlString) && task.parseMediaFile(metadata.urlString)) {
                 val part = metadata.suffix
-                val originalFilename = task.getMediaFileName(metadata.urlString, task.mediaUrl)
+                val originalFilename = task.filename ?: "unknown"
 
                 if (part != null) {
                     val lastDot = originalFilename.lastIndexOf(".")

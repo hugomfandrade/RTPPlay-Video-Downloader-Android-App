@@ -2,7 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import android.util.Log
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV2
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV3
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -46,7 +46,7 @@ open class RTPPlayTSDownloaderTask(private val url : String?,
             // try reparse
             if (tsUrls.isEmpty() && url != null) {
                 Log.d(TAG, "try reparse $url")
-                val parsingTask = RTPPlayParsingTaskV2()
+                val parsingTask = RTPPlayParsingTaskV3()
                 parsingTask.parseMediaFile(url)
                 val parsingMediaUrl = parsingTask.mediaUrl
                 if (parsingMediaUrl != null) {

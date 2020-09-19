@@ -5,6 +5,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.io.IOException
 
+@Deprecated(message = "use a more recent SIC parser")
 open class SICParsingTaskV2 : SICParsingTask() {
 
     override fun getVideoFile(url: String): String? {

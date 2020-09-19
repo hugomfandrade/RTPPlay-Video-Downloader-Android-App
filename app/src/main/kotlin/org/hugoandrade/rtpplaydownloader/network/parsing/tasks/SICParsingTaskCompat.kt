@@ -2,9 +2,9 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 class SICParsingTaskCompat : ParsingTask() {
 
-    val v1 = SICParsingTask()
-    val v2 = SICParsingTaskV2()
-    val v3 = SICParsingTaskV3()
+    private val v1 = SICParsingTask()
+    private val v2 = SICParsingTaskV2()
+    private val v3 = SICParsingTaskV3()
 
     override fun parseMediaFile(url: String): Boolean {
 
