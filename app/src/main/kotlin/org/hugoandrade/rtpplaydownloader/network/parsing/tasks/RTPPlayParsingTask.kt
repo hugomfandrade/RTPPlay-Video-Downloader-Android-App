@@ -110,7 +110,7 @@ open class RTPPlayParsingTask : ParsingTask() {
         return RTPPlayUtils.getMediaFileName(url, videoFile)
     }
 
-    fun getThumbnailPath(url: String): String? {
+    override fun getThumbnailPath(url: String): String? {
         return RTPPlayUtils.getThumbnailPath(url)
     }
 }

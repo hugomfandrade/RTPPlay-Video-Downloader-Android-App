@@ -54,7 +54,6 @@ private constructor() {
 
                 val connMgr = context
                         .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                        ?: return false
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     val networks = connMgr.allNetworks

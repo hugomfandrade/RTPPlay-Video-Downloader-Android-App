@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
@@ -59,32 +58,9 @@ open class SICParsingTaskV3 : SICParsingTaskV2() {
     }
 
     override fun getMediaFileName(url: String, videoFile: String?): String {
-
-        try {
-            val doc: Document?
-
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return videoFile ?: url
-            }
-
-            val titleElements = doc?.getElementsByTag("title")
-
-            if (videoFile != null && titleElements != null && titleElements.size > 0) {
-
-                val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
-                        .replace("SIC.Noticias.", "")
-                        .replace("SIC.Radical.", "")
-                        .replace("SIC.", "")
-
-                return "$title.ts"
-            }
-        }
-        catch (e : java.lang.Exception) {
-            e.printStackTrace()
-        }
-
-        return videoFile?:url
+        return RTPPlayUtils.getMediaFileName(url, videoFile)
+                .replace("SIC.Noticias.", "")
+                .replace("SIC.Radical.", "")
+                .replace("SIC.", "") + ".ts"
     }
 }

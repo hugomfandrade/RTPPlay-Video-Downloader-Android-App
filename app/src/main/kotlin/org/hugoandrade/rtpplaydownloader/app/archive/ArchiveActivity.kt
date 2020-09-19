@@ -60,7 +60,7 @@ class ArchiveActivity : ActivityBase() {
                 synchronized(this@ArchiveActivity.downloadableItems) {
 
                     for (item in result) {
-                        downloadableItems.putIfAbsent(item.id ?: -1, item)
+                        downloadableItems.putIfAbsent(item.id, item)
                     }
                 }
 

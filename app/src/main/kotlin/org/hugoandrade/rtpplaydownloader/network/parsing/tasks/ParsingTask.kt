@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 
 abstract class ParsingTask {
 
@@ -20,5 +21,11 @@ abstract class ParsingTask {
 
     abstract fun parseMediaFile(url: String): Boolean
 
-    protected abstract fun getMediaFileName(url: String, videoFile: String?): String
+    protected open fun getMediaFileName(url: String, videoFile: String?): String {
+        return RTPPlayUtils.getMediaFileName(url, videoFile)
+    }
+
+    protected open fun getThumbnailPath(url: String): String? {
+        return RTPPlayUtils.getThumbnailFromTwitterMetadata(url)
+    }
 }

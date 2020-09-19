@@ -25,7 +25,6 @@ private constructor() {
                 if (mediaFileUrl != null && titleElements != null && titleElements.size > 0) {
 
                     val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
-                            .replace(".RTP.Play.RTP", "")
 
                     if (mediaFileUrl.indexOf(".mp4") >= 0) {  // is video file
 
@@ -97,6 +96,48 @@ private constructor() {
                 e.printStackTrace()
             }
 
+            return null
+        }
+
+        fun getThumbnailFromTwitterMetadata(url: String) : String? {
+            try {
+                val doc: Document
+
+                try {
+                    doc = Jsoup.connect(url).timeout(10000).get()
+                } catch (ignored: IOException) {
+                    return null
+                }
+
+                val headElements = doc.getElementsByTag("head")?:return null
+
+                for (headElement in headElements.iterator()) {
+
+                    val metaElements = headElement.getElementsByTag("meta")?: Elements()
+
+                    for (metaElement in metaElements.iterator()) {
+
+                        if (!metaElement.hasAttr("property") ||
+                                !metaElement.hasAttr("name") ||
+                                !metaElement.hasAttr("content") ||
+                                metaElement.attr("name") != "twitter:image" ||
+                                metaElement.attr("property") != "og:image") {
+                            continue
+                        }
+
+                        val thumbnail = metaElement.attr("content")
+                        if (thumbnail.isNullOrEmpty()) {
+                            continue
+                        }
+                        else {
+                            return thumbnail
+                        }
+                    }
+                }
+            }
+            catch (e : java.lang.Exception) {
+                e.printStackTrace()
+            }
             return null
         }
 

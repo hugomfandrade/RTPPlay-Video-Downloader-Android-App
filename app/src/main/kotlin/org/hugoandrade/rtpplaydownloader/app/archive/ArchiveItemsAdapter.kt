@@ -127,7 +127,7 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
     }
 
     fun add(downloadableItem: DownloadableItem) {
-        val id = downloadableItem.id ?: -1
+        val id = downloadableItem.id
         synchronized(downloadableItemList) {
 
             if (!downloadableItemList.contains(downloadableItem)) {

@@ -176,7 +176,7 @@ class DownloadService : Service() {
     private val downloadMap : LinkedHashMap<Int, DownloadableItemAction> = LinkedHashMap()
 
     private fun start(downloadableItemAction: DownloadableItemAction) {
-        val itemID: Int = downloadableItemAction.item.id ?: -1
+        val itemID: Int = downloadableItemAction.item.id
 
         if (downloadMap.containsKey(downloadableItemAction.item.id)) return
 

@@ -91,7 +91,7 @@ class TVIPlayerParsingTask : ParsingTask() {
     }
 
 
-    private fun getThumbnailPath(url: String): String? {
+    override fun getThumbnailPath(url: String): String? {
         try {
             val doc = Jsoup.connect(url).timeout(10000).get()
             val scriptElements = doc.getElementsByTag("script")
