@@ -30,7 +30,7 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
 
                 for (dataNode: DataNode in scriptElement.dataNodes()) {
 
-                    val scriptText: String = dataNode.wholeData
+                    val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
 
                     if (!scriptText.contains("RTPPlayer({")) continue
 
@@ -38,7 +38,7 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
 
                         val rtpPlayerSubString: String = scriptText
 
-                        for (i in arrayOf("file: \"", "file : \"")) {
+                        for (i in arrayOf("file:\"", "file: \"", "file : \"")) {
                             if (rtpPlayerSubString.indexOf(i) >= 0) {
                                 return rtpPlayerSubString.substring(
                                         ParsingUtils.indexOfEx(rtpPlayerSubString, i),
