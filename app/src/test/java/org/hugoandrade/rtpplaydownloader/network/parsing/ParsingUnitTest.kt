@@ -129,6 +129,13 @@ class ParsingUnitTest {
         System.err.println("successfully parsed: ")
         System.err.println(mediaUrl)
 
+        val tsPlaylist = parsingTask.getTSPlaylist()
+
+        System.err.println("ts Urls are: ")
+        System.err.println(tsPlaylist?.getTSUrls())
+
+
+        if (true) return
         val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
 
         System.err.println(mediaFilename)

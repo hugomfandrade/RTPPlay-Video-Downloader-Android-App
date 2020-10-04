@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
@@ -90,7 +91,6 @@ class TVIPlayerParsingTask : ParsingTask() {
         return videoFile?:url
     }
 
-
     override fun getThumbnailPath(url: String): String? {
         try {
             val doc = Jsoup.connect(url).timeout(10000).get()
@@ -100,7 +100,7 @@ class TVIPlayerParsingTask : ParsingTask() {
                     for (dataNode in element.dataNodes()) {
                         val scriptText = dataNode.wholeData
                         if (scriptText.contains("$('#player').iolplayer({")) {
-                            val scriptTextStart = scriptText.substring(indexOfEx(scriptText, "\"cover\":\""))
+                            val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"cover\":\""))
                             return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
                         }
                     }
@@ -139,7 +139,7 @@ class TVIPlayerParsingTask : ParsingTask() {
                     for (dataNode in element.dataNodes()) {
                         val scriptText = dataNode.wholeData
                         if (scriptText.contains("$('#player').iolplayer({")) {
-                            val scriptTextStart = scriptText.substring(indexOfEx(scriptText, "\"videoUrl\":\""))
+                            val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"videoUrl\":\""))
                             return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
                         }
                     }
@@ -148,12 +148,5 @@ class TVIPlayerParsingTask : ParsingTask() {
         } catch (ignored: java.lang.Exception) {
         }
         return null
-    }
-
-    private fun indexOfEx(string : String, subString: String) : Int {
-        if (string.contains(subString)) {
-            return string.indexOf(subString) + subString.length
-        }
-        return 0
     }
 }

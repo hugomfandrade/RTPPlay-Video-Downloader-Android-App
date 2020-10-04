@@ -1,14 +1,38 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 import java.io.IOException
+import java.net.URL
+import java.util.*
+import kotlin.collections.ArrayList
 
-open class SICParsingTaskV3 : SICParsingTaskV2() {
+open class SICParsingTaskV3 : SICParsingTaskV2(), TSParsingTask {
+
+    private var playlist: TSPlaylist? = null
+
+    override fun parseMediaFile(url: String): Boolean {
+        val parsed = super.parseMediaFile(url)
+
+        playlist = getM3U8Files(mediaUrl)
+
+        return parsed
+    }
 
     override fun getVideoFile(url: String): String? {
+        return getM3U8Playlist(url)
+    }
+
+    override fun getTSPlaylist(): TSPlaylist? {
+        return playlist
+    }
+
+    private fun getM3U8Playlist(url: String): String? {
         try {
             val doc: Document?
 
@@ -55,6 +79,12 @@ open class SICParsingTaskV3 : SICParsingTaskV2() {
         }
 
         return null
+    }
+
+    private fun getM3U8Files(playlistUrl: String?): TSPlaylist? {
+        if (playlistUrl == null) return null
+
+        return TSUtils.getCompleteM3U8Playlist(playlistUrl)
     }
 
     override fun getMediaFileName(url: String, videoFile: String?): String {
