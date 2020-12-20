@@ -151,6 +151,8 @@ private constructor() {
         }
 
         private fun internalGetUniqueFilenameAndLock(originalFile : File, index : Int) : String  {
+            val lastIndexOf = originalFile.name.lastIndexOf(".")
+            if (lastIndexOf < 0) return originalFile.name;
             val extension = originalFile.name.substring(originalFile.name.lastIndexOf("."))
             val filename = originalFile.name.substring(0, originalFile.name.lastIndexOf("."))
             val fullFilename = "$filename($index)$extension"

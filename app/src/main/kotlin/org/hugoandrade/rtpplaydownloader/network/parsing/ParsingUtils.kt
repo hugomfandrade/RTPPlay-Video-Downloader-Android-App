@@ -1,5 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
+import org.hugoandrade.rtpplaydownloader.network.utils.Predicate
+
 class ParsingUtils
 
 /**
@@ -18,6 +20,13 @@ private constructor() {
                 return string.indexOf(subString) + subString.length
             }
             return 0
+        }
+
+        fun <T> findFirst(tasks : List<T>, predicate: Predicate<T>) : T? {
+            for (task in tasks) {
+                if (predicate.test(task)) return task
+            }
+            return null
         }
     }
 }

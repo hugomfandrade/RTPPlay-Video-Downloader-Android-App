@@ -19,7 +19,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
         val metadataList: ArrayList<Metadata> = getUrls(url)
 
         metadataList.forEach(action = { metadata ->
-            val task = RTPPlayParsingTaskCompat()
+            val task = RTPPlayParsingTaskIdentifier()
 
             if (task.isValid(metadata.urlString) && task.parseMediaFile(metadata.urlString)) {
                 val part = metadata.suffix
@@ -39,7 +39,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
     }
 
     override fun isValid(url: String) : Boolean {
-        if (!RTPPlayParsingTaskCompat().isValid(url)) {
+        if (!RTPPlayParsingTaskIdentifier().isValid(url)) {
             return false
         }
 
