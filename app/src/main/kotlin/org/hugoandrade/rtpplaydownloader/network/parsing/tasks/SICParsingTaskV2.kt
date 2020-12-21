@@ -1,23 +1,15 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import java.io.IOException
 
 open class SICParsingTaskV2 : SICParsingTask() {
 
-    override fun getVideoFile(url: String): String? {
+    override fun getMediaUrl(doc: Document): String? {
         try {
-            val doc: Document?
 
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return null
-            }
-
-            val videoElements = doc?.getElementsByTag("video")
+            val videoElements = doc.getElementsByTag("video")
+            val url = this.url ?: ""
 
             if (videoElements != null) {
                 for (videoElement in videoElements.iterator()) {
@@ -49,7 +41,7 @@ open class SICParsingTaskV2 : SICParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(url: String, videoFile: String?): String {
-        return super.getMediaFileName(url, videoFile) + ".ts"
+    override fun getMediaFileName(doc: Document): String {
+        return super.getMediaFileName(doc) + ".ts"
     }
 }

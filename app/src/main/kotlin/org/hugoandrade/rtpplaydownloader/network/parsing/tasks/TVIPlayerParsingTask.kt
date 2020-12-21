@@ -2,59 +2,25 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
+import java.io.*
 import java.net.URL
 import java.nio.charset.Charset
 
 class TVIPlayerParsingTask : ParsingTask() {
 
-    override fun parseMediaFile(url: String): Boolean {
-
-        this.url = url
-        this.mediaUrl = getM3U8File(url)?: return false
-        this.filename = getMediaFileName(url, mediaUrl)
-        this.thumbnailUrl = getThumbnailPath(url)
-
-        try {
-            URL(mediaUrl)
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
-
-        return true
-    }
-
     override fun isValid(url: String) : Boolean {
-
-        if (!NetworkUtils.isValidURL(url)) {
-            return false
-        }
 
         val isFileType: Boolean = url.contains("tviplayer.iol.pt")
 
-        if (isFileType) {
-
-            val videoFile: String? = getM3U8File(url)
-
-            return videoFile != null
-        }
-
-        return false
+        return isFileType || super.isValid(url)
     }
 
-    private fun getM3U8File(url: String): String? {
+    override fun getMediaUrl(doc: Document): String? {
 
         try {
             val jwiol = getJWIOL() ?: return null
-            val m3u8Url = getM3U8ChunkUrl(url) ?: return null
+            val m3u8Url = getM3U8ChunkUrl(doc) ?: return null
             val m3u8 = "$m3u8Url?wmsAuthSign=$jwiol"
 
             return m3u8
@@ -64,19 +30,11 @@ class TVIPlayerParsingTask : ParsingTask() {
         }
     }
 
-    override fun getMediaFileName(url: String, videoFile: String?): String {
+    override fun getMediaFileName(doc: Document): String {
         try {
-            val doc: Document?
+            val titleElements = doc.getElementsByTag("title")
 
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return videoFile ?: url
-            }
-
-            val titleElements = doc?.getElementsByTag("title")
-
-            if (videoFile != null && titleElements != null && titleElements.size > 0) {
+            if (mediaUrl != null && titleElements != null && titleElements.size > 0) {
 
                 val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
 
@@ -88,12 +46,11 @@ class TVIPlayerParsingTask : ParsingTask() {
             e.printStackTrace()
         }
 
-        return videoFile?:url
+        return mediaUrl?:url?: null.toString()
     }
 
-    override fun getThumbnailPath(url: String): String? {
+    override fun getThumbnailPath(doc: Document): String? {
         try {
-            val doc = Jsoup.connect(url).timeout(10000).get()
             val scriptElements = doc.getElementsByTag("script")
             if (scriptElements != null) {
                 for (element in scriptElements) {
@@ -107,6 +64,7 @@ class TVIPlayerParsingTask : ParsingTask() {
                 }
             }
         } catch (ignored: java.lang.Exception) {
+            ignored.printStackTrace()
         }
         return null
     }
@@ -130,9 +88,8 @@ class TVIPlayerParsingTask : ParsingTask() {
         return null
     }
 
-    private fun getM3U8ChunkUrl(url: String): String? {
+    private fun getM3U8ChunkUrl(doc: Document): String? {
         try {
-            val doc = Jsoup.connect(url).timeout(10000).get()
             val scriptElements = doc.getElementsByTag("script")
             if (scriptElements != null) {
                 for (element in scriptElements) {
@@ -146,6 +103,7 @@ class TVIPlayerParsingTask : ParsingTask() {
                 }
             }
         } catch (ignored: java.lang.Exception) {
+            ignored.printStackTrace()
         }
         return null
     }

@@ -2,6 +2,8 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.Predicate
+import org.jsoup.nodes.Document
+import java.lang.RuntimeException
 
 class SICParsingTaskIdentifier : ParsingTask() {
 
@@ -34,8 +36,12 @@ class SICParsingTaskIdentifier : ParsingTask() {
         return ParsingUtils.findFirst(parsingTasks, predicate)
     }
 
+    override fun getMediaUrl(doc: Document): String? {
+        throw RuntimeException("delegated not defined")
+    }
+
     // never called within class
-    override fun getMediaFileName(url: String, videoFile: String?): String {
-        return RTPPlayUtils.getMediaFileName(url, videoFile)
+    override fun getMediaFileName(doc: Document): String {
+        throw RuntimeException("delegated not defined")
     }
 }

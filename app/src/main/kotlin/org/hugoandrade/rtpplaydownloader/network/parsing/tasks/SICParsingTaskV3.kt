@@ -4,45 +4,33 @@ import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
-import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
-import java.io.IOException
-import java.net.URL
-import java.util.*
-import kotlin.collections.ArrayList
 
 open class SICParsingTaskV3 : SICParsingTaskV2(), TSParsingTask {
 
     private var playlist: TSPlaylist? = null
 
-    override fun parseMediaFile(url: String): Boolean {
-        val parsed = super.parseMediaFile(url)
+    override fun parseMediaFile(doc: Document): Boolean {
+        val parsed = super.parseMediaFile(doc)
 
         playlist = getM3U8Files(mediaUrl)
 
         return parsed
     }
 
-    override fun getVideoFile(url: String): String? {
-        return getM3U8Playlist(url)
+    override fun getMediaUrl(doc: Document): String? {
+        return getM3U8Playlist(doc)
     }
 
     override fun getTSPlaylist(): TSPlaylist? {
         return playlist
     }
 
-    private fun getM3U8Playlist(url: String): String? {
+    private fun getM3U8Playlist(doc: Document): String? {
         try {
-            val doc: Document?
 
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return null
-            }
-
-            val scriptElements = doc?.getElementsByTag("script") ?: return null
+            val scriptElements = doc.getElementsByTag("script") ?: return null
 
             for (scriptElement in scriptElements.iterator()) {
 
@@ -87,8 +75,8 @@ open class SICParsingTaskV3 : SICParsingTaskV2(), TSParsingTask {
         return TSUtils.getCompleteM3U8Playlist(playlistUrl)
     }
 
-    override fun getMediaFileName(url: String, videoFile: String?): String {
-        return RTPPlayUtils.getMediaFileName(url, videoFile)
+    override fun getMediaFileName(doc: Document): String {
+        return RTPPlayUtils.getMediaFileName(doc, url ?: "", mediaUrl)
                 .replace("SIC.Noticias.", "")
                 .replace("SIC.Radical.", "")
                 .replace("SIC.", "") + ".ts"

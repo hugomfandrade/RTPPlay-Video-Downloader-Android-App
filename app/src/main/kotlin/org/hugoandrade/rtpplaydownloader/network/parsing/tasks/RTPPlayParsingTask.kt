@@ -1,60 +1,20 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
-import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
-import java.io.IOException
-import java.net.URL
 
 @Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTask : ParsingTask() {
 
-    override fun parseMediaFile(url: String): Boolean {
-
-        this.url = url
-        this.mediaUrl = getVideoFile(url) ?: return false
-        this.filename = getMediaFileName(url, mediaUrl)
-        this.thumbnailUrl = getThumbnailPath(url)
-
-        try {
-            URL(mediaUrl)
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
-
-        return true
-    }
-
     override fun isValid(url: String) : Boolean {
-
-        if (!NetworkUtils.isValidURL(url)) {
-            return false
-        }
 
         val isFileType: Boolean = url.contains("www.rtp.pt/play")
 
-        if (isFileType) {
-
-            val videoFile: String? = getVideoFile(url)
-
-            return videoFile != null
-        }
-
-        return false
+        return isFileType || super.isValid(url)
     }
 
-    open fun getVideoFile(url: String): String? {
-        val doc: Document
-
-        try {
-            doc = Jsoup.connect(url).timeout(10000).get()
-        } catch (ignored: IOException) {
-            return null
-        }
+    override fun getMediaUrl(doc: Document): String? {
 
         try {
             val scriptElements = doc.getElementsByTag("script")?: return null
@@ -106,11 +66,11 @@ open class RTPPlayParsingTask : ParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(url: String, videoFile: String?): String {
-        return RTPPlayUtils.getMediaFileName(url, videoFile)
+    override fun getMediaFileName(doc: Document): String {
+        return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
     }
 
-    override fun getThumbnailPath(url: String): String? {
-        return RTPPlayUtils.getThumbnailPath(url)
+    override fun getThumbnailPath(doc: Document): String? {
+        return RTPPlayUtils.getThumbnailPath(doc)
     }
 }

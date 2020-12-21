@@ -5,11 +5,38 @@ import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayTSDownloaderTas
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV2
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV3
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV4
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
+import org.junit.Assert
 import org.junit.Test
+import java.io.File
 
 class ParsingUnitTestRTPPlay : ParsingUnitTest() {
+
+    @Test
+    fun rtpPlayV4FromResourceHTML() {
+
+        val filename = "RTPPlay.20201211.Ultimo.Apaga.a.Luz.html";
+
+        // get file from resources
+        val url = javaClass.classLoader?.getResource(filename)?.file
+                ?: return Assert.fail("failed to get file from resources")
+
+        val parsingTask = RTPPlayParsingTaskV3()
+        val parsed = parsingTask.parseMediaFile(File(url))
+
+        val mediaUrl : String? = parsingTask.mediaUrl
+        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+
+        System.err.println("successfully parsed ? " + parsed)
+        System.err.println(mediaUrl)
+        System.err.println(mediaFilename)
+
+        val downloaderTask = RTPPlayTSDownloaderTask(url, mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
+        downloaderTask.downloadMediaFile()
+
+    }
 
     @Test
     fun rtpPlayV3Player() {

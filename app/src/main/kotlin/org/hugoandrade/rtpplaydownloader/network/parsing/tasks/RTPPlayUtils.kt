@@ -4,8 +4,6 @@ import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
-import java.io.IOException
-import java.net.SocketTimeoutException
 
 class RTPPlayUtils
 
@@ -18,6 +16,7 @@ private constructor() {
     companion object {
 
         fun getMediaFileName(doc: Document, srcUrl: String, mediaFileUrl: String?): String {
+
             try {
 
                 val titleElements = doc.getElementsByTag("title")
@@ -44,24 +43,18 @@ private constructor() {
             return mediaFileUrl?:srcUrl
         }
 
-        fun getMediaFileName(srcUrl: String, mediaFileUrl: String?): String {
+        fun getMediaFileName(url: String, mediaFileUrl: String?): String {
 
             try {
-                val doc: Document
+                val doc: Document = Jsoup.connect(url).timeout(10000).get()
 
-                try {
-                    doc = Jsoup.connect(srcUrl).timeout(10000).get()
-                } catch (ignored: IOException) {
-                    return mediaFileUrl ?: srcUrl
-                }
-
-                return getMediaFileName(doc, srcUrl, mediaFileUrl)
+                return getMediaFileName(doc, url, mediaFileUrl)
             }
             catch (e : java.lang.Exception) {
                 e.printStackTrace()
             }
 
-            return mediaFileUrl?:srcUrl
+            return mediaFileUrl ?: url
         }
 
         fun getThumbnailPath(doc: Document): String? {
@@ -99,15 +92,32 @@ private constructor() {
             return null
         }
 
+        fun getThumbnailPath(url: String): String? {
+
+            try {
+                val doc = Jsoup.connect(url).timeout(10000).get()
+                return getThumbnailPath(doc)
+            }
+            catch (e : java.lang.Exception) {
+                e.printStackTrace()
+            }
+
+            return null
+        }
+
         fun getThumbnailFromTwitterMetadata(url: String) : String? {
             try {
-                val doc: Document
+                val doc = Jsoup.connect(url).timeout(10000).get()
+                return getThumbnailFromTwitterMetadata(doc)
+            }
+            catch (e : java.lang.Exception) {
+                e.printStackTrace()
+            }
+            return null
+        }
 
-                try {
-                    doc = Jsoup.connect(url).timeout(10000).get()
-                } catch (ignored: IOException) {
-                    return null
-                }
+        fun getThumbnailFromTwitterMetadata(doc: Document) : String? {
+            try {
 
                 val headElements = doc.getElementsByTag("head")?:return null
 
@@ -138,26 +148,6 @@ private constructor() {
             catch (e : java.lang.Exception) {
                 e.printStackTrace()
             }
-            return null
-        }
-
-        fun getThumbnailPath(srcUrl: String): String? {
-
-            try {
-                val doc: Document
-
-                try {
-                    doc = Jsoup.connect(srcUrl).timeout(10000).get()
-                } catch (ignored: IOException) {
-                    return null
-                }
-
-                return getThumbnailPath(doc)
-            }
-            catch (e : java.lang.Exception) {
-                e.printStackTrace()
-            }
-
             return null
         }
     }
