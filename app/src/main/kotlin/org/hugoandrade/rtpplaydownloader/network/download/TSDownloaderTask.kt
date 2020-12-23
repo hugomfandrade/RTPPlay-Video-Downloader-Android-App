@@ -1,32 +1,24 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
-import android.util.Log
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV2
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV3
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import kotlin.collections.ArrayList
 
-open class SICTSDownloaderTask(private val url : String?,
-                               private val mediaUrl : String,
-                               private val dirPath : String,
-                               private val filename : String,
-                               private val listener : Listener) :
+class TSDownloaderTask(private val url : String?,
+                       private var playlistUrl : String,
+                       private val dirPath : String,
+                       private val filename : String,
+                       private val listener : Listener,
+                       private val tsUrlsValidator: TSUtils.Validator<String>? = null,
+                       private val reParsingTask : TSParsingTask? = null) :
 
         DownloaderTask(listener) {
 
     override val TAG : String = javaClass.simpleName
-
-    private val m3u8Validator = object : TSUtils.Validator<String>{
-        override fun isValid(o: String): Boolean {
-            return o.contains(".m3u8")
-        }
-    }
-
-    private val retryParsingTasks : List<ParsingTask> = listOf(SICParsingTaskV2(), SICParsingTaskV3())
 
     override fun downloadMediaFile() {
 
@@ -37,41 +29,42 @@ open class SICTSDownloaderTask(private val url : String?,
 
         try {
             try {
-                URL(mediaUrl)
+                URL(playlistUrl)
             }
             catch (e: Exception) {
                 dispatchDownloadFailed("URL no longer exists")
                 return
             }
 
-            val m3u8: String = mediaUrl
+            val m3u8: String = playlistUrl
             val baseUrl: String = m3u8.substring(0, m3u8.lastIndexOf("/") + 1)
-            var playlist = TSUtils.getM3U8Playlist(m3u8, m3u8Validator)
 
-            if (playlist == null && url != null) {
+            /*
+            if (url != null && reParsingTask != null) {
                 // try reparse
                 Log.d(TAG, "try reparse $url")
-
-                for (parsingTask in retryParsingTasks) {
-                    parsingTask.parseMediaFile(url)
-                    val parsingMediaUrl = parsingTask.mediaUrl
-                    if (parsingMediaUrl != null) {
-                        playlist = TSUtils.getM3U8Playlist(parsingMediaUrl, m3u8Validator)
-                    }
-                    if (playlist != null) {
-                        break
-                    }
+                val parsingTask = reParsingTask
+                parsingTask.parseMediaFile(url)
+                val parsingMediaUrl = parsingTask.mediaUrl
+                if (parsingMediaUrl != null) {
+                    playlistUrl = TSUtils.getM3U8Playlist(parsingMediaUrl)
                 }
             }
-
-            val playlistUrl = baseUrl + playlist
-            val tsUrls = TSUtils.getTSUrls(playlistUrl)
-
-            if (tsUrls.isEmpty()) {
-                dispatchDownloadFailed("failed to get ts files")
-                return
+            val playlistUrl = baseUrl + playlist*/
+            val tsUrls = if(tsUrlsValidator == null) {
+                TSUtils.getTSUrls(playlistUrl)
+            }
+            else {
+                TSUtils.getTSUrls(playlistUrl, tsUrlsValidator)
             }
 
+            // full urls
+            /*
+            val tsFullUrls: ArrayList<String> = tsUrls
+                    .stream()
+                    .map { tsUrl -> baseUrl + tsUrl }
+                    .collect(Collectors.toList())
+            */
             val tsFullUrls: ArrayList<String> = ArrayList()
             for (tsUrl in tsUrls) {
                 val tsFullUrl = baseUrl + tsUrl

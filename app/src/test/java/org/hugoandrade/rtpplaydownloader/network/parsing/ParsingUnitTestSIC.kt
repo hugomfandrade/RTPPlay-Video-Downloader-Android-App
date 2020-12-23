@@ -2,7 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderIdentifier
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.RawDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.download.SICTSDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
@@ -128,7 +128,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         System.err.println(mediaUrl)
         System.err.println(mediaFilename)
 
-        val sicTSDownloaderTask = DownloaderTask(mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
+        val sicTSDownloaderTask = RawDownloaderTask(mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
         sicTSDownloaderTask.downloadMediaFile()
     }
 }

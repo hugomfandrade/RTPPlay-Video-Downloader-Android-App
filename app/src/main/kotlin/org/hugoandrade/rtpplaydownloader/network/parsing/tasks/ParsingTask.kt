@@ -29,7 +29,7 @@ abstract class ParsingTask {
 
         try {
             val doc = Jsoup.connect(url).timeout(10000).get()
-            val mediaUrl: String? = getMediaUrl(doc)
+            val mediaUrl: String? = parseMediaUrl(doc)
 
             return mediaUrl != null
         }
@@ -67,9 +67,9 @@ abstract class ParsingTask {
 
     open fun parseMediaFile(doc: Document): Boolean {
 
-        this.mediaUrl = getMediaUrl(doc) ?: return false
-        this.filename = getMediaFileName(doc)
-        this.thumbnailUrl = getThumbnailPath(doc)
+        this.mediaUrl = parseMediaUrl(doc) ?: return false
+        this.filename = parseMediaFileName(doc)
+        this.thumbnailUrl = parseThumbnailPath(doc)
 
         try {
             URL(mediaUrl)
@@ -82,13 +82,13 @@ abstract class ParsingTask {
         return true
     }
 
-    abstract fun getMediaUrl(doc: Document): String?
+    abstract fun parseMediaUrl(doc: Document): String?
 
-    protected open fun getMediaFileName(doc: Document): String {
+    protected open fun parseMediaFileName(doc: Document): String {
         return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
     }
 
-    protected open fun getThumbnailPath(doc: Document): String? {
+    protected open fun parseThumbnailPath(doc: Document): String? {
         return RTPPlayUtils.getThumbnailFromTwitterMetadata(doc)
     }
 }

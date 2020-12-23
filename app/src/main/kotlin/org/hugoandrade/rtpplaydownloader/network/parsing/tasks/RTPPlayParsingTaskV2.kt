@@ -7,7 +7,7 @@ import org.jsoup.nodes.Document
 @Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTaskV2 : RTPPlayParsingTask() {
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
 
         try {
             val scriptElements = doc.getElementsByTag("script") ?: return null

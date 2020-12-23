@@ -14,7 +14,7 @@ open class RTPPlayParsingTask : ParsingTask() {
         return isFileType || super.isValid(url)
     }
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
 
         try {
             val scriptElements = doc.getElementsByTag("script")?: return null
@@ -66,11 +66,11 @@ open class RTPPlayParsingTask : ParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document): String {
         return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
     }
 
-    override fun getThumbnailPath(doc: Document): String? {
+    override fun parseThumbnailPath(doc: Document): String? {
         return RTPPlayUtils.getThumbnailPath(doc)
     }
 }

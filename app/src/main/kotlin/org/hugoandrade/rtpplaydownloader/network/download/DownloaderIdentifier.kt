@@ -3,9 +3,8 @@ package org.hugoandrade.rtpplaydownloader.network.download
 import android.net.Uri
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier.FileType
-import java.lang.RuntimeException
 
-class DownloaderIdentifier() {
+class DownloaderIdentifier {
 
     init {
         throw AssertionError()
@@ -49,14 +48,14 @@ class DownloaderIdentifier() {
             val downloadTask = downloadableItem.downloadTask
 
             return when(findHost(downloadTask, mediaUrl)) {
-                DownloadType.FullFile -> DownloaderTask(mediaUrl, dir, filename, listener)
+                DownloadType.FullFile -> RawDownloaderTask(mediaUrl, dir, filename, listener)
                 DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, listener)
                 DownloadType.RTPTSFiles -> {
-                    if (filename.endsWith(".mp3")) DownloaderTask(mediaUrl, dir, filename, listener)
+                    if (filename.endsWith(".mp3")) RawDownloaderTask(mediaUrl, dir, filename, listener)
                     else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, listener)
                 }
                 DownloadType.SICTSFiles -> {
-                    if (filename.endsWith("net_wide")) DownloaderTask(mediaUrl, dir, filename, listener)
+                    if (filename.endsWith("net_wide")) RawDownloaderTask(mediaUrl, dir, filename, listener)
                     else  SICTSDownloaderTask(url, mediaUrl, dir, filename, listener)
                 }
                 null -> throw IllegalAccessException("downloaderTask not found")

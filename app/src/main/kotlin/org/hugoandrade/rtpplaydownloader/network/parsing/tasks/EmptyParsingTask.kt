@@ -4,7 +4,7 @@ import org.jsoup.nodes.Document
 
 class EmptyParsingTask : ParsingTask() {
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
         return null
     }
 

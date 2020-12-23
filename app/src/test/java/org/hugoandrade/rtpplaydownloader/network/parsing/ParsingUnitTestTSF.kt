@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.RawDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TSFParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
@@ -30,7 +30,7 @@ class ParsingUnitTestTSF : ParsingUnitTest() {
         System.err.println(mediaUrl)
         System.err.println(mediaFilename)
 
-        val downloaderTask = DownloaderTask(mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
+        val downloaderTask = RawDownloaderTask(mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
         downloaderTask.downloadMediaFile()
     }
 }

@@ -5,7 +5,7 @@ import org.jsoup.nodes.Element
 
 open class SICParsingTaskV2 : SICParsingTask() {
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
         try {
 
             val videoElements = doc.getElementsByTag("video")
@@ -41,7 +41,7 @@ open class SICParsingTaskV2 : SICParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(doc: Document): String {
-        return super.getMediaFileName(doc) + ".ts"
+    override fun parseMediaFileName(doc: Document): String {
+        return super.parseMediaFileName(doc) + ".ts"
     }
 }

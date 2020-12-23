@@ -7,27 +7,24 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-open class SICParsingTaskV3 : SICParsingTaskV2(), TSParsingTask {
+open class SICParsingTaskV3 : TSParsingTask() {
 
-    private var playlist: TSPlaylist? = null
+    override fun isValid(url: String) : Boolean {
 
-    override fun parseMediaFile(doc: Document): Boolean {
-        val parsed = super.parseMediaFile(doc)
+        val isFileType: Boolean =
+                url.contains("sicradical.sapo.pt") ||
+                url.contains("sicradical.pt") ||
+                url.contains("sicnoticias.sapo.pt") ||
+                url.contains("sicnoticias.pt") ||
+                url.contains("sic.sapo.pt") ||
+                url.contains("sic.pt")
 
-        playlist = getM3U8Files(mediaUrl)
-
-        return parsed
+        return isFileType || super.isValid(url)
     }
 
-    override fun getMediaUrl(doc: Document): String? {
-        return getM3U8Playlist(doc)
-    }
+    // get ts playlist
+    override fun parseMediaUrl(doc: Document): String? {
 
-    override fun getTSPlaylist(): TSPlaylist? {
-        return playlist
-    }
-
-    private fun getM3U8Playlist(doc: Document): String? {
         try {
 
             val scriptElements = doc.getElementsByTag("script") ?: return null
@@ -69,13 +66,13 @@ open class SICParsingTaskV3 : SICParsingTaskV2(), TSParsingTask {
         return null
     }
 
-    private fun getM3U8Files(playlistUrl: String?): TSPlaylist? {
-        if (playlistUrl == null) return null
+    override fun parseM3U8Playlist(): TSPlaylist? {
+        val playlistUrl = mediaUrl ?: return null
 
         return TSUtils.getCompleteM3U8Playlist(playlistUrl)
     }
 
-    override fun getMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document): String {
         return RTPPlayUtils.getMediaFileName(doc, url ?: "", mediaUrl)
                 .replace("SIC.Noticias.", "")
                 .replace("SIC.Radical.", "")

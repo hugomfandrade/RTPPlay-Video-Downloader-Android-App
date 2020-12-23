@@ -6,27 +6,25 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-open class RTPPlayParsingTaskV3 : RTPPlayParsingTask(), TSParsingTask {
+open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
-    private var playlist: TSPlaylist? = null
+    override fun isValid(url: String) : Boolean {
 
-    override fun parseMediaFile(doc: Document): Boolean {
-        val parsed = super.parseMediaFile(doc)
+        val isFileType: Boolean = url.contains("www.rtp.pt/play")
 
-        playlist = getM3U8Files(mediaUrl)
-
-        return parsed
+        return isFileType || super.isValid(url)
     }
 
-    override fun getMediaUrl(doc: Document): String? {
-        return getM3U8Playlist(doc)
+    override fun parseMediaFileName(doc: Document): String {
+        return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
     }
 
-    override fun getTSPlaylist(): TSPlaylist? {
-        return playlist
+    override fun parseThumbnailPath(doc: Document): String? {
+        return RTPPlayUtils.getThumbnailPath(doc)
     }
 
-    private fun getM3U8Playlist(doc: Document): String? {
+    // get playlist url
+    override fun parseMediaUrl(doc: Document): String? {
 
         try {
 
@@ -64,9 +62,9 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask(), TSParsingTask {
         return null
     }
 
-    private fun getM3U8Files(playlistUrl: String?): TSPlaylist? {
-        if (playlistUrl == null) return null
+    override fun parseM3U8Playlist(): TSPlaylist? {
+        val tsPlaylist = mediaUrl ?: return null
 
-        return TSPlaylist().add("DEFAULT", playlistUrl)
+        return TSPlaylist().add("DEFAULT", tsPlaylist)
     }
 }

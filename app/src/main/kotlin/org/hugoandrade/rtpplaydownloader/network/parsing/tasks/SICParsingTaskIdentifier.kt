@@ -36,12 +36,12 @@ class SICParsingTaskIdentifier : ParsingTask() {
         return ParsingUtils.findFirst(parsingTasks, predicate)
     }
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
         throw RuntimeException("delegated not defined")
     }
 
     // never called within class
-    override fun getMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document): String {
         throw RuntimeException("delegated not defined")
     }
 }

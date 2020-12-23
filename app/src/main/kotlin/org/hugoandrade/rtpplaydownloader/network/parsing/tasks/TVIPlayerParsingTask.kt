@@ -1,13 +1,16 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.nodes.Document
 import java.io.*
 import java.net.URL
 import java.nio.charset.Charset
 
-class TVIPlayerParsingTask : ParsingTask() {
+class TVIPlayerParsingTask : TSParsingTask() {
 
     override fun isValid(url: String) : Boolean {
 
@@ -16,7 +19,7 @@ class TVIPlayerParsingTask : ParsingTask() {
         return isFileType || super.isValid(url)
     }
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
 
         try {
             val jwiol = getJWIOL() ?: return null
@@ -30,7 +33,7 @@ class TVIPlayerParsingTask : ParsingTask() {
         }
     }
 
-    override fun getMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document): String {
         try {
             val titleElements = doc.getElementsByTag("title")
 
@@ -49,7 +52,7 @@ class TVIPlayerParsingTask : ParsingTask() {
         return mediaUrl?:url?: null.toString()
     }
 
-    override fun getThumbnailPath(doc: Document): String? {
+    override fun parseThumbnailPath(doc: Document): String? {
         try {
             val scriptElements = doc.getElementsByTag("script")
             if (scriptElements != null) {
@@ -106,5 +109,14 @@ class TVIPlayerParsingTask : ParsingTask() {
             ignored.printStackTrace()
         }
         return null
+    }
+
+    override fun parseM3U8Playlist(): TSPlaylist? {
+        //
+
+        val m3u8: String = mediaUrl ?: return null
+        val playlist = TSUtils.getM3U8Playlist(m3u8) ?: return null
+
+        return TSPlaylist().add("DEFAULT", playlist)
     }
 }

@@ -33,12 +33,12 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
         return tasks.size != 0
     }
 
-    override fun getMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document): String {
         // do nothing
         return null.toString()
     }
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
         // do nothing
         return null.toString()
     }

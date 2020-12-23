@@ -1,5 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
+/**
+ * TS Playlist for the many resolutions
+ */
 class TSPlaylist {
 
     private val tsFiles = HashMap<String, TSUrl>()

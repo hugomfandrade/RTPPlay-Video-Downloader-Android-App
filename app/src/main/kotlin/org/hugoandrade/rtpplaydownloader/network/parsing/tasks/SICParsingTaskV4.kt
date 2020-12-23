@@ -6,7 +6,7 @@ import org.jsoup.nodes.Document
 
 open class SICParsingTaskV4 : SICParsingTask() {
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
         try {
 
             val scriptElements = doc.getElementsByTag("script") ?: return null
@@ -49,7 +49,7 @@ open class SICParsingTaskV4 : SICParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document): String {
         return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
     }
 }

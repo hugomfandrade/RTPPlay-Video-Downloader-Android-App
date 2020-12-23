@@ -20,7 +20,7 @@ open class SICParsingTask : ParsingTask() {
         return isFileType || super.isValid(url)
     }
 
-    override fun getMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String? {
         try {
 
             val videoElements = doc.getElementsByTag("video")
@@ -54,7 +54,7 @@ open class SICParsingTask : ParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document): String {
 
         try {
 
