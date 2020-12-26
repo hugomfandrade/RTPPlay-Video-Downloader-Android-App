@@ -53,9 +53,4 @@ class TSFParsingTask : ParsingTask() {
 
         return null
     }
-
-    override fun parseMediaFileName(doc: Document): String {
-        return RTPPlayUtils.getMediaFileName(doc, url?:null.toString(), mediaUrl)
-                .replace(".RTP.Play.RTP", "")
-    }
 }

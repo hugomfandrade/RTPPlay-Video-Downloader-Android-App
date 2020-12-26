@@ -1,7 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import com.google.common.util.concurrent.AtomicDouble
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.download.*
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import kotlin.math.roundToInt
@@ -53,4 +55,68 @@ open class ParsingUnitTest {
     }
 
 
+
+    internal fun debug(parsingTask: TSParsingTask) {
+
+        val mediaUrl : String? = parsingTask.mediaUrl
+        val playlist : TSPlaylist? = parsingTask.getTSPlaylist()
+        val playlistUrl : String? = playlist?.getTSUrls()?.firstOrNull()?.url
+
+        System.err.println(playlist?.getTSUrls())
+        System.err.println(mediaUrl)
+        System.err.println(playlistUrl)
+    }
+
+    internal fun debug(parsingTask: ParsingTask) {
+
+        val mediaUrl : String? = parsingTask.mediaUrl
+
+        System.err.println(mediaUrl)
+    }
+
+    internal fun download(item: DownloadableItem) {
+
+
+        val downloaderTask = DownloaderIdentifier.findTask(testDir.absolutePath, item, defaultListener)
+
+        System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
+
+        downloaderTask.downloadMediaFile()
+    }
+
+    internal fun download(parsingTask: TSParsingTask) {
+
+        val mediaUrl : String? = parsingTask.mediaUrl
+        val playlist : TSPlaylist? = parsingTask.getTSPlaylist()
+        val playlistUrl : String = playlist?.getTSUrls()?.firstOrNull()?.url ?: ""
+        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+
+        val downloaderTask = TSDownloaderTask(
+                playlistUrl,
+                testDir.absolutePath,
+                mediaFilename,
+                defaultListener,
+                object : TSUtils.Validator<String> {
+                    override fun isValid(o: String): Boolean {
+                        return o.contains(".ts")
+                    }
+                }
+        )
+
+        downloaderTask.downloadMediaFile()
+    }
+
+    internal fun download(parsingTask: ParsingTask) {
+
+        val mediaUrl : String = parsingTask.mediaUrl ?: ""
+        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+
+        val downloaderTask = RawDownloaderTask(
+                mediaUrl,
+                testDir.absolutePath,
+                mediaFilename,
+                defaultListener)
+
+        downloaderTask.downloadMediaFile()
+    }
 }

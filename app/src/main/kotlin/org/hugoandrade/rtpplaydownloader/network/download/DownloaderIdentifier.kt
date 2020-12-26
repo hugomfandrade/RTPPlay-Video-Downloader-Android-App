@@ -49,14 +49,14 @@ class DownloaderIdentifier {
 
             return when(findHost(downloadTask, mediaUrl)) {
                 DownloadType.FullFile -> RawDownloaderTask(mediaUrl, dir, filename, listener)
-                DownloadType.TVITSFiles -> TVIPlayerTSDownloaderTask(url, mediaUrl, dir, filename, listener)
+                DownloadType.TVITSFiles -> TSDownloaderTask(mediaUrl, dir, filename, listener)
                 DownloadType.RTPTSFiles -> {
                     if (filename.endsWith(".mp3")) RawDownloaderTask(mediaUrl, dir, filename, listener)
-                    else  RTPPlayTSDownloaderTask(url, mediaUrl, dir, filename, listener)
+                    else  TSDownloaderTask(mediaUrl, dir, filename, listener)
                 }
                 DownloadType.SICTSFiles -> {
                     if (filename.endsWith("net_wide")) RawDownloaderTask(mediaUrl, dir, filename, listener)
-                    else  SICTSDownloaderTask(url, mediaUrl, dir, filename, listener)
+                    else  TSDownloaderTask(mediaUrl, dir, filename, listener)
                 }
                 null -> throw IllegalAccessException("downloaderTask not found")
             }
@@ -65,6 +65,7 @@ class DownloaderIdentifier {
 
     enum class DownloadType {
         FullFile,
+
         TVITSFiles,
         RTPTSFiles,
         SICTSFiles

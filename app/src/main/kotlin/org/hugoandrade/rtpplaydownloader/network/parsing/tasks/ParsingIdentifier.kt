@@ -30,6 +30,7 @@ class ParsingIdentifier() {
             if (task is RTPPlayParsingTask ||
                     task is RTPPlayParsingTaskV2 ||
                     task is RTPPlayParsingTaskV3 ||
+                    task is RTPPlayParsingTaskV4 ||
                     task is RTPPlayParsingTaskIdentifier) return FileType.RTPPlay
             if (task is SICParsingTask
                     || task is SICParsingTaskV2

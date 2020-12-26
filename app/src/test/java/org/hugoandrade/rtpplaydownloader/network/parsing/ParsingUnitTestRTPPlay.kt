@@ -1,17 +1,33 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import org.hugoandrade.rtpplaydownloader.network.download.RTPPlayTSDownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.RawDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV2
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV3
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV4
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.junit.Assert
 import org.junit.Test
 import java.io.File
 
 class ParsingUnitTestRTPPlay : ParsingUnitTest() {
+
+    @Test
+    fun rtpPlayV4() {
+
+        val url = "https://www.rtp.pt/play/p2064/gps"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = RTPPlayParsingTaskV4()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
 
     @Test
     fun rtpPlayV4FromResourceHTML() {
@@ -22,29 +38,21 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val url = javaClass.classLoader?.getResource(filename)?.file
                 ?: return Assert.fail("failed to get file from resources")
 
-        val parsingTask = RTPPlayParsingTaskV3()
+        val parsingTask = RTPPlayParsingTaskV4()
         val parsed = parsingTask.parseMediaFile(File(url))
 
-        val mediaUrl : String? = parsingTask.mediaUrl
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
-
         System.err.println("successfully parsed ? " + parsed)
-        System.err.println(mediaUrl)
-        System.err.println(mediaFilename)
 
-        val downloaderTask = RTPPlayTSDownloaderTask(url, mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
-        downloaderTask.downloadMediaFile()
+        debug(parsingTask)
 
+        download(parsingTask)
     }
 
     @Test
+    @Deprecated(message = "no longer valid")
     fun rtpPlayV3Player() {
 
-        val url =
-        // "https://www.rtp.pt/play/p2064/gps"
-        // "https://www.rtp.pt/play/p7701/operacao-shock-and-awe"
-                // "https://www.rtp.pt/play/p7662/amor-de-improviso"
-                "https://www.rtp.pt/play/p7684/operation-yellow-bird"
+        val url = "https://www.rtp.pt/play/p2064/gps"
 
         System.err.println("trying to parse: ")
         System.err.println(url)
@@ -53,18 +61,14 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
         if (!isUrl) throw RuntimeException("is not a valid website")
 
-        val parsingTask = RTPPlayParsingTaskV3()
-        parsingTask.parseMediaFile(url)
+        val parsingTask = RTPPlayParsingTaskV3() // RTPPlayParsingTaskV3()
+        val parsed = parsingTask.parseMediaFile(url)
 
-        val mediaUrl : String? = parsingTask.mediaUrl
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+        System.err.println("successfully parsed ? " + parsed)
 
-        System.err.println("successfully parsed: ")
-        System.err.println(mediaUrl)
-        System.err.println(mediaFilename)
+        debug(parsingTask)
 
-        val downloaderTask = RTPPlayTSDownloaderTask(url, mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
-        downloaderTask.downloadMediaFile()
+        download(parsingTask)
     }
 
 
@@ -81,18 +85,14 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
         if (!isUrl) throw RuntimeException("is not a valid website")
 
-        val parsingTask = RTPPlayParsingTaskV2()
-        parsingTask.parseMediaFile(url)
+        val parsingTask = RTPPlayParsingTaskV2() // RTPPlayParsingTaskV2()
+        val parsed = parsingTask.parseMediaFile(url)
 
-        val mediaUrl : String? = parsingTask.mediaUrl
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+        System.err.println("successfully parsed ? " + parsed)
 
-        System.err.println("successfully parsed: ")
-        System.err.println(mediaUrl)
-        System.err.println(mediaFilename)
+        debug(parsingTask)
 
-        val downloaderTask = RawDownloaderTask(mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
-        downloaderTask.downloadMediaFile()
+        download(parsingTask)
     }
 
     @Test
@@ -109,16 +109,12 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         if (!isUrl) throw RuntimeException("is not a valid website")
 
         val parsingTask = RTPPlayParsingTask()
-        parsingTask.parseMediaFile(url)
+        val parsed = parsingTask.parseMediaFile(url)
 
-        val mediaUrl : String? = parsingTask.mediaUrl
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+        System.err.println("successfully parsed ? " + parsed)
 
-        System.err.println("successfully parsed: ")
-        System.err.println(mediaUrl)
-        System.err.println(mediaFilename)
+        debug(parsingTask)
 
-        val downloaderTask = RawDownloaderTask(mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
-        downloaderTask.downloadMediaFile()
+        download(parsingTask)
     }
 }

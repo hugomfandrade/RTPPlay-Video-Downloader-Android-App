@@ -48,8 +48,4 @@ open class SICParsingTaskV4 : SICParsingTask() {
 
         return null
     }
-
-    override fun parseMediaFileName(doc: Document): String {
-        return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
-    }
 }

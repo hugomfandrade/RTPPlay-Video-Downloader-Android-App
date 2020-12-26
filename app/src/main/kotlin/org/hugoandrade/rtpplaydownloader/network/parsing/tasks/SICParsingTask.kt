@@ -84,7 +84,7 @@ open class SICParsingTask : ParsingTask() {
                         .replace("SIC.Radical.", "")
                         .replace("SIC.", "")
 
-                if (checkNotNull(type?.contains("video/mp4"))) {  // is video file
+                if (type != null && type.contains("video/mp4")) {  // is video file
                     return "$title.mp4"
                 }
 

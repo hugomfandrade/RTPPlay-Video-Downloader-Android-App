@@ -33,6 +33,19 @@ class TVIPlayerParsingTask : TSParsingTask() {
         }
     }
 
+    override fun parseM3U8Playlist(): TSPlaylist? {
+        //
+        val m3u8: String = mediaUrl ?: return null
+
+        val playlist = TSUtils.getCompleteM3U8Playlist(m3u8)
+
+        // TODO
+        // update mediaUrl fields for now for compatibility reasons
+        mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
+
+        return playlist
+    }
+
     override fun parseMediaFileName(doc: Document): String {
         try {
             val titleElements = doc.getElementsByTag("title")
@@ -109,14 +122,5 @@ class TVIPlayerParsingTask : TSParsingTask() {
             ignored.printStackTrace()
         }
         return null
-    }
-
-    override fun parseM3U8Playlist(): TSPlaylist? {
-        //
-
-        val m3u8: String = mediaUrl ?: return null
-        val playlist = TSUtils.getM3U8Playlist(m3u8) ?: return null
-
-        return TSPlaylist().add("DEFAULT", playlist)
     }
 }

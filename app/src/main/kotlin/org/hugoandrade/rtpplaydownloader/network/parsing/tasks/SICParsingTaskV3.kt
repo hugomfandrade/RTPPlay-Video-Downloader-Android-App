@@ -7,6 +7,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
+@Deprecated(message = "use a more recent SIC parser")
 open class SICParsingTaskV3 : TSParsingTask() {
 
     override fun isValid(url: String) : Boolean {
@@ -67,13 +68,20 @@ open class SICParsingTaskV3 : TSParsingTask() {
     }
 
     override fun parseM3U8Playlist(): TSPlaylist? {
-        val playlistUrl = mediaUrl ?: return null
+        //
+        val m3u8: String = mediaUrl ?: return null
 
-        return TSUtils.getCompleteM3U8Playlist(playlistUrl)
+        val playlist = TSUtils.getCompleteM3U8Playlist(m3u8)
+
+        // TODO
+        // update mediaUrl fields for now for compatibility reasons
+        mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
+
+        return playlist
     }
 
     override fun parseMediaFileName(doc: Document): String {
-        return RTPPlayUtils.getMediaFileName(doc, url ?: "", mediaUrl)
+        return ParsingUtils.getMediaFileName(doc, url ?: "", mediaUrl)
                 .replace("SIC.Noticias.", "")
                 .replace("SIC.Radical.", "")
                 .replace("SIC.", "") + ".ts"

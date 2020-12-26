@@ -66,11 +66,7 @@ open class RTPPlayParsingTask : ParsingTask() {
         return null
     }
 
-    override fun parseMediaFileName(doc: Document): String {
-        return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
-    }
-
     override fun parseThumbnailPath(doc: Document): String? {
-        return RTPPlayUtils.getThumbnailPath(doc)
+        return ParsingUtils.getThumbnailPath(doc)
     }
 }

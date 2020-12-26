@@ -6,15 +6,14 @@ import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 
-class TSDownloaderTask(private val url : String?,
-                       private var playlistUrl : String,
+class TSDownloaderTask(private var playlistUrl : String,
                        private val dirPath : String,
                        private val filename : String,
                        private val listener : Listener,
-                       private val tsUrlsValidator: TSUtils.Validator<String>? = null,
-                       private val reParsingTask : TSParsingTask? = null) :
+                       private val tsUrlsValidator: TSUtils.Validator<String>? = null) :
 
         DownloaderTask(listener) {
 
@@ -39,18 +38,6 @@ class TSDownloaderTask(private val url : String?,
             val m3u8: String = playlistUrl
             val baseUrl: String = m3u8.substring(0, m3u8.lastIndexOf("/") + 1)
 
-            /*
-            if (url != null && reParsingTask != null) {
-                // try reparse
-                Log.d(TAG, "try reparse $url")
-                val parsingTask = reParsingTask
-                parsingTask.parseMediaFile(url)
-                val parsingMediaUrl = parsingTask.mediaUrl
-                if (parsingMediaUrl != null) {
-                    playlistUrl = TSUtils.getM3U8Playlist(parsingMediaUrl)
-                }
-            }
-            val playlistUrl = baseUrl + playlist*/
             val tsUrls = if(tsUrlsValidator == null) {
                 TSUtils.getTSUrls(playlistUrl)
             }
@@ -59,17 +46,10 @@ class TSDownloaderTask(private val url : String?,
             }
 
             // full urls
-            /*
-            val tsFullUrls: ArrayList<String> = tsUrls
+            val tsFullUrls = tsUrls
                     .stream()
                     .map { tsUrl -> baseUrl + tsUrl }
                     .collect(Collectors.toList())
-            */
-            val tsFullUrls: ArrayList<String> = ArrayList()
-            for (tsUrl in tsUrls) {
-                val tsFullUrl = baseUrl + tsUrl
-                tsFullUrls.add(tsFullUrl)
-            }
 
             val storagePath = dirPath
             val f = File(storagePath, filename)

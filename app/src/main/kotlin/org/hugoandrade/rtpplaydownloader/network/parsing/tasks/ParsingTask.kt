@@ -1,6 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -85,10 +86,10 @@ abstract class ParsingTask {
     abstract fun parseMediaUrl(doc: Document): String?
 
     protected open fun parseMediaFileName(doc: Document): String {
-        return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
+        return ParsingUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
     }
 
     protected open fun parseThumbnailPath(doc: Document): String? {
-        return RTPPlayUtils.getThumbnailFromTwitterMetadata(doc)
+        return ParsingUtils.getThumbnailFromTwitterMetadata(doc)
     }
 }

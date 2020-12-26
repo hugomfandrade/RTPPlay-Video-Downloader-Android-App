@@ -6,6 +6,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
+@Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
     override fun isValid(url: String) : Boolean {
@@ -15,12 +16,8 @@ open class RTPPlayParsingTaskV3 : TSParsingTask() {
         return isFileType || super.isValid(url)
     }
 
-    override fun parseMediaFileName(doc: Document): String {
-        return RTPPlayUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
-    }
-
     override fun parseThumbnailPath(doc: Document): String? {
-        return RTPPlayUtils.getThumbnailPath(doc)
+        return ParsingUtils.getThumbnailPath(doc)
     }
 
     // get playlist url

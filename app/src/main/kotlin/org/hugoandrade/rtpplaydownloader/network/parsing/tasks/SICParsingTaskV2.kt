@@ -3,6 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
+@Deprecated(message = "use a more recent SIC parser")
 open class SICParsingTaskV2 : SICParsingTask() {
 
     override fun parseMediaUrl(doc: Document): String? {
@@ -39,9 +40,5 @@ open class SICParsingTaskV2 : SICParsingTask() {
         }
 
         return null
-    }
-
-    override fun parseMediaFileName(doc: Document): String {
-        return super.parseMediaFileName(doc) + ".ts"
     }
 }

@@ -1,11 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderIdentifier
-import org.hugoandrade.rtpplaydownloader.network.download.RawDownloaderTask
-import org.hugoandrade.rtpplaydownloader.network.download.SICTSDownloaderTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.junit.Test
 
@@ -16,7 +12,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         val url =
                 // "https://sicnoticias.pt/programas/eixodomal/2020-09-11-Regresso-as-aulas-Presidenciais-e-a-morte-de-Vicente-Jorge-Silva.-O-Eixo-do-Mal-na-integra"
-                "https://sicradical.pt/programas/irritacoes/Videos/2020-10-03-Irritacoes---Programa-de-2-de-outubro"
+                "https://sicradical.pt/programas/irritacoes/Videos/2020-12-19-Irritacoes---Programa-de-18-de-dezembro"
 
         System.err.println("trying to parse: ")
         System.err.println(url)
@@ -26,22 +22,20 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         if (!isUrl) throw RuntimeException("is not a valid website")
 
         val parsingTask = SICParsingTaskIdentifier()
-        if (!parsingTask.parseMediaFile(url)) throw RuntimeException("failed to parse media file")
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
 
         val mediaUrl : String = parsingTask.mediaUrl ?: throw RuntimeException("could not parse media file")
         val thumbnailUrl : String? = parsingTask.thumbnailUrl
         val filename : String? = parsingTask.filename
 
-        System.err.println("successfully parsed: $mediaUrl")
-
         val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = filename)
         item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
-        val downloaderTask = DownloaderIdentifier.findTask(testDir.absolutePath, item, defaultListener)
-
-        System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
-
-        downloaderTask.downloadMediaFile()
+        download(item)
     }
 
     @Test
@@ -57,26 +51,13 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         if (!isUrl) throw RuntimeException("is not a valid website")
 
         val parsingTask = SICParsingTaskV3()
-        parsingTask.parseMediaFile(url)
+        val parsed = parsingTask.parseMediaFile(url)
 
-        val mediaUrl : String? = parsingTask.mediaUrl
+        System.err.println("successfully parsed ? " + parsed)
 
-        System.err.println("successfully parsed: ")
-        System.err.println(mediaUrl)
+        debug(parsingTask)
 
-        val tsPlaylist = parsingTask.getTSPlaylist()
-
-        System.err.println("ts Urls are: ")
-        System.err.println(tsPlaylist?.getTSUrls())
-
-
-        if (true) return
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
-
-        System.err.println(mediaFilename)
-
-        val sicTSDownloaderTask = SICTSDownloaderTask(url, mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
-        sicTSDownloaderTask.downloadMediaFile()
+        download(parsingTask)
     }
 
     @Test
@@ -92,17 +73,13 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         if (!isUrl) throw RuntimeException("is not a valid website")
 
         val parsingTask = SICParsingTaskV2()
-        parsingTask.parseMediaFile(url)
+        val parsed = parsingTask.parseMediaFile(url)
 
-        val mediaUrl : String? = parsingTask.mediaUrl
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+        System.err.println("successfully parsed ? " + parsed)
 
-        System.err.println("successfully parsed: ")
-        System.err.println(mediaUrl)
-        System.err.println(mediaFilename)
+        debug(parsingTask)
 
-        val sicTSDownloaderTask = SICTSDownloaderTask(url, mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
-        sicTSDownloaderTask.downloadMediaFile()
+        download(parsingTask)
     }
 
     @Test
@@ -119,16 +96,12 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         if (!isUrl) throw RuntimeException("is not a valid website")
 
         val parsingTask = SICParsingTask()
-        parsingTask.parseMediaFile(url)
+        val parsed = parsingTask.parseMediaFile(url)
 
-        val mediaUrl : String? = parsingTask.mediaUrl
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
+        System.err.println("successfully parsed ? " + parsed)
 
-        System.err.println("successfully parsed: ")
-        System.err.println(mediaUrl)
-        System.err.println(mediaFilename)
+        debug(parsingTask)
 
-        val sicTSDownloaderTask = RawDownloaderTask(mediaUrl?:"", testDir.absolutePath, mediaFilename, defaultListener)
-        sicTSDownloaderTask.downloadMediaFile()
+        download(parsingTask)
     }
 }
