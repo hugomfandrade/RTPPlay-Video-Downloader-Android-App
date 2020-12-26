@@ -1,5 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSUrl
 import java.net.URL
 import java.util.*
 import kotlin.collections.ArrayList
@@ -40,10 +43,84 @@ private constructor() {
             return null
         }
 
+        fun getCompleteM3U8Playlist(playlistUrl: String): TSPlaylist? {
+            try {
+                val tsPlaylist = TSPlaylist()
+
+                val baseUrl: String = playlistUrl.substring(0, playlistUrl.lastIndexOf("/") + 1)
+                val url = URL(playlistUrl)
+                val s = Scanner(url.openStream())
+                while (s.hasNext()) {
+                    val line: String = s.next()
+
+                    if (!line.contains("#EXT-X-STREAM-INF")) continue
+                    if (!line.contains("BANDWIDTH=")) continue
+                    if (!line.contains("RESOLUTION=")) continue
+
+                    val bandwidthFrom = line.substring(ParsingUtils.indexOfEx(line, "BANDWIDTH="))
+                    val bandwidth = bandwidthFrom.substring(0, bandwidthFrom.indexOf(",")).toInt()
+
+                    val resolutionFrom = line.substring(ParsingUtils.indexOfEx(line, "RESOLUTION="))
+                    val resolutionTo = resolutionFrom.indexOf(",")
+                    val resolution = resolutionFrom.substring(0, if (resolutionTo == -1) resolutionFrom.length else resolutionTo)
+
+                    val resolutionArray = IntArray(2)
+                    resolutionArray[0] = resolution.split("x")[0].toInt()
+                    resolutionArray[1] = resolution.split("x")[1].toInt()
+
+                    val nextLine = s.next()
+                    val url = baseUrl + nextLine
+
+                    tsPlaylist.add(resolution, TSUrl(url, bandwidth, resolutionArray))
+                }
+                return tsPlaylist
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+
+            return null
+        }
+
+        fun getCompleteM3U8PlaylistWithoutBaseUrl(playlistUrl: String): TSPlaylist? {
+            try {
+                val tsPlaylist = TSPlaylist()
+
+                val url = URL(playlistUrl)
+                val s = Scanner(url.openStream())
+                while (s.hasNext()) {
+                    val line: String = s.next()
+
+                    if (!line.contains("#EXT-X-STREAM-INF")) continue
+                    if (!line.contains("BANDWIDTH=")) continue
+                    if (!line.contains("RESOLUTION=")) continue
+
+                    val bandwidthFrom = line.substring(ParsingUtils.indexOfEx(line, "BANDWIDTH="))
+                    val bandwidth = bandwidthFrom.substring(0, bandwidthFrom.indexOf(",")).toInt()
+
+                    val resolutionFrom = line.substring(ParsingUtils.indexOfEx(line, "RESOLUTION="))
+                    val resolution = resolutionFrom.substring(0, resolutionFrom.indexOf(","))
+
+                    val resolutionArray = IntArray(2)
+                    resolutionArray[0] = resolution.split("x")[0].toInt()
+                    resolutionArray[1] = resolution.split("x")[1].toInt()
+
+                    val nextLine = s.next()
+                    val url = nextLine
+
+                    tsPlaylist.add(resolution, TSUrl(url, bandwidth, resolutionArray))
+                }
+                return tsPlaylist
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+
+            return null
+        }
+
         fun getTSUrls(playlistUrl: String): List<String> {
             val validator = object : Validator<String> {
                 override fun isValid(o: String): Boolean {
-                    return o.endsWith(".ts")
+                    return o.contains(".ts")
                 }
             }
             return getTSUrls(playlistUrl, validator)

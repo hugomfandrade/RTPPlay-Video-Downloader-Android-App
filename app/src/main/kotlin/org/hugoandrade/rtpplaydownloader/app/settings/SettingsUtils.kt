@@ -69,6 +69,7 @@ private constructor() {
 
         fun getDataColumn(context: Context, uri: Uri?, selection: String?,
                           selectionArgs: Array<String>?): String? {
+            if (uri == null) return null
             var cursor: Cursor? = null
             val column = "_data"
             val projection = arrayOf(

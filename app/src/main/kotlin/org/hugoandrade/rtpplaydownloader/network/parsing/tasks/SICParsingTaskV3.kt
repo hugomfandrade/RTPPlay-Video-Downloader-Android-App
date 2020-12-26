@@ -1,24 +1,33 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.jsoup.Jsoup
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
-import java.io.IOException
 
-open class SICParsingTaskV3 : SICParsingTaskV2() {
+open class SICParsingTaskV3 : TSParsingTask() {
 
-    override fun getVideoFile(url: String): String? {
+    override fun isValid(url: String) : Boolean {
+
+        val isFileType: Boolean =
+                url.contains("sicradical.sapo.pt") ||
+                url.contains("sicradical.pt") ||
+                url.contains("sicnoticias.sapo.pt") ||
+                url.contains("sicnoticias.pt") ||
+                url.contains("sic.sapo.pt") ||
+                url.contains("sic.pt")
+
+        return isFileType || super.isValid(url)
+    }
+
+    // get ts playlist
+    override fun parseMediaUrl(doc: Document): String? {
+
         try {
-            val doc: Document?
 
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return null
-            }
-
-            val scriptElements = doc?.getElementsByTag("script") ?: return null
+            val scriptElements = doc.getElementsByTag("script") ?: return null
 
             for (scriptElement in scriptElements.iterator()) {
 
@@ -40,9 +49,11 @@ open class SICParsingTaskV3 : SICParsingTaskV2() {
 
                         if (jwPlayerSubString.indexOf(from) >= 0) {
 
+                            val startIndex = ParsingUtils.indexOfEx(jwPlayerSubString, from)
+
                             val link: String = jwPlayerSubString.substring(
-                                    ParsingUtils.indexOfEx(jwPlayerSubString, from),
-                                    ParsingUtils.indexOfEx(jwPlayerSubString, from) + jwPlayerSubString.substring(ParsingUtils.indexOfEx(jwPlayerSubString, from)).indexOf(to))
+                                    startIndex,
+                                    startIndex+ jwPlayerSubString.substring(startIndex).indexOf(to))
 
                             return link
                         }
@@ -57,10 +68,33 @@ open class SICParsingTaskV3 : SICParsingTaskV2() {
         return null
     }
 
-    override fun getMediaFileName(url: String, videoFile: String?): String {
-        return RTPPlayUtils.getMediaFileName(url, videoFile)
+    override fun parseM3U8Playlist(): TSPlaylist? {
+        //
+        val m3u8: String = mediaUrl ?: return null
+
+        val playlist = TSUtils.getCompleteM3U8Playlist(m3u8)
+
+        // TODO
+        // update mediaUrl fields for now for compatibility reasons
+        mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
+
+        return playlist
+    }
+
+    override fun parseMediaFileName(doc: Document): String {
+        return ParsingUtils.getMediaFileName(doc, url ?: "", mediaUrl)
                 .replace("SIC.Noticias.", "")
                 .replace("SIC.Radical.", "")
                 .replace("SIC.", "") + ".ts"
+    }
+
+    override fun parseThumbnailPath(doc: Document): String? {
+        val filename = super.parseThumbnailPath(doc)
+
+        return if (filename.isNullOrEmpty()) {
+            ParsingUtils.getThumbnailFromTwitterMetadata(doc) ?: filename
+        } else {
+            filename
+        }
     }
 }

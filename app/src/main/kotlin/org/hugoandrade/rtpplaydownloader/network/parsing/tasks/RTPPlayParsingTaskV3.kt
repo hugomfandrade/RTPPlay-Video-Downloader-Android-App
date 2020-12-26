@@ -1,25 +1,27 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.jsoup.Jsoup
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
-import java.io.IOException
 
-open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
+@Deprecated(message = "use a more recent RTPPlay parser")
+open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
-    override fun getVideoFile(url: String): String? {
-        return getM3U8File(url)
+    override fun isValid(url: String) : Boolean {
+
+        val isFileType: Boolean = url.contains("www.rtp.pt/play")
+
+        return isFileType || super.isValid(url)
     }
 
-    private fun getM3U8File(url: String): String? {
-        val doc: Document
+    override fun parseThumbnailPath(doc: Document): String? {
+        return ParsingUtils.getThumbnailPath(doc)
+    }
 
-        try {
-            doc = Jsoup.connect(url).timeout(10000).get()
-        } catch (ignored: IOException) {
-            return null
-        }
+    // get playlist url
+    override fun parseMediaUrl(doc: Document): String? {
 
         try {
 
@@ -37,14 +39,14 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
                     try {
 
                         val rtpPlayerSubString: String = scriptText
+                        val from = "file:\""
+                        val to = "\","
 
-                        for (i in arrayOf("file:\"", "file: \"", "file : \"")) {
-                            if (rtpPlayerSubString.indexOf(i) >= 0) {
-                                return rtpPlayerSubString.substring(
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, i),
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, i) + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, i)).indexOf("\","))
+                        if (rtpPlayerSubString.indexOf(from) >= 0) {
+                            val indexFrom = ParsingUtils.indexOfEx(rtpPlayerSubString, from)
 
-                            }
+                            return rtpPlayerSubString.substring(indexFrom, indexFrom + rtpPlayerSubString.substring(indexFrom).indexOf(to))
+
                         }
                     } catch (parsingException: java.lang.Exception) { }
                 }
@@ -55,5 +57,16 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask() {
         }
 
         return null
+    }
+
+    override fun parseM3U8Playlist(): TSPlaylist? {
+        val tsPlaylist = mediaUrl ?: return null
+
+        return TSPlaylist().add("DEFAULT", tsPlaylist)
+    }
+
+    override fun parseMediaFileName(doc: Document): String {
+        return super.parseMediaFileName(doc)
+                .replace(".RTP.Play.RTP", "") + ".ts"
     }
 }

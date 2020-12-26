@@ -188,8 +188,9 @@ class MainActivity : ActivityBase() {
              */
             override fun onDrawerClosed(view: View) {
                 super.onDrawerClosed(view)
-                if (mPendingRunnable != null) {
-                    mHandler.post(mPendingRunnable)
+                val pendingRunnable = mPendingRunnable
+                if (pendingRunnable != null) {
+                    mHandler.post(pendingRunnable)
                     mPendingRunnable = null
                 }
             }
