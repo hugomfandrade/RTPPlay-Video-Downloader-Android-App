@@ -10,8 +10,9 @@ import kotlin.math.roundToInt
 
 open class ParsingUnitTest {
 
-    val testDir = File("test-download-folder")
-    val defaultListener: DownloaderTask.Listener = object : DownloaderTask.Listener {
+    val DO_DOWNLOAD = false
+    private val testDir = File("test-download-folder")
+    private val defaultListener: DownloaderTask.Listener = object : DownloaderTask.Listener {
 
         private val progressLogPercentageDelta = 1.0
         private val progressLogLastPercentage = AtomicDouble(Double.NaN)
@@ -58,26 +59,34 @@ open class ParsingUnitTest {
 
     internal fun debug(parsingTask: TSParsingTask) {
 
-        val mediaUrl : String? = parsingTask.mediaUrl
         val playlist : TSPlaylist? = parsingTask.getTSPlaylist()
         val playlistUrl : String? = playlist?.getTSUrls()?.firstOrNull()?.url
 
-        System.err.println(playlist?.getTSUrls())
-        System.err.println(mediaUrl)
+        System.err.println(parsingTask.filename)
+        System.err.println(parsingTask.mediaUrl)
         System.err.println(playlistUrl)
+        System.err.println(playlist?.getTSUrls())
     }
 
     internal fun debug(parsingTask: ParsingTask) {
 
-        val mediaUrl : String? = parsingTask.mediaUrl
-
-        System.err.println(mediaUrl)
+        System.err.println(parsingTask.filename)
+        System.err.println(parsingTask.mediaUrl)
     }
 
     internal fun download(item: DownloadableItem) {
+        if (!DO_DOWNLOAD) return
 
+        // clone with unique filename
+        val downloadableItem = DownloadableItem(
+                url = item.url,
+                mediaUrl = item.mediaUrl,
+                filename = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, item.filename ?: ""),
+                thumbnailUrl = item.thumbnailUrl,
+                downloadTask = item.downloadTask
+        )
 
-        val downloaderTask = DownloaderIdentifier.findTask(testDir.absolutePath, item, defaultListener)
+        val downloaderTask = DownloaderIdentifier.findTask(testDir.absolutePath, downloadableItem, defaultListener)
 
         System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
 
@@ -85,38 +94,10 @@ open class ParsingUnitTest {
     }
 
     internal fun download(parsingTask: TSParsingTask) {
-
-        val mediaUrl : String? = parsingTask.mediaUrl
-        val playlist : TSPlaylist? = parsingTask.getTSPlaylist()
-        val playlistUrl : String = playlist?.getTSUrls()?.firstOrNull()?.url ?: ""
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
-
-        val downloaderTask = TSDownloaderTask(
-                playlistUrl,
-                testDir.absolutePath,
-                mediaFilename,
-                defaultListener,
-                object : TSUtils.Validator<String> {
-                    override fun isValid(o: String): Boolean {
-                        return o.contains(".ts")
-                    }
-                }
-        )
-
-        downloaderTask.downloadMediaFile()
+        download(DownloadableItem(parsingTask))
     }
 
     internal fun download(parsingTask: ParsingTask) {
-
-        val mediaUrl : String = parsingTask.mediaUrl ?: ""
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, parsingTask.filename ?: "")
-
-        val downloaderTask = RawDownloaderTask(
-                mediaUrl,
-                testDir.absolutePath,
-                mediaFilename,
-                defaultListener)
-
-        downloaderTask.downloadMediaFile()
+        download(DownloadableItem(parsingTask))
     }
 }

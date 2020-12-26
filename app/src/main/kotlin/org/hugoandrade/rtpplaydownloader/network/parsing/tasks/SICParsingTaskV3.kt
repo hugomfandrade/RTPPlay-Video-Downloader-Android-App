@@ -87,4 +87,14 @@ open class SICParsingTaskV3 : TSParsingTask() {
                 .replace("SIC.Radical.", "")
                 .replace("SIC.", "") + ".ts"
     }
+
+    override fun parseThumbnailPath(doc: Document): String? {
+        val filename = super.parseThumbnailPath(doc)
+
+        return if (filename.isNullOrEmpty()) {
+            ParsingUtils.getThumbnailFromTwitterMetadata(doc) ?: filename
+        } else {
+            filename
+        }
+    }
 }

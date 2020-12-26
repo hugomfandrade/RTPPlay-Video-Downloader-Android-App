@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenerSet
 import java.io.File
@@ -24,6 +25,13 @@ class DownloadableItem(@PrimaryKey(autoGenerate = true) @ColumnInfo(name = "_id"
                        @ColumnInfo(name = "DownloadMessage") var downloadMessage: String? = null) :
 
         DownloaderTask.Listener {
+
+    constructor(task: ParsingTask) : this(
+            url = task.url ?: null.toString(),
+            mediaUrl = task.mediaUrl ?: null.toString(),
+            thumbnailUrl = task.thumbnailUrl ?: null.toString(),
+            filename = task.filename ?: null.toString()
+    )
 
     companion object {
 

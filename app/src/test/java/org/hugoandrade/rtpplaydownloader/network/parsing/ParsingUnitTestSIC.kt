@@ -3,7 +3,6 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.junit.Test
 
 class ParsingUnitTestSIC : ParsingUnitTest() {
@@ -23,12 +22,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         debug(parsingTask)
 
-        val mediaUrl : String = parsingTask.mediaUrl ?: throw RuntimeException("could not parse media file")
-        val thumbnailUrl : String? = parsingTask.thumbnailUrl
-        val filename : String? = parsingTask.filename
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, filename ?: "")
-
-        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = mediaFilename)
+        val item = DownloadableItem(parsingTask)
         item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
         download(item)
@@ -49,12 +43,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         debug(parsingTask)
 
-        val mediaUrl : String = parsingTask.mediaUrl ?: throw RuntimeException("could not parse media file")
-        val thumbnailUrl : String? = parsingTask.thumbnailUrl
-        val filename : String? = parsingTask.filename
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, filename ?: "")
-
-        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = mediaFilename)
+        val item = DownloadableItem(parsingTask)
         item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
         download(item)
@@ -79,12 +68,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         debug(parsingTask)
 
-        val mediaUrl : String = parsingTask.mediaUrl ?: throw RuntimeException("could not parse media file")
-        val thumbnailUrl : String? = parsingTask.thumbnailUrl
-        val filename : String? = parsingTask.filename
-        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, filename ?: "")
-
-        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = mediaFilename)
+        val item = DownloadableItem(parsingTask)
         item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
         download(item)

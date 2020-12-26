@@ -146,11 +146,9 @@ private constructor() {
 
                     for (metaElement in metaElements.iterator()) {
 
-                        if (!metaElement.hasAttr("property") ||
-                                !metaElement.hasAttr("name") ||
-                                !metaElement.hasAttr("content") ||
-                                metaElement.attr("name") != "twitter:image" ||
-                                metaElement.attr("property") != "og:image") {
+                        if (!metaElement.hasAttr("name") ||
+                            !metaElement.hasAttr("content") ||
+                            metaElement.attr("name") != "twitter:image") {
                             continue
                         }
 

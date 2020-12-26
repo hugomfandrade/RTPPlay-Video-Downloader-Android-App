@@ -120,7 +120,7 @@ private constructor() {
         fun getTSUrls(playlistUrl: String): List<String> {
             val validator = object : Validator<String> {
                 override fun isValid(o: String): Boolean {
-                    return o.endsWith(".ts")
+                    return o.contains(".ts")
                 }
             }
             return getTSUrls(playlistUrl, validator)

@@ -64,4 +64,9 @@ open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
         return TSPlaylist().add("DEFAULT", tsPlaylist)
     }
+
+    override fun parseMediaFileName(doc: Document): String {
+        return super.parseMediaFileName(doc)
+                .replace(".RTP.Play.RTP", "") + ".ts"
+    }
 }

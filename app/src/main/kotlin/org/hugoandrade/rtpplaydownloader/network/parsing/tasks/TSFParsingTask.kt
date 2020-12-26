@@ -53,4 +53,8 @@ class TSFParsingTask : ParsingTask() {
 
         return null
     }
+
+    override fun parseThumbnailPath(doc: Document): String? {
+        return ParsingUtils.getThumbnailFromTwitterMetadata(doc)
+    }
 }
