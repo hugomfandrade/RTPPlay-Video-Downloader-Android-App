@@ -18,14 +18,10 @@
             <include
                 layout="@layout/layout_toolbar" />
 
-            <RelativeLayout
+            <androidx.coordinatorlayout.widget.CoordinatorLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-                <include
-                    android:id="@+id/tv_no_network_connection"
-                    layout="@layout/layout_no_network_connection" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/download_items_recycler_view"
@@ -35,11 +31,11 @@
 
                 <LinearLayout
                     android:id="@+id/empty_list_view_group"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="120dp"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:layout_gravity="center"
+                    android:orientation="vertical"
+                    android:gravity="center">
 
                     <ImageView
                         android:layout_width="40dp"
@@ -55,7 +51,11 @@
 
                 </LinearLayout>
 
-            </RelativeLayout>
+                <include
+                    android:id="@+id/tv_no_network_connection"
+                    layout="@layout/layout_no_network_connection" />
+
+            </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

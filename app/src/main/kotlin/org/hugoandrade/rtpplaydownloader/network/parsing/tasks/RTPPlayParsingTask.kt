@@ -1,22 +1,21 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
-import java.net.SocketTimeoutException
+import java.io.IOException
 import java.net.URL
 
-@Deprecated(message = "use RTPPlayParsingTaskV3")
+@Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTask : ParsingTask() {
 
     override fun parseMediaFile(url: String): Boolean {
 
         this.url = url
         this.mediaUrl = getVideoFile(url) ?: return false
-        this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        this.filename = getMediaFileName(url, mediaUrl)
         this.thumbnailUrl = getThumbnailPath(url)
 
         try {
@@ -53,7 +52,7 @@ open class RTPPlayParsingTask : ParsingTask() {
 
         try {
             doc = Jsoup.connect(url).timeout(10000).get()
-        } catch (ignored: SocketTimeoutException) {
+        } catch (ignored: IOException) {
             return null
         }
 
@@ -111,7 +110,7 @@ open class RTPPlayParsingTask : ParsingTask() {
         return RTPPlayUtils.getMediaFileName(url, videoFile)
     }
 
-    fun getThumbnailPath(url: String): String? {
+    override fun getThumbnailPath(url: String): String? {
         return RTPPlayUtils.getThumbnailPath(url)
     }
 }

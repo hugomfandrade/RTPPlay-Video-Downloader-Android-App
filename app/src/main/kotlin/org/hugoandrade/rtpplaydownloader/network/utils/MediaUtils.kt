@@ -1,10 +1,14 @@
 package org.hugoandrade.rtpplaydownloader.network.utils
 
 import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
+import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.io.File
 import java.text.Normalizer
 import kotlin.math.ln
@@ -25,14 +29,19 @@ private constructor() {
         const val sharedPreferencesName = "org.hugoandrade.rtpplaydownloader"
         const val directoryKey = "org.hugoandrade.rtpplaydownloader.directoryKey"
 
-        fun getDownloadsDirectory(context: Context) : Uri? {
+        // private val defaultDir : File = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+        private fun getDefaultDir() : File {
+            return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+        }
+
+        fun getDownloadsDirectory(context: Context) : Uri {
 
             try {
                 return Uri.parse(context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE)
-                        .getString(directoryKey, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()))
+                        .getString(directoryKey, getDefaultDir().toString()))
             }
             catch (e : Exception) {
-                return Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES))
+                return Uri.fromFile(getDefaultDir())
             }
         }
 
@@ -98,6 +107,7 @@ private constructor() {
                     .replace('\\', '.')
                     .replace('|', '.')
                     .replace('/', '.')
+                    .replace(',', '.')
                     .replace(".|.", ".")
                     .replace(' ', '.')
             filename = Normalizer.normalize(filename, Normalizer.Form.NFKD)
@@ -109,8 +119,7 @@ private constructor() {
         }
 
         fun getUniqueFilename(filename : String) : String  {
-            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            return getUniqueFilename(File(storagePath, filename))
+            return getUniqueFilename(File(getDefaultDir().toString(), filename))
         }
 
         fun getUniqueFilename(file : File) : String  {
@@ -126,11 +135,15 @@ private constructor() {
         }
 
         fun getUniqueFilenameAndLock(filename : String) : String  {
-            val storagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
-            return getUniqueFilenameAndLock(File(storagePath, filename))
+            val defaultDirPath = getDefaultDir().toString()
+            return getUniqueFilenameAndLock(defaultDirPath, filename)
         }
 
-        fun getUniqueFilenameAndLock(file : File) : String  {
+        fun getUniqueFilenameAndLock(dirPath : String, filename : String) : String  {
+            return getUniqueFilenameAndLock(File(dirPath, filename))
+        }
+
+        private fun getUniqueFilenameAndLock(file : File) : String  {
             return if (!doesMediaFileExist(file) && FilenameLockerAdapter.instance.put(file.name))
                 file.name
             else
@@ -195,6 +208,51 @@ private constructor() {
                 (progress - oldProgress).toFloat() * 1000f / (timestamp - oldTimestamp).toFloat()
             } else {
                 0f
+            }
+        }
+
+        fun showInFolderIntent(context: Context, item: DownloadableItem) {
+
+            try {
+                val dir = Uri.parse(File(item.filepath).parentFile.absolutePath + File.separator)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    intent.addCategory(Intent.CATEGORY_DEFAULT)
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, dir)
+                    }
+
+                    intent.putExtra("android.content.extra.SHOW_ADVANCED", true)
+                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.open_folder)))
+                } else {
+                    val intent = Intent(Intent.ACTION_GET_CONTENT)
+                    intent.setDataAndType(dir, "*/*")
+                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.open_folder)))
+                }
+
+            } catch (e: Exception) { }
+        }
+
+        fun openUrl(context: Context, item: DownloadableItem) {
+
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(item.url)))
+            } catch (e: Exception) { }
+        }
+
+        fun play(context: Context, item: DownloadableItem) {
+
+            try {
+                val filepath = item.filepath
+                if (doesMediaFileExist(item)) {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(filepath))
+                            .setDataAndType(Uri.parse(filepath), "video/mp4"))
+                } else {
+                    ViewUtils.showToast(context, context.getString(R.string.file_not_found))
+                }
+            } catch (ignored: Exception) {
             }
         }
     }

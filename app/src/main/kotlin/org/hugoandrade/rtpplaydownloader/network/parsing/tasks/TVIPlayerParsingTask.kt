@@ -1,13 +1,13 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.net.SocketTimeoutException
 import java.net.URL
 import java.nio.charset.Charset
 
@@ -17,7 +17,7 @@ class TVIPlayerParsingTask : ParsingTask() {
 
         this.url = url
         this.mediaUrl = getM3U8File(url)?: return false
-        this.filename = MediaUtils.getUniqueFilenameAndLock(getMediaFileName(url, mediaUrl))
+        this.filename = getMediaFileName(url, mediaUrl)
         this.thumbnailUrl = getThumbnailPath(url)
 
         try {
@@ -69,7 +69,7 @@ class TVIPlayerParsingTask : ParsingTask() {
 
             try {
                 doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
+            } catch (ignored: IOException) {
                 return videoFile ?: url
             }
 
@@ -91,7 +91,7 @@ class TVIPlayerParsingTask : ParsingTask() {
     }
 
 
-    private fun getThumbnailPath(url: String): String? {
+    override fun getThumbnailPath(url: String): String? {
         try {
             val doc = Jsoup.connect(url).timeout(10000).get()
             val scriptElements = doc.getElementsByTag("script")

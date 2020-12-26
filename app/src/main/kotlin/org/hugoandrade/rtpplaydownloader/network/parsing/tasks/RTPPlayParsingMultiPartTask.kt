@@ -1,12 +1,11 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import java.net.SocketTimeoutException
+import java.io.IOException
 
-class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
+class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
 
     override fun getMediaFileName(url: String, videoFile: String?): String {
         // do nothing
@@ -24,13 +23,13 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
             if (task.isValid(metadata.urlString) && task.parseMediaFile(metadata.urlString)) {
                 val part = metadata.suffix
-                val originalFilename = task.getMediaFileName(metadata.urlString, task.mediaUrl)
+                val originalFilename = task.filename ?: "unknown"
 
                 if (part != null) {
                     val lastDot = originalFilename.lastIndexOf(".")
                     val preFilename = originalFilename.substring(0, lastDot)
                     val extFilename = originalFilename.substring(lastDot, originalFilename.length)
-                    task.filename = MediaUtils.getUniqueFilenameAndLock("$preFilename.$part$extFilename")
+                    task.filename = "$preFilename.$part$extFilename"
                 }
                 tasks.add(task)
             }
@@ -50,7 +49,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
             try {
                 doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
+            } catch (ignored: IOException) {
                 return false
             }
 
@@ -95,7 +94,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTaskBase() {
 
             try {
                 doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: SocketTimeoutException) {
+            } catch (ignored: IOException) {
                 return urlsMetadata
             }
 

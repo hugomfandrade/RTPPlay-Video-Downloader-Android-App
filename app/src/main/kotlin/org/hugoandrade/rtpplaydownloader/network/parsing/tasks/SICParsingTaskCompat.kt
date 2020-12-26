@@ -1,16 +1,18 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-class RTPPlayParsingTaskCompat : ParsingTask() {
+class SICParsingTaskCompat : ParsingTask() {
 
-    private val v1 = RTPPlayParsingTask()
-    private val v2 = RTPPlayParsingTaskV2()
-    private val v3 = RTPPlayParsingTaskV3()
+    private val v1 = SICParsingTask()
+    private val v2 = SICParsingTaskV2()
+    private val v3 = SICParsingTaskV3()
+    private val v4 = SICParsingTaskV4()
 
     override fun parseMediaFile(url: String): Boolean {
 
         this.url = url
 
         val task : ParsingTask = when {
+            v4.parseMediaFile(url) -> v4
             v3.parseMediaFile(url) -> v3
             v2.parseMediaFile(url) -> v2
             v1.parseMediaFile(url) -> v1
@@ -26,6 +28,7 @@ class RTPPlayParsingTaskCompat : ParsingTask() {
 
     override fun isValid(url: String) : Boolean {
 
+        if (v4.isValid(url)) return true
         if (v3.isValid(url)) return true
         if (v2.isValid(url)) return true
         if (v1.isValid(url)) return true

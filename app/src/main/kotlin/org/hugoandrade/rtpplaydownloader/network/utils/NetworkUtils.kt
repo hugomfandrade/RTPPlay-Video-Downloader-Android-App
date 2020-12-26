@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.utils
+package org.hugoandrade.rtpplaydownloader.network.utils
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -54,7 +54,6 @@ private constructor() {
 
                 val connMgr = context
                         .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                        ?: return false
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     val networks = connMgr.allNetworks

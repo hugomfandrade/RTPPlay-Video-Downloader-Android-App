@@ -1,109 +1,102 @@
 package org.hugoandrade.rtpplaydownloader.app.main
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.os.Handler
 import android.view.KeyEvent
 import android.view.View
+import android.view.WindowManager
+import androidx.appcompat.app.AppCompatDialog
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 
-class ParsingDialog(val mContext: Context) {
 
-    @Suppress("unused")
-    private val TAG = ParsingDialog::class.java.simpleName
+class ParsingDialog(context: Context): AppCompatDialog(context) {
 
-    private var mAlertDialog: AlertDialog? = null
-    private var mView: View? = null
+    companion object {
+        private val TAG = ParsingDialog::class.java.simpleName
+    }
+
     private val mParsingItemsAdapter = ParsingItemsAdapter()
 
     private var mListener: OnParsingListener? = null
 
-    private var mHandler: Handler = Handler()
-    private var isDelaying = false
-    private val delayedShowCallback: Runnable = Runnable() {
-        delayedShow()
-        isDelaying = false
-    }
-
-    private var isDismissedBecauseOfTouchOutside : Boolean? = true
-
     init {
-        buildView()
+        setContentView(R.layout.dialog_parsing)
+
+        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        findViewById<View>(R.id.tv_cancel)?.setOnClickListener {
+
+            mListener?.onCancelled()
+
+            dismiss()
+        }
+
+        findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+        findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
+        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.visibility = View.GONE
+        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.isNestedScrollingEnabled = false
+        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
+        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.adapter = mParsingItemsAdapter
+
+        setOnKeyListener(DialogInterface.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+
+                mListener?.onCancelled()
+
+                dismiss()
+
+                return@OnKeyListener true
+            }
+            false
+        })
+
+        setCanceledOnTouchOutside(true)
+        setOnDismissListener {
+            mListener?.onCancelled()
+        }
+
+        // make full screen
+        val lp = WindowManager.LayoutParams()
+        lp.copyFrom(window?.attributes)
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT
+        window?.attributes = lp
     }
 
     internal fun setOnParsingDialogListener(listener: OnParsingListener?) {
         mListener = listener
     }
 
-    fun show() {
-        val delayMillis = 100L
-        isDelaying = true
-        mHandler.postDelayed(delayedShowCallback, delayMillis)
-    }
-
-    private fun buildView() {
-        mView = View.inflate(mContext, R.layout.dialog_parsing, null)
-        mView?.findViewById<View>(R.id.tv_cancel)?.setOnClickListener {
-
-            mListener?.onCancelled()
-
-            dismissDialog()
-        }
-
-        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
-        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.visibility = View.GONE
-        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.isNestedScrollingEnabled = false
-        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(mContext)
-        mView?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.adapter = mParsingItemsAdapter
-
-        mAlertDialog = AlertDialog.Builder(mContext)
-                .setOnKeyListener(DialogInterface.OnKeyListener { _, keyCode, event ->
-                    if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-
-                        mListener?.onCancelled()
-
-                        dismissDialog()
-
-                        return@OnKeyListener true
-                    }
-                    false
-                })
-                .create()
-    }
-
     fun loading() {
-        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.GONE
+        findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+        findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
+        findViewById<View>(R.id.parsing_items)?.visibility = View.GONE
 
-        mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.VISIBLE
-        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
+        findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.VISIBLE
+        findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
     }
 
     fun loadingMore() {
         mParsingItemsAdapter.hideLoadMoreButton()
         mParsingItemsAdapter.showProgressBarView()
-        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
+        findViewById<View>(R.id.tv_download)?.visibility = View.GONE
+        findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
     }
 
     fun showParsingResult(parsingData: ParsingData) {
-        mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
+        findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
+        findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
+        findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
         val tasks : ArrayList<ParsingTask> = parsingData.tasks
         val paginationTask: PaginationParserTask? = parsingData.paginationTask
 
         if (tasks.isEmpty()) {
-            dismissDialog()
+            dismiss()
             return
         }
 
@@ -111,34 +104,33 @@ class ParsingDialog(val mContext: Context) {
         mParsingItemsAdapter.addAll(tasks)
         mParsingItemsAdapter.notifyDataSetChanged()
 
-        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
-        mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
+        findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
+        findViewById<View>(R.id.tv_download)?.setOnClickListener {
 
             mListener?.onDownload(mParsingItemsAdapter.getSelectedTasks())
 
-            dismissDialog()
+            dismiss()
         }
 
         if (paginationTask != null && !paginationTask.getPaginationComplete()) {
-            mView?.findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.VISIBLE
-            mView?.findViewById<View>(R.id.tv_parse_entire_series)?.setOnClickListener {
+            findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.VISIBLE
+            findViewById<View>(R.id.tv_parse_entire_series)?.setOnClickListener {
 
                 mListener?.onParseEntireSeries(paginationTask)
             }
         }
     }
 
-    fun showPaginationResult(paginationTask: PaginationParserTask,
-                             tasks: ArrayList<ParsingTask>) {
+    fun showPaginationResult(paginationTask: PaginationParserTask, tasks: ArrayList<ParsingTask>) {
 
         if (tasks.isEmpty()) {
-            dismissDialog()
+            dismiss()
             return
         }
 
-        mView?.findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
+        findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
+        findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
+        findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
         mParsingItemsAdapter.hideProgressBarView()
         mParsingItemsAdapter.clear()
@@ -146,19 +138,18 @@ class ParsingDialog(val mContext: Context) {
         showPaginationMoreResult(paginationTask, tasks)
     }
 
-    fun showPaginationMoreResult(paginationTask: PaginationParserTask,
-                                 tasks: ArrayList<ParsingTask>) {
+    fun showPaginationMoreResult(paginationTask: PaginationParserTask, tasks: ArrayList<ParsingTask>) {
 
         mParsingItemsAdapter.hideProgressBarView()
         mParsingItemsAdapter.addAllAndNotify(tasks)
 
-        mView?.findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
-        mView?.findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
-        mView?.findViewById<View>(R.id.tv_download)?.setOnClickListener {
+        findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
+        findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
+        findViewById<View>(R.id.tv_download)?.setOnClickListener {
 
             mListener?.onDownload(mParsingItemsAdapter.getSelectedTasks())
 
-            dismissDialog()
+            dismiss()
         }
 
         val show = !paginationTask.getPaginationComplete()
@@ -176,34 +167,6 @@ class ParsingDialog(val mContext: Context) {
             mParsingItemsAdapter.hideLoadMoreButton()
             mParsingItemsAdapter.setListener(null)
         }
-    }
-
-    private fun delayedShow() {
-
-        if (checkNotNull(isDismissedBecauseOfTouchOutside == false)) {
-            return
-        }
-
-        mAlertDialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        mAlertDialog?.setCanceledOnTouchOutside(true)
-        mAlertDialog?.show()
-        mAlertDialog?.setContentView(checkNotNull(mView))
-        mAlertDialog?.setOnDismissListener {
-            if (checkNotNull(isDismissedBecauseOfTouchOutside)) {
-
-                mListener?.onCancelled()
-            }
-        }
-    }
-
-    fun dismissDialog() {
-        isDismissedBecauseOfTouchOutside = false
-        mAlertDialog?.dismiss()
-        mHandler.removeCallbacks(delayedShowCallback)
-    }
-
-    fun isShowing(): Boolean {
-        return isDelaying || mAlertDialog?.isShowing ?: false
     }
 
     interface OnParsingListener {

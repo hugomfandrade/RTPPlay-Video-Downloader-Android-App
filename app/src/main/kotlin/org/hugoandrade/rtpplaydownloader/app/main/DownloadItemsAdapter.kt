@@ -190,6 +190,7 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
             var currentID = if (downloadableItemList.isEmpty()) 0 else downloadableItemList[pos].item.id
             while(pos < downloadableItemList.size && id < currentID) {
                 pos++
+                if (pos >= downloadableItemList.size) break
                 currentID = downloadableItemList[pos].item.id
             }
 

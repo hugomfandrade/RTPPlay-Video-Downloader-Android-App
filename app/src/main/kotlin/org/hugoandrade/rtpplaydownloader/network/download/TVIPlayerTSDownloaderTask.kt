@@ -21,6 +21,12 @@ open class TVIPlayerTSDownloaderTask(private val url : String?,
 
     override val TAG : String = javaClass.simpleName
 
+    private val tsUrlsValidator = object : TSUtils.Validator<String> {
+        override fun isValid(o: String): Boolean {
+            return o.startsWith("media")
+        }
+    }
+
     override fun downloadMediaFile() {
 
         if (isDownloading) {
@@ -41,7 +47,7 @@ open class TVIPlayerTSDownloaderTask(private val url : String?,
 
             val m3u8: String = mediaUrl
             val baseUrl: String = m3u8.substring(0, m3u8.lastIndexOf("/") + 1)
-            var playlist = getM3U8Playlist(m3u8)
+            var playlist = TSUtils.getM3U8Playlist(m3u8)
 
             if (playlist == null && url != null) {
                 // try reparse
@@ -50,11 +56,11 @@ open class TVIPlayerTSDownloaderTask(private val url : String?,
                 parsingTask.parseMediaFile(url)
                 val parsingMediaUrl = parsingTask.mediaUrl
                 if (parsingMediaUrl != null) {
-                    playlist = getM3U8Playlist(parsingMediaUrl)
+                    playlist = TSUtils.getM3U8Playlist(parsingMediaUrl)
                 }
             }
             val playlistUrl = baseUrl + playlist
-            val tsUrls = getTSUrls(playlistUrl)
+            val tsUrls = TSUtils.getTSUrls(playlistUrl, tsUrlsValidator)
             val tsFullUrls: ArrayList<String> = ArrayList()
 
             for (tsUrl in tsUrls!!) {
@@ -145,35 +151,6 @@ open class TVIPlayerTSDownloaderTask(private val url : String?,
 
     override fun pause() {
         isDownloading = false
-    }
-
-    private fun getM3U8Playlist(m3u8: String): String? {
-        try {
-            val chunkListUrl = URL(m3u8)
-            val s = Scanner(chunkListUrl.openStream())
-            while (s.hasNext()) {
-                val line: String = s.next()
-                if (line.startsWith("chunklist")) return line
-            }
-        } catch (ignored: java.lang.Exception) {
-        }
-        return null
-    }
-
-    private fun getTSUrls(playlistUrl: String): List<String>? {
-        try {
-            val tsUrls: MutableList<String> = ArrayList()
-            val url = URL(playlistUrl)
-            val s = Scanner(url.openStream())
-            while (s.hasNext()) {
-                val line: String = s.next()
-                if (!line.startsWith("media")) continue
-                tsUrls.add(line)
-            }
-            return tsUrls
-        } catch (ignored: java.lang.Exception) {
-        }
-        return null
     }
 
     private fun tryToCancelIfNeeded(fos: FileOutputStream, inputStream: InputStream, f: File): Boolean {

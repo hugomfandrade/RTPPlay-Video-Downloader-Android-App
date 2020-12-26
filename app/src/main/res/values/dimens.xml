@@ -1,0 +1,3 @@
+<resources>
+    <dimen name="parsing_dialog_margin">30dp</dimen>
+</resources>

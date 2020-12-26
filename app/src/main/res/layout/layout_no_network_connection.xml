@@ -5,12 +5,12 @@
     android:id="@+id/tv_no_network_connection"
     android:layout_width="match_parent"
     android:layout_height="0dp"
+    android:layout_gravity="bottom"
     android:gravity="center"
     android:textColor="#fff"
     android:textSize="12sp"
     android:text="@string/no_network_connection"
     android:background="#1e1e1e"
-    android:layout_alignParentBottom="true"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintLeft_toLeftOf="parent"
     app:layout_constraintRight_toRightOf="parent"/>

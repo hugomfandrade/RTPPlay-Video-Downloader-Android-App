@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.utils
+package org.hugoandrade.rtpplaydownloader.app.main
 
 import android.Manifest
 import android.annotation.TargetApi
