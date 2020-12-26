@@ -1,78 +1,64 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
-import android.util.Log
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV3
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.net.HttpURLConnection
 import java.net.URL
+import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 
-open class RTPPlayTSDownloaderTask(private val url : String?,
-                                   private val mediaUrl : String,
-                                   private val dirPath : String,
-                                   private val filename : String,
-                                   private val listener : Listener) : DownloaderTask(mediaUrl, dirPath, filename, listener) {
+class TSDownloaderTask(private var playlistUrl : String,
+                       private val dirPath : String,
+                       private val filename : String,
+                       private val listener : Listener,
+                       private val tsUrlsValidator: TSUtils.Validator<String>? = null) :
+
+        DownloaderTask(listener) {
 
     override val TAG : String = javaClass.simpleName
 
     override fun downloadMediaFile() {
 
-        if (isDownloading) {
-            return
-        }
+        if (isDownloading) return
 
         isDownloading = true
         doCanceling = false
 
         try {
             try {
-                URL(mediaUrl)
+                URL(playlistUrl)
             }
             catch (e: Exception) {
-                listener.downloadFailed("URL no longer exists")
+                dispatchDownloadFailed("URL no longer exists")
                 return
             }
 
-            val m3u8: String = mediaUrl
+            val m3u8: String = playlistUrl
             val baseUrl: String = m3u8.substring(0, m3u8.lastIndexOf("/") + 1)
 
-            var tsUrls = TSUtils.getTSUrls(m3u8)
-
-            // try reparse
-            if (tsUrls.isEmpty() && url != null) {
-                Log.d(TAG, "try reparse $url")
-                val parsingTask = RTPPlayParsingTaskV3()
-                parsingTask.parseMediaFile(url)
-                val parsingMediaUrl = parsingTask.mediaUrl
-                if (parsingMediaUrl != null) {
-                    tsUrls = TSUtils.getTSUrls(parsingMediaUrl)
-                }
+            val tsUrls = if(tsUrlsValidator == null) {
+                TSUtils.getTSUrls(playlistUrl)
+            }
+            else {
+                TSUtils.getTSUrls(playlistUrl, tsUrlsValidator)
             }
 
-            if (tsUrls.isEmpty()) {
-                listener.downloadFailed("failed to get ts files")
-                return
-            }
-
-            val tsFullUrls: ArrayList<String> = ArrayList()
-            for (tsUrl in tsUrls) {
-                val tsFullUrl = baseUrl + tsUrl
-                tsFullUrls.add(tsFullUrl)
-            }
+            // full urls
+            val tsFullUrls = tsUrls
+                    .stream()
+                    .map { tsUrl -> baseUrl + tsUrl }
+                    .collect(Collectors.toList())
 
             val storagePath = dirPath
             val f = File(storagePath, filename)
             if (MediaUtils.doesMediaFileExist(f)) {
                 isDownloading = false
-                listener.downloadFailed("file with same name already exists")
+                dispatchDownloadFailed("file with same name already exists")
                 return
             }
-            listener.downloadStarted(f)
+            dispatchDownloadStarted(f)
 
             var progress = 0L
             var size = 0L
@@ -83,7 +69,7 @@ open class RTPPlayTSDownloaderTask(private val url : String?,
                 val inputStream = u.openStream()
                 if (inputStream != null) {
                     // update size
-                    val huc = u.openConnection() as HttpURLConnection //to know the size of video
+                    val huc = u.openConnection()
                     val tsSize = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         huc.contentLengthLong
                     } else {
@@ -121,51 +107,20 @@ open class RTPPlayTSDownloaderTask(private val url : String?,
                             return
                         }
 
-                        listener.onProgress(progress, estimatedSize)
+                        dispatchProgress(progress, estimatedSize)
                     }
                     inputStream.close()
                 }
 
             }
-            listener.downloadFinished(f)
+            dispatchDownloadFinished(f)
 
             fos.close()
 
         } catch (ioe: Exception) {
             ioe.printStackTrace()
-            listener.downloadFailed("Internal error while downloading")
+            dispatchDownloadFailed("Internal error while downloading")
         }
         isDownloading = false
-    }
-
-    override fun cancel() {
-        doCanceling = true
-    }
-
-    override fun resume() {
-        isDownloading = true
-    }
-
-    override fun pause() {
-        isDownloading = false
-    }
-
-    private fun tryToCancelIfNeeded(fos: FileOutputStream, inputStream: InputStream, f: File): Boolean {
-
-        if (doCanceling) {
-            fos.close()
-            try {
-                inputStream.close()
-            } catch (ioe: IOException) {
-                // just going to ignore this one
-            }
-            f.delete()
-
-            listener.downloadFailed("cancelled")
-            isDownloading = false
-            doCanceling = false
-            return true
-        }
-        return false
     }
 }

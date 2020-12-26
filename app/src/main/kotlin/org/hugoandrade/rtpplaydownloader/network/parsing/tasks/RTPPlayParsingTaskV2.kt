@@ -1,22 +1,13 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
-import java.io.IOException
 
 @Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTaskV2 : RTPPlayParsingTask() {
 
-    override fun getVideoFile(url: String): String? {
-        val doc: Document
-
-        try {
-            doc = Jsoup.connect(url).timeout(10000).get()
-        } catch (ignored: IOException) {
-            return null
-        }
+    override fun parseMediaUrl(doc: Document): String? {
 
         try {
             val scriptElements = doc.getElementsByTag("script") ?: return null

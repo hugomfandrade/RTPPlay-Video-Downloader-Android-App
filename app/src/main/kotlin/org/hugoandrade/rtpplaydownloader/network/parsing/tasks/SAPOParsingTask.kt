@@ -1,62 +1,25 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.io.IOException
 import java.net.SocketTimeoutException
-import java.net.URL
 
 class SAPOParsingTask : ParsingTask() {
 
-    override fun parseMediaFile(url: String): Boolean {
-
-        this.url = url
-        mediaUrl = getVideoFile(url) ?: return false
-        filename = getMediaFileName(url, mediaUrl)
-
-        try {
-            URL(mediaUrl)
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
-
-        return true
-    }
-
     override fun isValid(url: String) : Boolean {
-
-        if (!NetworkUtils.isValidURL(url)) {
-            return false
-        }
 
         val isFileType: Boolean = url.contains("videos.sapo.pt")
 
-        if (isFileType) {
-
-            val videoFile: String? = getVideoFile(url)
-
-            return videoFile != null
-        }
-
-        return false
+        return isFileType || super.isValid(url)
     }
 
-    private fun getVideoFile(urlString: String): String? {
+    override fun parseMediaUrl(doc: Document): String? {
         try {
-            val doc: Document?
 
-            try {
-                doc = Jsoup.connect(urlString).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return null
-            }
-
-            val playerVideoElements = doc?.getElementsByAttributeValue("id", "player-video")
+            val playerVideoElements = doc.getElementsByAttributeValue("id", "player-video")
+            val url = this.url ?: ""
 
             if (playerVideoElements != null) {
 
@@ -67,8 +30,8 @@ class SAPOParsingTask : ParsingTask() {
                     if (dataVideoLink.isEmpty()) continue
 
                     val location : String = when {
-                        urlString.contains("http://") -> "http:"
-                        urlString.contains("https://") -> "https:"
+                        url.contains("http://") -> "http:"
+                        url.contains("https://") -> "https:"
                         else -> ""
                     }
 
@@ -96,21 +59,13 @@ class SAPOParsingTask : ParsingTask() {
         return null
     }
 
-    override fun getMediaFileName(url: String, videoFile: String?): String {
+    override fun parseMediaFileName(doc: Document): String {
 
         try {
-            val doc: Document?
 
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return videoFile ?: url
-            }
+            val titleElements = doc.getElementsByTag("title")
 
-
-            val titleElements = doc?.getElementsByTag("title")
-
-            if (videoFile != null && titleElements != null && titleElements.size > 0) {
+            if (mediaUrl != null && titleElements != null && titleElements.size > 0) {
 
                 val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
                         .replace(".SAPO.Videos", "")
@@ -122,6 +77,6 @@ class SAPOParsingTask : ParsingTask() {
             e.printStackTrace()
         }
 
-        return videoFile?:url
+        return mediaUrl?: url?: null.toString()
     }
 }

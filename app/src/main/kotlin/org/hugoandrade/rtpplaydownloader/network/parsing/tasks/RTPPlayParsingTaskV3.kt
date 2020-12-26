@@ -3,39 +3,25 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
-import org.jsoup.Jsoup
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
-import java.io.IOException
 
-open class RTPPlayParsingTaskV3 : RTPPlayParsingTask(), TSParsingTask {
+@Deprecated(message = "use a more recent RTPPlay parser")
+open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
-    private var playlist: TSPlaylist? = null
+    override fun isValid(url: String) : Boolean {
 
-    override fun parseMediaFile(url: String): Boolean {
-        val parsed = super.parseMediaFile(url)
+        val isFileType: Boolean = url.contains("www.rtp.pt/play")
 
-        playlist = getM3U8Files(mediaUrl)
-
-        return parsed
+        return isFileType || super.isValid(url)
     }
 
-    override fun getVideoFile(url: String): String? {
-        return getM3U8Playlist(url)
+    override fun parseThumbnailPath(doc: Document): String? {
+        return ParsingUtils.getThumbnailPath(doc)
     }
 
-    override fun getTSPlaylist(): TSPlaylist? {
-        return playlist
-    }
-
-    private fun getM3U8Playlist(url: String): String? {
-        val doc: Document
-
-        try {
-            doc = Jsoup.connect(url).timeout(10000).get()
-        } catch (ignored: IOException) {
-            return null
-        }
+    // get playlist url
+    override fun parseMediaUrl(doc: Document): String? {
 
         try {
 
@@ -73,9 +59,14 @@ open class RTPPlayParsingTaskV3 : RTPPlayParsingTask(), TSParsingTask {
         return null
     }
 
-    private fun getM3U8Files(playlistUrl: String?): TSPlaylist? {
-        if (playlistUrl == null) return null
+    override fun parseM3U8Playlist(): TSPlaylist? {
+        val tsPlaylist = mediaUrl ?: return null
 
-        return TSPlaylist().add("DEFAULT", playlistUrl)
+        return TSPlaylist().add("DEFAULT", tsPlaylist)
+    }
+
+    override fun parseMediaFileName(doc: Document): String {
+        return super.parseMediaFileName(doc)
+                .replace(".RTP.Play.RTP", "") + ".ts"
     }
 }
