@@ -3,16 +3,67 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.junit.Test
 
 class ParsingUnitTestSIC : ParsingUnitTest() {
 
     @Test
-    fun sicCompat() {
+    fun sicIdentifier_20201226() {
 
-        val url =
-                // "https://sicnoticias.pt/programas/eixodomal/2020-09-11-Regresso-as-aulas-Presidenciais-e-a-morte-de-Vicente-Jorge-Silva.-O-Eixo-do-Mal-na-integra"
-                "https://sicradical.pt/programas/irritacoes/Videos/2020-12-19-Irritacoes---Programa-de-18-de-dezembro"
+        val url = "https://sicnoticias.pt/programas/eixodomal/2020-12-25-As-entrevistas-a-Cavaco-Silva-e-a-Passos-Coelho-e-o-massacre-de-animais-na-Azambuja"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = SICParsingTaskIdentifier()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        val mediaUrl : String = parsingTask.mediaUrl ?: throw RuntimeException("could not parse media file")
+        val thumbnailUrl : String? = parsingTask.thumbnailUrl
+        val filename : String? = parsingTask.filename
+        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, filename ?: "")
+
+        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = mediaFilename)
+        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
+
+        download(item)
+    }
+
+    @Test
+    fun sicIdentifier_withTS() {
+
+        val url = "https://sicnoticias.pt/programas/eixodomal/2020-09-11-Regresso-as-aulas-Presidenciais-e-a-morte-de-Vicente-Jorge-Silva.-O-Eixo-do-Mal-na-integra"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = SICParsingTaskIdentifier()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        val mediaUrl : String = parsingTask.mediaUrl ?: throw RuntimeException("could not parse media file")
+        val thumbnailUrl : String? = parsingTask.thumbnailUrl
+        val filename : String? = parsingTask.filename
+        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, filename ?: "")
+
+        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = mediaFilename)
+        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
+
+        download(item)
+    }
+
+    @Test
+    fun sicIdentifier_withRaw() {
+
+        val url = "https://sicradical.pt/programas/irritacoes/Videos/2020-12-19-Irritacoes---Programa-de-18-de-dezembro"
 
         System.err.println("trying to parse: ")
         System.err.println(url)
@@ -31,15 +82,16 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         val mediaUrl : String = parsingTask.mediaUrl ?: throw RuntimeException("could not parse media file")
         val thumbnailUrl : String? = parsingTask.thumbnailUrl
         val filename : String? = parsingTask.filename
+        val mediaFilename : String = MediaUtils.getUniqueFilenameAndLock(testDir.absolutePath, filename ?: "")
 
-        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = filename)
+        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = mediaFilename)
         item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
         download(item)
     }
 
     @Test
-    fun sicV3Player() {
+    fun sicV3Player_withTSDownload() {
 
         val url = "https://sicnoticias.pt/programas/eixodomal/2020-09-11-Regresso-as-aulas-Presidenciais-e-a-morte-de-Vicente-Jorge-Silva.-O-Eixo-do-Mal-na-integra"
 
@@ -61,6 +113,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
     }
 
     @Test
+    @Deprecated(message = "no longer valid")
     fun sicV2Player() {
 
         val url = "https://sic.pt/Programas/governo-sombra/videos/2020-08-29-Governo-Sombra---28-de-agosto"

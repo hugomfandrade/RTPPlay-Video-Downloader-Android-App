@@ -20,6 +20,7 @@ open class SICParsingTaskV4 : SICParsingTask() {
                     if (!scriptText.contains("jwplayer")) continue
                     if (!scriptText.contains("'playlist'")) continue
                     if (!scriptText.contains("'file'")) continue
+                    if (scriptText.contains(".m3u8")) continue
 
                     try {
 

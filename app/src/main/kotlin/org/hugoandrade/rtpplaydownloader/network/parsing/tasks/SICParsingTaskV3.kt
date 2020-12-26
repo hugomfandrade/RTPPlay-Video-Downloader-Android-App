@@ -7,7 +7,6 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-@Deprecated(message = "use a more recent SIC parser")
 open class SICParsingTaskV3 : TSParsingTask() {
 
     override fun isValid(url: String) : Boolean {
@@ -50,9 +49,11 @@ open class SICParsingTaskV3 : TSParsingTask() {
 
                         if (jwPlayerSubString.indexOf(from) >= 0) {
 
+                            val startIndex = ParsingUtils.indexOfEx(jwPlayerSubString, from)
+
                             val link: String = jwPlayerSubString.substring(
-                                    ParsingUtils.indexOfEx(jwPlayerSubString, from),
-                                    ParsingUtils.indexOfEx(jwPlayerSubString, from) + jwPlayerSubString.substring(ParsingUtils.indexOfEx(jwPlayerSubString, from)).indexOf(to))
+                                    startIndex,
+                                    startIndex+ jwPlayerSubString.substring(startIndex).indexOf(to))
 
                             return link
                         }
