@@ -1,9 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV2
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV3
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.RTPPlayParsingTaskV4
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.junit.Assert
 import org.junit.Test
@@ -12,6 +9,25 @@ import java.io.File
 class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
     @Test
+    fun rtpPlayV5() {
+
+        val url = "https://www.rtp.pt/play/p2064/gps"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = RTPPlayParsingTaskV5()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
+
+    @Test
+    @Deprecated(message = "no longer valid")
     fun rtpPlayV4() {
 
         val url = "https://www.rtp.pt/play/p2064/gps"

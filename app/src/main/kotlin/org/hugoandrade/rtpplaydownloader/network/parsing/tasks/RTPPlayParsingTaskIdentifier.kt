@@ -9,6 +9,7 @@ class RTPPlayParsingTaskIdentifier : ParsingTask() {
 
 
     private val parsingTasks = listOf(
+            RTPPlayParsingTaskV5(),
             RTPPlayParsingTaskV4(),
             RTPPlayParsingTaskV3(),
             RTPPlayParsingTaskV2(),
