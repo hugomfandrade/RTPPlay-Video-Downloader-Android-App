@@ -33,7 +33,7 @@ open class RTPPlayParsingTaskV5 : TSParsingTask() {
 
                 for (dataNode: DataNode in scriptElement.dataNodes()) {
 
-                    if (!dataNode.wholeData.contains("RTPPlayer({")) continue
+                    if (!dataNode.wholeData.contains("RTPPlayer")) continue
 
                     val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
 

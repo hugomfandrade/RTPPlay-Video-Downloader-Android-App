@@ -37,8 +37,6 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>)
 
         if (selectedTask == null) return false
 
-        System.err.println(TAG + " selectedTask " + selectedTask)
-
         this.mediaUrl = selectedTask.mediaUrl
         this.filename = selectedTask.filename
         this.thumbnailUrl = selectedTask.thumbnailUrl

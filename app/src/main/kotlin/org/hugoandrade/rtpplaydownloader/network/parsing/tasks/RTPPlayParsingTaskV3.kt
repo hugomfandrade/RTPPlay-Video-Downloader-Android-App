@@ -1,8 +1,10 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSUrl
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
@@ -61,6 +63,8 @@ open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
     override fun parseM3U8Playlist(): TSPlaylist? {
         val tsPlaylist = mediaUrl ?: return null
+
+        if (!TSUtils.getUrlWithoutParameters(tsPlaylist).endsWith(".m3u8")) return null
 
         return TSPlaylist().add("DEFAULT", tsPlaylist)
     }

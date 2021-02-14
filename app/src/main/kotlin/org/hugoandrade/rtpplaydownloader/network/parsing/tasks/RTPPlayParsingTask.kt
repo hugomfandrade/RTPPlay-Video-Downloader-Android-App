@@ -4,7 +4,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-@Deprecated(message = "use a more recent RTPPlay parser")
+// still useful for audio files
 open class RTPPlayParsingTask : ParsingTask() {
 
     override fun isUrlSupported(url: String) : Boolean {
@@ -67,5 +67,10 @@ open class RTPPlayParsingTask : ParsingTask() {
 
     override fun parseThumbnailPath(doc: Document): String? {
         return ParsingUtils.getThumbnailPath(doc)
+    }
+
+    override fun parseMediaFileName(doc: Document): String {
+        return super.parseMediaFileName(doc)
+                .replace(".RTP.Play.RTP", "")
     }
 }

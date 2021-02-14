@@ -3,6 +3,8 @@ package org.hugoandrade.rtpplaydownloader.network.download
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSUrl
+import java.net.URI
+import java.net.URISyntaxException
 import java.net.URL
 import java.util.*
 import kotlin.collections.ArrayList
@@ -30,6 +32,8 @@ private constructor() {
         }
 
         fun getM3U8Playlist(m3u8: String, validator: Validator<String>): String? {
+            if (!getUrlWithoutParameters(m3u8).endsWith(".m3u8")) return null
+
             try {
                 val chunkListUrl = URL(m3u8)
                 val s = Scanner(chunkListUrl.openStream())
@@ -44,6 +48,8 @@ private constructor() {
         }
 
         fun getCompleteM3U8Playlist(playlistUrl: String): TSPlaylist? {
+            if (!getUrlWithoutParameters(playlistUrl).endsWith(".m3u8")) return null
+
             try {
                 val tsPlaylist = TSPlaylist()
 
@@ -82,6 +88,8 @@ private constructor() {
         }
 
         fun getCompleteM3U8PlaylistWithoutBaseUrl(playlistUrl: String): TSPlaylist? {
+            if (!getUrlWithoutParameters(playlistUrl).endsWith(".m3u8")) return null
+
             try {
                 val tsPlaylist = TSPlaylist()
 
@@ -141,9 +149,19 @@ private constructor() {
 
             return ArrayList()
         }
+
+        @Throws(URISyntaxException::class)
+        fun getUrlWithoutParameters(url: String): String {
+            val uri = URI(url)
+            return URI(uri.scheme,
+                    uri.authority,
+                    uri.path,
+                    null,  // Ignore the query part of the input url
+                    uri.fragment).toString()
+        }
     }
 
     interface Validator<T> {
-        fun isValid(o : T) : Boolean
+        fun isValid(o: T) : Boolean
     }
 }

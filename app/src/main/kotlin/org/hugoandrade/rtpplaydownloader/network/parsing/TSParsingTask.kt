@@ -12,7 +12,7 @@ abstract  class TSParsingTask : ParsingTask() {
 
         playlist = parseM3U8Playlist()
 
-        return parsed
+        return playlist != null
     }
 
     abstract fun parseM3U8Playlist(): TSPlaylist?
