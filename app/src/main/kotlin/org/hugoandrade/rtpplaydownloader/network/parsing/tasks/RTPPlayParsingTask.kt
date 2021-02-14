@@ -7,11 +7,11 @@ import org.jsoup.nodes.Document
 @Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTask : ParsingTask() {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String) : Boolean {
 
         val isFileType: Boolean = url.contains("www.rtp.pt/play")
 
-        return isFileType || super.isValid(url)
+        return isFileType || super.isUrlSupported(url)
     }
 
     override fun parseMediaUrl(doc: Document): String? {
@@ -24,10 +24,9 @@ open class RTPPlayParsingTask : ParsingTask() {
 
                 for (dataNode: DataNode in scriptElement.dataNodes()) {
 
-                    val scriptText: String = dataNode.wholeData
+                    if (!dataNode.wholeData.contains("RTPPlayer")) continue
 
-                    if (!scriptText.contains("RTPPlayer")) continue
-
+                    val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
 
                     try {
 
@@ -35,11 +34,11 @@ open class RTPPlayParsingTask : ParsingTask() {
 
                         if (rtpPlayerSubString.indexOf(".mp4") >= 0) {  // is video file
 
-                            if (rtpPlayerSubString.indexOf("fileKey: \"") >= 0) {
+                            if (rtpPlayerSubString.indexOf("fileKey:\"") >= 0) {
 
                                 val link: String = rtpPlayerSubString.substring(
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey: \""),
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey: \"") + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey: \"")).indexOf("\","))
+                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey:\""),
+                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey:\"") + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, "fileKey:\"")).indexOf("\","))
 
 
                                 return "http://cdn-ondemand.rtp.pt$link"
@@ -47,11 +46,11 @@ open class RTPPlayParsingTask : ParsingTask() {
 
                         } else if (rtpPlayerSubString.indexOf(".mp3") >= 0) { // is audio file
 
-                            if (rtpPlayerSubString.indexOf("file: \"") >= 0) {
+                            if (rtpPlayerSubString.indexOf("file:\"") >= 0) {
 
                                 return rtpPlayerSubString.substring(
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "file: \""),
-                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "file: \"") + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, "file: \"")).indexOf("\","))
+                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "file:\""),
+                                        ParsingUtils.indexOfEx(rtpPlayerSubString, "file:\"") + rtpPlayerSubString.substring(ParsingUtils.indexOfEx(rtpPlayerSubString, "file:\"")).indexOf("\","))
 
                             }
                         }

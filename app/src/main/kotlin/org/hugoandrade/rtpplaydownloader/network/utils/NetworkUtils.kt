@@ -7,6 +7,8 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.os.Build
 import org.hugoandrade.rtpplaydownloader.R
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import java.net.URL
 
 class NetworkUtils
@@ -21,6 +23,19 @@ private constructor() {
 
 
     companion object {
+
+        fun getDoc(url: String): Document? {
+            return getDoc(url, 10000);
+        }
+
+        fun getDoc(url: String, millis: Int): Document? {
+            return try {
+                Jsoup.connect(url).timeout(millis).get()
+            } catch (e : java.lang.Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
 
         fun isValidURL(urlText: String): Boolean {
             return try {

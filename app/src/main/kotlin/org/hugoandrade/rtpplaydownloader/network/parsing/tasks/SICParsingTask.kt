@@ -7,7 +7,7 @@ import org.jsoup.nodes.Element
 @Deprecated(message = "use a more recent SIC parser")
 open class SICParsingTask : ParsingTask() {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String) : Boolean {
 
         val isFileType: Boolean =
                 url.contains("sicradical.sapo.pt") ||
@@ -17,7 +17,7 @@ open class SICParsingTask : ParsingTask() {
                 url.contains("sic.sapo.pt") ||
                 url.contains("sic.pt")
 
-        return isFileType || super.isValid(url)
+        return isFileType || super.isUrlSupported(url)
     }
 
     override fun parseMediaUrl(doc: Document): String? {

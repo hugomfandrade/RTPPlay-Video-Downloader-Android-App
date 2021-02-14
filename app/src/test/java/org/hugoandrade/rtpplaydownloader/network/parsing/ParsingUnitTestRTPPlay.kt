@@ -2,11 +2,66 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
+import org.jsoup.Jsoup
 import org.junit.Assert
 import org.junit.Test
 import java.io.File
 
 class ParsingUnitTestRTPPlay : ParsingUnitTest() {
+
+    @Test
+    fun rtpPlayAudio() {
+
+        val url = "https://www.rtp.pt/play/p5661/vamos-todos-morrer"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = RTPPlayParsingTaskIdentifier()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
+
+    @Test
+    fun rtpPlayV5Audio() {
+
+        val url = "https://www.rtp.pt/play/p5661/vamos-todos-morrer"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = RTPPlayParsingTaskV5()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
+
+    @Test
+    fun rtpPlayV4Audio() {
+
+        val url = "https://www.rtp.pt/play/p5661/vamos-todos-morrer"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = RTPPlayParsingTaskV4()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
 
     @Test
     fun rtpPlayV5() {
@@ -54,8 +109,11 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val url = javaClass.classLoader?.getResource(filename)?.file
                 ?: return Assert.fail("failed to get file from resources")
 
+        val file = File(url)
+        val doc = Jsoup.parse(file, null)
+
         val parsingTask = RTPPlayParsingTaskV4()
-        val parsed = parsingTask.parseMediaFile(File(url))
+        val parsed = parsingTask.parseMediaFile(doc)
 
         System.err.println("successfully parsed ? " + parsed)
 

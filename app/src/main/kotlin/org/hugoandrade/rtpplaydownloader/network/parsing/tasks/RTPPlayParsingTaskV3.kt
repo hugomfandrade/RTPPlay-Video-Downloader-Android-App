@@ -9,11 +9,11 @@ import org.jsoup.nodes.Document
 @Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String) : Boolean {
 
         val isFileType: Boolean = url.contains("www.rtp.pt/play")
 
-        return isFileType || super.isValid(url)
+        return isFileType || super.isUrlSupported(url)
     }
 
     override fun parseThumbnailPath(doc: Document): String? {
@@ -32,9 +32,9 @@ open class RTPPlayParsingTaskV3 : TSParsingTask() {
 
                 for (dataNode: DataNode in scriptElement.dataNodes()) {
 
-                    val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
+                    if (!dataNode.wholeData.contains("RTPPlayer")) continue
 
-                    if (!scriptText.contains("RTPPlayer({")) continue
+                    val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
 
                     try {
 

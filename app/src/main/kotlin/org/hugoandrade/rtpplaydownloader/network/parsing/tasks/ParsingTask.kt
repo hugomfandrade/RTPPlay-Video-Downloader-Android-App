@@ -5,7 +5,6 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.io.File
 import java.net.URL
 
 abstract class ParsingTask {
@@ -22,21 +21,36 @@ abstract class ParsingTask {
 
     var doCanceling: Boolean = false
 
+    open fun isUrlSupported(url: String) : Boolean {
+        return true
+    }
+
     open fun isValid(url: String) : Boolean {
 
-        if (!NetworkUtils.isValidURL(url)) {
-            return false
-        }
+        if (!NetworkUtils.isValidURL(url)) return false
+
+        if (!isUrlSupported(url)) return false
 
         try {
-            val doc = Jsoup.connect(url).timeout(10000).get()
-            val mediaUrl: String? = parseMediaUrl(doc)
-
-            return mediaUrl != null
+            val doc = NetworkUtils.getDoc(url) ?: return false
+            return isValid(doc)
         }
         catch (e : java.lang.Exception) {
             e.printStackTrace()
             return false
+        }
+    }
+
+    open fun isValid(doc: Document) : Boolean {
+
+        return try {
+            val mediaUrl: String? = parseMediaUrl(doc)
+
+            mediaUrl != null
+        }
+        catch (e : java.lang.Exception) {
+            e.printStackTrace()
+            false
         }
     }
 
@@ -46,18 +60,6 @@ abstract class ParsingTask {
 
         try {
             val doc = Jsoup.connect(url).timeout(10000).get()
-            return parseMediaFile(doc)
-        }
-        catch (e : java.lang.Exception) {
-            e.printStackTrace()
-            return false
-        }
-    }
-
-    open fun parseMediaFile(file: File): Boolean {
-
-        try {
-            val doc = Jsoup.parse(file, null)
             return parseMediaFile(doc)
         }
         catch (e : java.lang.Exception) {

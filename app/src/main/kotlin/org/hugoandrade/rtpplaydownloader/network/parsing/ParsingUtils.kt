@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.Predicate
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
@@ -24,13 +23,6 @@ private constructor() {
                 return string.indexOf(subString) + subString.length
             }
             return 0
-        }
-
-        fun <T> findFirst(tasks : List<T>, predicate: Predicate<T>) : T? {
-            for (task in tasks) {
-                if (predicate.test(task)) return task
-            }
-            return null
         }
 
         fun getMediaFileName(doc: Document, srcUrl: String, mediaFileUrl: String?): String {

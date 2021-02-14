@@ -3,6 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV3
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV4
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
+import org.jsoup.Jsoup
 import org.junit.Assert
 import org.junit.Test
 import java.io.File
@@ -18,8 +19,11 @@ class ParsingUnitTestSICRadical : ParsingUnitTest() {
         val url = javaClass.classLoader?.getResource(filename)?.file
                 ?: return Assert.fail("failed to get file from resources")
 
+        val file = File(url)
+        val doc = Jsoup.parse(file, null)
+
         val parsingTask = SICParsingTaskV4()
-        val parsed = parsingTask.parseMediaFile(File(url))
+        val parsed = parsingTask.parseMediaFile(doc)
 
         System.err.println("successfully parsed ? " + parsed)
 

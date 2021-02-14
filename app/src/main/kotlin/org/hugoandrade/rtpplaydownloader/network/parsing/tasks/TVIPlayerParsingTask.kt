@@ -12,11 +12,11 @@ import java.nio.charset.Charset
 
 class TVIPlayerParsingTask : TSParsingTask() {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String) : Boolean {
 
         val isFileType: Boolean = url.contains("tviplayer.iol.pt")
 
-        return isFileType || super.isValid(url)
+        return isFileType || super.isUrlSupported(url)
     }
 
     override fun parseMediaUrl(doc: Document): String? {

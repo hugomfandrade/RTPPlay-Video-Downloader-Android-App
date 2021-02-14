@@ -1,7 +1,5 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
@@ -12,11 +10,11 @@ import org.jsoup.nodes.Document
 
 open class RTPPlayParsingTaskV5 : TSParsingTask() {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String) : Boolean {
 
         val isFileType: Boolean = url.contains("www.rtp.pt/play")
 
-        return isFileType || super.isValid(url)
+        return isFileType || super.isUrlSupported(url)
     }
 
     override fun parseThumbnailPath(doc: Document): String? {
@@ -35,9 +33,9 @@ open class RTPPlayParsingTaskV5 : TSParsingTask() {
 
                 for (dataNode: DataNode in scriptElement.dataNodes()) {
 
-                    val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
+                    if (!dataNode.wholeData.contains("RTPPlayer({")) continue
 
-                    if (!scriptText.contains("RTPPlayer({")) continue
+                    val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
 
                     try {
 

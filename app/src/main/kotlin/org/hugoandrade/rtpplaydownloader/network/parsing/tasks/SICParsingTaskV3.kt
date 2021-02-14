@@ -9,7 +9,7 @@ import org.jsoup.nodes.Document
 
 open class SICParsingTaskV3 : TSParsingTask() {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String) : Boolean {
 
         val isFileType: Boolean =
                 url.contains("sicradical.sapo.pt") ||
@@ -19,7 +19,7 @@ open class SICParsingTaskV3 : TSParsingTask() {
                 url.contains("sic.sapo.pt") ||
                 url.contains("sic.pt")
 
-        return isFileType || super.isValid(url)
+        return isFileType || super.isUrlSupported(url)
     }
 
     // get ts playlist
