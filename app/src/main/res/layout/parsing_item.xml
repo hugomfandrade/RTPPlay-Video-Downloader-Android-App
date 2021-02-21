@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <data>
-        <variable name="item" type="org.hugoandrade.rtpplaydownloader.network.parsing.ParsingItem"/>
+        <variable name="item" type="org.hugoandrade.rtpplaydownloader.app.main.ParsingItem"/>
     </data>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

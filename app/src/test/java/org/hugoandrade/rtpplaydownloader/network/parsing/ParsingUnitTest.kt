@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.AtomicDouble
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.download.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import kotlin.math.roundToInt

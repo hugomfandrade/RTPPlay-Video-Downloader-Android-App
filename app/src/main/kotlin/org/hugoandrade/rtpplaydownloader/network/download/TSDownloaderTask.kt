@@ -1,13 +1,11 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
-import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
 
 class TSDownloaderTask(private var playlistUrl : String,
                        private val dirPath : String,

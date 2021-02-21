@@ -9,7 +9,6 @@ import android.widget.CompoundButton
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingItem
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File

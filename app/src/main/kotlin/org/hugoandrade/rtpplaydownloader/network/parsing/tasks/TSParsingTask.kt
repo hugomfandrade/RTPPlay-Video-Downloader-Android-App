@@ -1,6 +1,6 @@
-package org.hugoandrade.rtpplaydownloader.network.parsing
+package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.Document
 
 abstract  class TSParsingTask : ParsingTask() {

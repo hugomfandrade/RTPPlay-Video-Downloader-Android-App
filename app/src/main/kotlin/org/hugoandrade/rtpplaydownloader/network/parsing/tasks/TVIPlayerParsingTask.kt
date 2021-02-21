@@ -2,7 +2,6 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.nodes.Document
@@ -67,16 +66,15 @@ class TVIPlayerParsingTask : TSParsingTask() {
 
     override fun parseThumbnailPath(doc: Document): String? {
         try {
-            val scriptElements = doc.getElementsByTag("script")
-            if (scriptElements != null) {
-                for (element in scriptElements) {
-                    for (dataNode in element.dataNodes()) {
-                        val scriptText = dataNode.wholeData
-                        if (scriptText.contains("$('#player').iolplayer({")) {
-                            val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"cover\":\""))
-                            return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
-                        }
-                    }
+            val scriptElements = doc.getElementsByTag("script") ?: return null
+
+            for (element in scriptElements) {
+                for (dataNode in element.dataNodes()) {
+                    val scriptText = dataNode.wholeData
+                    if (scriptText.contains("$('#player').iolplayer({")) continue
+
+                    val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"cover\":\""))
+                    return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
                 }
             }
         } catch (ignored: java.lang.Exception) {
@@ -106,16 +104,15 @@ class TVIPlayerParsingTask : TSParsingTask() {
 
     private fun getM3U8ChunkUrl(doc: Document): String? {
         try {
-            val scriptElements = doc.getElementsByTag("script")
-            if (scriptElements != null) {
-                for (element in scriptElements) {
-                    for (dataNode in element.dataNodes()) {
-                        val scriptText = dataNode.wholeData
-                        if (scriptText.contains("$('#player').iolplayer({")) {
-                            val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"videoUrl\":\""))
-                            return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
-                        }
-                    }
+            val scriptElements = doc.getElementsByTag("script") ?: return null
+
+            for (element in scriptElements) {
+                for (dataNode in element.dataNodes()) {
+                    val scriptText = dataNode.wholeData
+                    if (!scriptText.contains("$('#player').iolplayer({")) continue
+
+                    val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"videoUrl\":\""))
+                    return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
                 }
             }
         } catch (ignored: java.lang.Exception) {

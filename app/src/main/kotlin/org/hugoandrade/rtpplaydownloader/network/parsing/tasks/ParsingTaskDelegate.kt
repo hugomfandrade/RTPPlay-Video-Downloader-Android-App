@@ -65,7 +65,7 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>)
             if (task.isValid(doc)) return true
         }
 
-        return true
+        return false
     }
 
     override fun parseMediaUrl(doc: Document): String? {
