@@ -64,6 +64,25 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
     }
 
     @Test
+    fun rtpPlayV6() {
+
+        val url = "https://www.rtp.pt/play/p2064/gps"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = RTPPlayParsingTaskV6()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
+
+    @Test
+    @Deprecated(message = "no longer valid")
     fun rtpPlayV5() {
 
         val url = "https://www.rtp.pt/play/p2064/gps"

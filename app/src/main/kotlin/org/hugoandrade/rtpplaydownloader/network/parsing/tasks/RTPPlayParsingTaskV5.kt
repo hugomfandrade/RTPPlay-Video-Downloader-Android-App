@@ -7,6 +7,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
+@Deprecated(message = "use a more recent RTPPlay parser")
 open class RTPPlayParsingTaskV5 : TSParsingTask() {
 
     override fun isUrlSupported(url: String) : Boolean {
