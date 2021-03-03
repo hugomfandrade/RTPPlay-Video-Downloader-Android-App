@@ -2,12 +2,13 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import org.apache.commons.codec.binary.Base64
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
+import java.util.*
 
-@Deprecated(message = "use a more recent RTPPlay parser")
-open class RTPPlayParsingTaskV6 : RTPPlayParsingTaskV5() {
+open class RTPPlayParsingTaskV7 : RTPPlayParsingTaskV6() {
 
     // get playlist url
     override fun parseMediaUrl(doc: Document): String? {
@@ -25,15 +26,18 @@ open class RTPPlayParsingTaskV6 : RTPPlayParsingTaskV5() {
                 val scriptText: String = dataNode.wholeData.replace("\\s+".toRegex(), "")
 
                 try {
+                    System.err.println(scriptText)
 
                     val rtpPlayerSubString: String = scriptText
-                    val from = "hls:decodeURIComponent("
+                    val from = "hls:atob(decodeURIComponent("
                     val to = ".join(\"\"))"
 
                     if (rtpPlayerSubString.indexOf(from) >= 0) {
                         val indexFrom = ParsingUtils.indexOfEx(rtpPlayerSubString, from)
 
                         val fileKeyAsString = rtpPlayerSubString.substring(indexFrom, indexFrom + rtpPlayerSubString.substring(indexFrom).indexOf(to))
+
+                        System.err.println(fileKeyAsString)
 
                         val jsonArray : JsonArray = JsonParser().parse(fileKeyAsString).asJsonArray ?: continue
 
@@ -45,7 +49,25 @@ open class RTPPlayParsingTaskV6 : RTPPlayParsingTaskV5() {
                             link.append(item)
                         }
 
-                        return decode(link.toString())
+                        val fullLink = link.toString()
+
+                        /*
+                        System.err.println("fullLink: " + fullLink)
+
+                        val encodedBytes: ByteArray = Base64.encodeBase64("Test".toByteArray())
+                        val decodedBytes: ByteArray = Base64.decodeBase64(encodedBytes)
+
+                        val decodeLink = String(Base64.decodeBase64(fullLink.toByteArray()))
+                        val decodeLink01 = decode(fullLink)
+                        val decodeLink02 = String(Base64.decodeBase64(decode(fullLink).toByteArray()))
+
+                        System.err.println("decodeLink: ")
+                        System.err.println(decodeLink)
+                        System.err.println("decodeLink01: " + decodeLink01)
+                        System.err.println("decodeLink02: " + decodeLink02)
+                        */
+
+                        return String(Base64.decodeBase64(decode(fullLink).toByteArray()))
                     }
                 } catch (parsingException: java.lang.Exception) {
                     parsingException.printStackTrace()
@@ -56,7 +78,7 @@ open class RTPPlayParsingTaskV6 : RTPPlayParsingTaskV5() {
         return null
     }
 
-    private fun decode(link : String) : String {
+    private fun decode(link: String) : String {
 
         val decodedLink = StringBuilder()
 
