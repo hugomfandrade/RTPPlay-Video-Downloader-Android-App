@@ -1,12 +1,13 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.util.EntityUtils
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSUrl
 import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.io.StringReader
 import java.net.URI
 import java.net.URISyntaxException
@@ -175,10 +176,40 @@ private constructor() {
 
         fun readBulk(url: String): String? {
             try {
-                val httpClient = DefaultHttpClient()
+                val client = OkHttpClient.Builder().build()
+                val request = Request.Builder()
+                        .url(url)
+                        .build()
+
+                val response = client.newCall(request).execute()
+                return response.body?.string()
+                /*
+                val httpClient = OkHttpClient.Builder()
                 val httpGet = HttpGet(url)
                 val response = httpClient.execute(httpGet)
                 return EntityUtils.toString(response.entity, "UTF-8")
+                */
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return null
+        }
+
+        fun readBulkAsInputStream(url: String): InputStream? {
+            try {
+                val client = OkHttpClient.Builder().build()
+                val request = Request.Builder()
+                        .url(url)
+                        .build()
+
+                val response = client.newCall(request).execute()
+                return response.body?.byteStream()
+                /*
+                val httpClient = OkHttpClient.Builder()
+                val httpGet = HttpGet(url)
+                val response = httpClient.execute(httpGet)
+                return EntityUtils.toString(response.entity, "UTF-8")
+                */
             } catch (e: Exception) {
                 e.printStackTrace()
             }

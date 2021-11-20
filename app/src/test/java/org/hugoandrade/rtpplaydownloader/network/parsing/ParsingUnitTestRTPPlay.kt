@@ -13,7 +13,8 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
     fun rtpPlayV8_02() {
         DO_DOWNLOAD = true
 
-        val url = "https://www.rtp.pt/play/p9446/e576556/unidade-42"
+        // val url = "https://www.rtp.pt/play/p9446/e576556/unidade-42"
+        val url = "https://www.rtp.pt/play/p9461/n00b"
 
         System.err.println("trying to parse: ")
         System.err.println(url)

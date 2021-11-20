@@ -3,7 +3,18 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
+
+    defaultConfig {
+        applicationId "org.hugoandrade.rtpplaydownloader"
+        minSdkVersion 15
+        targetSdkVersion 31
+        versionCode 15
+        versionName "1.2.1"
+        multiDexEnabled true
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
@@ -11,24 +22,18 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    defaultConfig {
-        applicationId "org.hugoandrade.rtpplaydownloader"
-        minSdkVersion 15
-        targetSdkVersion 30
-        versionCode 15
-        versionName "1.2.1"
-        multiDexEnabled true
-        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     sourceSets {
         main.java.srcDirs += "src/main/kotlin"
     }
+
     buildFeatures {
         dataBinding = true
     }
@@ -44,18 +49,18 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // ui / ux
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.appcompat:appcompat:1.4.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.2'
     implementation 'androidx.preference:preference-ktx:1.1.1'
-    implementation 'com.google.android.material:material:1.3.0'
+    implementation 'com.google.android.material:material:1.4.0'
 
     // room
-    def roomVersion = "2.2.6"
+    def roomVersion = "2.3.0"
     implementation "androidx.room:room-runtime:$roomVersion"
     kapt "androidx.room:room-compiler:$roomVersion"
 
     // jetpack arch
-    def lifecycleVersion = "2.3.0"
+    def lifecycleVersion = "2.4.0"
     def archVersion = "2.1.0"
 
     // ViewModel
@@ -71,7 +76,8 @@ dependencies {
     // html parsing lib
     implementation 'org.jsoup:jsoup:1.12.1'
     implementation 'commons-codec:commons-codec:1.15'
-    implementation 'org.apache.httpcomponents:httpclient:4.1.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    implementation 'com.google.guava:guava:27.0.1-android'
 
     // azure
     implementation 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'

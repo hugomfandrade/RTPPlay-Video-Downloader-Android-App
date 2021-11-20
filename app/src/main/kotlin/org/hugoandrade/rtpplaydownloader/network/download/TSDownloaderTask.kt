@@ -1,10 +1,12 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
+import okio.internal.commonAsUtf8ToByteArray
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.*
 import java.net.URL
 import java.util.stream.Collectors
+import kotlin.math.max
 
 class TSDownloaderTask(private var playlistUrl : String,
                        private val dirPath : String,
@@ -62,48 +64,12 @@ class TSDownloaderTask(private var playlistUrl : String,
             val fos = FileOutputStream(f)
             for ((i, tsUrl) in tsFullUrls.withIndex()) {
 
-                val file = TSUtils.readBulk(tsUrl)
-                val inputStream = file?.byteInputStream() ?: continue
-                val tsSize = file.encodeToByteArray().size
+                val inputStream = TSUtils.readBulkAsInputStream(tsUrl) ?: continue
 
-                size += tsSize
-                val estimatedSize = size + tsSize * (tsUrls.size - i - 1)
+                // System.err.println(tsSize)
+                // System.err.println("===")
 
-                val buffer = ByteArray(1024)
-                var len = inputStream.read(buffer)
-                progress += len.toLong()
-                while (len > 0) {
-
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling
-                        return
-                    }
-
-                    while (!isDownloading){
-                        // pause
-
-                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                            // do cancelling while paused
-                            return
-                        }
-                    }
-
-                    fos.write(buffer, 0, len)
-                    len = inputStream.read(buffer)
-                    progress += len
-
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling while paused
-                        return
-                    }
-
-                    dispatchProgress(progress, estimatedSize)
-                }
-                inputStream.close()
-            }
-            /*
-            for ((i, tsUrl) in tsFullUrls.withIndex()) {
-
+                /*
                 val u = URL(tsUrl)
                 val inputStream = u.openStream() ?: continue
                 // update size
@@ -113,9 +79,7 @@ class TSDownloaderTask(private var playlistUrl : String,
                 } else {
                     huc.contentLength.toLong()
                 }
-
-                size += tsSize
-                val estimatedSize = size + tsSize * (tsUrls.size - i - 1)
+                */
 
                 val buffer = ByteArray(1024)
                 var len = inputStream.read(buffer)
@@ -145,11 +109,20 @@ class TSDownloaderTask(private var playlistUrl : String,
                         return
                     }
 
+                    size = progress
+                    val tsSize = size / (max(1, i))
+                    // size += tsSize
+                    val estimatedSize = size + tsSize * (tsUrls.size - i - 1)
+
+                    // System.err.println("progress")
+                    // System.err.println(progress)
+                    // System.err.println(estimatedSize)
+
                     dispatchProgress(progress, estimatedSize)
                 }
                 inputStream.close()
             }
-            */
+
             dispatchDownloadFinished(f)
 
             fos.close()
