@@ -6,20 +6,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-open class SICParsingTaskV3 : TSParsingTask() {
-
-    override fun isUrlSupported(url: String) : Boolean {
-
-        val isFileType: Boolean =
-                url.contains("sicradical.sapo.pt") ||
-                url.contains("sicradical.pt") ||
-                url.contains("sicnoticias.sapo.pt") ||
-                url.contains("sicnoticias.pt") ||
-                url.contains("sic.sapo.pt") ||
-                url.contains("sic.pt")
-
-        return isFileType || super.isUrlSupported(url)
-    }
+open class SICParsingTaskV3 : SICTSParsingTask() {
 
     // get ts playlist
     override fun parseMediaUrl(doc: Document): String? {
@@ -78,22 +65,5 @@ open class SICParsingTaskV3 : TSParsingTask() {
         mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
 
         return playlist
-    }
-
-    override fun parseMediaFileName(doc: Document): String {
-        return ParsingUtils.getMediaFileName(doc, url ?: "", mediaUrl)
-                .replace("SIC.Noticias.", "")
-                .replace("SIC.Radical.", "")
-                .replace("SIC.", "") + ".ts"
-    }
-
-    override fun parseThumbnailPath(doc: Document): String? {
-        val filename = super.parseThumbnailPath(doc)
-
-        return if (filename.isNullOrEmpty()) {
-            ParsingUtils.getThumbnailFromTwitterMetadata(doc) ?: filename
-        } else {
-            filename
-        }
     }
 }

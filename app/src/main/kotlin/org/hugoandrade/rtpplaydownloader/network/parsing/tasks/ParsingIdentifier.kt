@@ -27,23 +27,13 @@ class ParsingIdentifier {
 
         fun findType(task: ParsingTask): FileType? {
             if (task is RTPPlayParsingMultiPartTask) return FileType.RTPPlayMultiPart
-            if (task is RTPPlayParsingTask ||
-                task is RTPPlayParsingTaskV2 ||
-                task is RTPPlayParsingTaskV3 ||
-                task is RTPPlayParsingTaskV4 ||
-                task is RTPPlayParsingTaskV5 ||
-                task is RTPPlayParsingTaskIdentifier) return FileType.RTPPlay
-            if (task is SICParsingTask ||
-                task is SICParsingTaskV2 ||
-                task is SICParsingTaskV3 ||
-                task is SICParsingTaskV4 ||
-                task is SICParsingTaskIdentifier) return FileType.SIC
+            if (task is RTPPlayParsingTaskIdentifier) return FileType.RTPPlay
+            if (task is SICParsingTaskIdentifier) return FileType.SIC
             if (task is SAPOParsingTask) return FileType.SAPO
             if (task is TVIPlayerParsingTask) return FileType.TVIPlayer
             if (task is TSFParsingTask) return FileType.TSF
             return null
         }
-
     }
 
     enum class FileType(var parsingTask: ParsingTask) {

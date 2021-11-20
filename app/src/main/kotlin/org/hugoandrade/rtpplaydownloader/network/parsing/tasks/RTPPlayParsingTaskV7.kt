@@ -15,7 +15,6 @@ open class RTPPlayParsingTaskV7 : RTPPlayParsingTaskV6() {
 
         val scriptElements = doc.getElementsByTag("script") ?: return null
 
-
         for (scriptElement in scriptElements.iterator()) {
 
             for (dataNode: DataNode in scriptElement.dataNodes()) {

@@ -3,7 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.Document
 
-abstract  class TSParsingTask : ParsingTask() {
+abstract class TSParsingTask : ParsingTask() {
 
     var playlist: TSPlaylist? = null
 

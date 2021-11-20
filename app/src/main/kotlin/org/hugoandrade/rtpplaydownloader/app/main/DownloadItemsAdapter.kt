@@ -119,6 +119,9 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
                     holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
                 }
             }
+            else -> {
+                holder.binding.downloadProgressTextView.setText(null)
+            }
         }
 
         val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItem.State.Downloading || downloadableItem.state == DownloadableItem.State.Start

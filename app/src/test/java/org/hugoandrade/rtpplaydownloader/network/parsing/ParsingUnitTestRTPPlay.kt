@@ -261,7 +261,7 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
         if (!isUrl) throw RuntimeException("is not a valid website")
 
-        val parsingTask = RTPPlayParsingTask()
+        val parsingTask = RTPPlayParsingTaskV1()
         val parsed = parsingTask.parseMediaFile(url)
 
         System.err.println("successfully parsed ? " + parsed)

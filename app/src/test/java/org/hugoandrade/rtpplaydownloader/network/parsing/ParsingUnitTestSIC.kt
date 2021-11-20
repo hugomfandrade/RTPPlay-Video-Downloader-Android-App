@@ -132,7 +132,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         if (!isUrl) throw RuntimeException("is not a valid website")
 
-        val parsingTask = SICParsingTask()
+        val parsingTask = SICParsingTaskV1()
         val parsed = parsingTask.parseMediaFile(url)
 
         System.err.println("successfully parsed ? " + parsed)

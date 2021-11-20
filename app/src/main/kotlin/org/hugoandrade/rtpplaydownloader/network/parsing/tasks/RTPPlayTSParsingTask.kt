@@ -3,10 +3,10 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.jsoup.nodes.Document
 
-// still useful for audio files
-abstract class RTPPlayParsingTask : ParsingTask() {
+abstract class RTPPlayTSParsingTask : TSParsingTask() {
 
     override fun isUrlSupported(url: String): Boolean {
+
         return url.contains("www.rtp.pt/play")
     }
 
@@ -16,6 +16,6 @@ abstract class RTPPlayParsingTask : ParsingTask() {
 
     override fun parseMediaFileName(doc: Document): String {
         return super.parseMediaFileName(doc)
-                .replace(".RTP.Play.RTP", "")
+                .replace(".RTP.Play.RTP", "") + ".ts"
     }
 }

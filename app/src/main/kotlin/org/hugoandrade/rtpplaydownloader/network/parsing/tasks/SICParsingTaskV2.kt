@@ -4,7 +4,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 @Deprecated(message = "use a more recent SIC parser")
-open class SICParsingTaskV2 : SICParsingTask() {
+open class SICParsingTaskV2 : SICParsingTaskV1() {
 
     override fun parseMediaUrl(doc: Document): String? {
         try {
@@ -41,4 +41,5 @@ open class SICParsingTaskV2 : SICParsingTask() {
 
         return null
     }
+
 }

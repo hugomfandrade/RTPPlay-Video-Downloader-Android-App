@@ -8,4 +8,4 @@ class RTPPlayParsingTaskIdentifier : ParsingTaskDelegate(listOf(
         RTPPlayParsingTaskV4(),
         RTPPlayParsingTaskV3(),
         RTPPlayParsingTaskV2(),
-        RTPPlayParsingTask()))
+        RTPPlayParsingTaskV1()))

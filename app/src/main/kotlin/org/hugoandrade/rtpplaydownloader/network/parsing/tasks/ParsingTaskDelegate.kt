@@ -3,30 +3,29 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.nodes.Document
 
-open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>)
+open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>) : ParsingTask() {
 
-    : ParsingTask() {
+    override fun isUrlSupported(url: String) : Boolean {
 
-    override fun parseMediaFile(url: String): Boolean {
+        for (task in parsingTasks) {
+            if (task.isUrlSupported(url)) return true
+        }
 
-        this.url = url
+        return false
+    }
+
+    override fun parseMediaFile(doc: Document): Boolean {
+
+        val url = doc.baseUri()
 
         if (!NetworkUtils.isValidURL(url)) return false
 
         var selectedTask : ParsingTask? = null
 
-        var doc : Document? = null
-
         for (task in parsingTasks) {
 
             // check if url is supported
             if (!task.isUrlSupported(url)) continue
-
-            // initialize if still null
-            doc = doc?: NetworkUtils.getDoc(url)
-
-            // if null, return false
-            if (doc == null) return false
 
             // if is able to parse, break out of loop with selected task
             if (task.parseMediaFile(doc)) {
@@ -37,6 +36,7 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>)
 
         if (selectedTask == null) return false
 
+        this.url = selectedTask.url
         this.mediaUrl = selectedTask.mediaUrl
         this.filename = selectedTask.filename
         this.thumbnailUrl = selectedTask.thumbnailUrl
@@ -44,9 +44,9 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>)
         return true
     }
 
-    override fun isValid(url: String) : Boolean {
+    override fun isValid(doc: Document) : Boolean {
 
-        var doc : Document? = null
+        val url = doc.baseUri()
 
         if (!NetworkUtils.isValidURL(url)) return false
 
@@ -54,12 +54,6 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>)
 
             // check if url is supported
             if (!task.isUrlSupported(url)) continue
-
-            // initialize if still null
-            doc = doc?: NetworkUtils.getDoc(url)
-
-            // if null, return false
-            if (doc == null) return false
 
             // if is valid, return true
             if (task.isValid(doc)) return true

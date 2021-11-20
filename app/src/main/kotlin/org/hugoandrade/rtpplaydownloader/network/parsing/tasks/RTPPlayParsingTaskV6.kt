@@ -12,9 +12,7 @@ open class RTPPlayParsingTaskV6 : RTPPlayParsingTaskV5() {
     // get playlist url
     override fun parseMediaUrl(doc: Document): String? {
 
-
         val scriptElements = doc.getElementsByTag("script") ?: return null
-
 
         for (scriptElement in scriptElements.iterator()) {
 
@@ -45,7 +43,7 @@ open class RTPPlayParsingTaskV6 : RTPPlayParsingTaskV5() {
                             link.append(item)
                         }
 
-                        return decode(link.toString())
+                        return ParsingUtils.decode(link.toString())
                     }
                 } catch (parsingException: java.lang.Exception) {
                     parsingException.printStackTrace()
@@ -54,75 +52,5 @@ open class RTPPlayParsingTaskV6 : RTPPlayParsingTaskV5() {
         }
 
         return null
-    }
-
-    private fun decode(link : String) : String {
-
-        val decodedLink = StringBuilder()
-
-        var i = 0
-        while (i < link.length)  {
-            val char = link[i]
-
-            if (char == '%') {
-                decodedLink.append(decodeSymbol(link.substring(i, i + 3)))
-                i += 3
-            }
-            else {
-                decodedLink.append(char)
-                i++
-            }
-        }
-
-        return decodedLink.toString()
-
-
-    }
-
-    private fun decodeSymbol(symbol: String): Char {
-        return when(symbol) {
-            "%21" -> '!'
-            "%23" -> '#'
-            "%24" -> '$'
-            "%26" -> '&'
-            "%27" -> '\''
-            "%28" -> '('
-            "%29" -> ')'
-            "%2A" -> '*'
-            "%2B" -> '+'
-            "%2C" -> ','
-
-            "%2F" -> '/'
-            "%3A" -> ':'
-            "%3B" -> ';'
-            "%3D" -> '='
-            "%3F" -> '?'
-            "%40" -> '@'
-            "%5B" -> '['
-            "%5D" -> ']'
-
-            "%0A" -> '\n'
-            "%0D" -> '\n'
-
-            "%20" -> ' '
-            "%22" -> '"'
-            "%25" -> '%'
-            "%2D" -> '-'
-            "%2E" -> '.'
-
-            "%3C" -> '<'
-            "%3E" -> '>'
-
-            "%5C" -> '\\'
-            "%5E" -> '^'
-            "%5F" -> '_'
-            "%60" -> '`'
-            "%7B" -> '{'
-            "%7C" -> '|'
-            "%7D" -> '}'
-            "%7E" -> '~'
-
-            else -> ' '
-        }
     }
 }

@@ -8,11 +8,9 @@ import java.net.SocketTimeoutException
 
 class SAPOParsingTask : ParsingTask() {
 
-    override fun isUrlSupported(url: String) : Boolean {
+    override fun isUrlSupported(url: String): Boolean {
 
-        val isFileType: Boolean = url.contains("videos.sapo.pt")
-
-        return isFileType || super.isUrlSupported(url)
+        return url.contains("videos.sapo.pt")
     }
 
     override fun parseMediaUrl(doc: Document): String? {

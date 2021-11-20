@@ -61,7 +61,6 @@ dependencies {
 
     // jetpack arch
     def lifecycleVersion = "2.4.0"
-    def archVersion = "2.1.0"
 
     // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"

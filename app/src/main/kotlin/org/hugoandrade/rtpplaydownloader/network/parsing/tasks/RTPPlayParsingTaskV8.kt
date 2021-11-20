@@ -9,7 +9,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-open class RTPPlayParsingTaskV8 : RTPPlayParsingTaskV6() {
+open class RTPPlayParsingTaskV8 : RTPPlayTSParsingTask() {
 
     // get playlist url
     override fun parseMediaUrl(doc: Document): String? {

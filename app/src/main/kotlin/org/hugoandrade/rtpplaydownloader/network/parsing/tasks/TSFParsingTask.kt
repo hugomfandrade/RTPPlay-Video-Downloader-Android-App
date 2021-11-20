@@ -6,12 +6,9 @@ import org.jsoup.nodes.Document
 
 class TSFParsingTask : ParsingTask() {
 
-    override fun isUrlSupported(url: String) : Boolean {
+    override fun isUrlSupported(url: String): Boolean {
 
-        val isFileType: Boolean =
-                url.contains("tsf.pt")
-
-        return isFileType || super.isUrlSupported(url)
+        return url.contains("tsf.pt")
     }
 
     override fun parseMediaUrl(doc: Document): String? {

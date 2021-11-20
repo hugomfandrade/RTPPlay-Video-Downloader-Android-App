@@ -7,7 +7,13 @@ import java.io.IOException
 
 class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
 
-    override fun parseMediaFile(url: String): Boolean {
+    override fun isUrlSupported(url: String): Boolean {
+        return url.contains("www.rtp.pt/play")
+    }
+
+    override fun parseMediaFile(doc: Document): Boolean {
+
+        val url = doc.baseUri()
 
         tasks.clear()
 
@@ -38,27 +44,21 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
         return null.toString()
     }
 
-    override fun parseMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String {
         // do nothing
         return null.toString()
     }
 
-    override fun isValid(url: String) : Boolean {
-        if (!RTPPlayParsingTaskIdentifier().isValid(url)) {
-            return false
-        }
+    override fun isValid(doc: Document) : Boolean {
+
+        val url = doc.baseUri()
+
+        if (!RTPPlayParsingTaskIdentifier().isValid(url)) return false
 
         // is Multi Part
         try {
-            val doc: Document?
 
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return false
-            }
-
-            val sectionParts = doc?.getElementsByClass("section-parts") ?: return false
+            val sectionParts = doc.getElementsByClass("section-parts") ?: return false
 
             for (sectionPart: Element in sectionParts.iterator()) {
 

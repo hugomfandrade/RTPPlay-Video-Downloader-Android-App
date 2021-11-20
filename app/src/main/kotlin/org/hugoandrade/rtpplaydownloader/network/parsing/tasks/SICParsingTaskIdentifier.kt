@@ -4,4 +4,4 @@ class SICParsingTaskIdentifier : ParsingTaskDelegate(listOf(
         SICParsingTaskV4(),
         SICParsingTaskV3(),
         SICParsingTaskV2(),
-        SICParsingTask()))
+        SICParsingTaskV1()))

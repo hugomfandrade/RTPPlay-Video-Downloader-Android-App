@@ -7,18 +7,7 @@ import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
 @Deprecated(message = "use a more recent RTPPlay parser")
-open class RTPPlayParsingTaskV3 : TSParsingTask() {
-
-    override fun isUrlSupported(url: String) : Boolean {
-
-        val isFileType: Boolean = url.contains("www.rtp.pt/play")
-
-        return isFileType || super.isUrlSupported(url)
-    }
-
-    override fun parseThumbnailPath(doc: Document): String? {
-        return ParsingUtils.getThumbnailPath(doc)
-    }
+open class RTPPlayParsingTaskV3 : RTPPlayTSParsingTask() {
 
     // get playlist url
     override fun parseMediaUrl(doc: Document): String? {
@@ -26,7 +15,6 @@ open class RTPPlayParsingTaskV3 : TSParsingTask() {
         try {
 
             val scriptElements = doc.getElementsByTag("script") ?: return null
-
 
             for (scriptElement in scriptElements.iterator()) {
 
@@ -65,10 +53,5 @@ open class RTPPlayParsingTaskV3 : TSParsingTask() {
         if (!TSUtils.getUrlWithoutParameters(tsPlaylist).endsWith(".m3u8")) return null
 
         return TSPlaylist().add("DEFAULT", tsPlaylist)
-    }
-
-    override fun parseMediaFileName(doc: Document): String {
-        return super.parseMediaFileName(doc)
-                .replace(".RTP.Play.RTP", "") + ".ts"
     }
 }
