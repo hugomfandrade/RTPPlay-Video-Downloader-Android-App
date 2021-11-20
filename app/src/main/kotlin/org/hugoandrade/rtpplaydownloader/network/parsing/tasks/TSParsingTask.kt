@@ -1,23 +1,24 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.Document
 
-abstract class TSParsingTask : ParsingTask() {
+interface TSParsingTask : ParsingTask {
 
-    var playlist: TSPlaylist? = null
+    override fun parseMediaFile(doc: Document): ParsingData? {
+        val parsingData : ParsingData = super.parseMediaFile(doc) ?: return null
 
-    override fun parseMediaFile(doc: Document): Boolean {
-        val parsed = super.parseMediaFile(doc)
+        val playlist = parsingData.mediaUrl?.let { parseM3U8Playlist(it) }
 
-        playlist = parseM3U8Playlist()
+        parsingData.m3u8Playlist = playlist
 
-        return playlist != null
+        // TODO
+        // update mediaUrl fields for now for compatibility reasons
+        parsingData.mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: parsingData.mediaUrl
+
+        return if (playlist == null) null else parsingData
     }
 
-    abstract fun parseM3U8Playlist(): TSPlaylist?
-
-    fun getTSPlaylist() : TSPlaylist? {
-        return playlist
-    }
+    fun parseM3U8Playlist(m3u8: String): TSPlaylist?
 }

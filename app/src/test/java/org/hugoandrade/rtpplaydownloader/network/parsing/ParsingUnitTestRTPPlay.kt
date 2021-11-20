@@ -23,11 +23,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         // val parsingTask = RTPPlayParsingTaskIdentifier()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -42,11 +40,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV8()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -60,11 +56,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskIdentifier()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -78,11 +72,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV5()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -96,11 +88,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV4()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -115,11 +105,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV7()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -134,11 +122,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV6()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -153,11 +139,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV5()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -172,11 +156,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV4()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -194,11 +176,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV4()
         val parsed = parsingTask.parseMediaFile(doc)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -217,11 +197,9 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV3() // RTPPlayParsingTaskV3()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
 
@@ -238,14 +216,12 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
         if (!isUrl) throw RuntimeException("is not a valid website")
 
-        val parsingTask = RTPPlayParsingTaskV2() // RTPPlayParsingTaskV2()
+        val parsingTask = RTPPlayParsingTaskV2()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -264,10 +240,8 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
         val parsingTask = RTPPlayParsingTaskV1()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 }

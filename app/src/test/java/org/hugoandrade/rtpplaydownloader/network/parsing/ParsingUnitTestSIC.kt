@@ -18,12 +18,10 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         val parsingTask = SICParsingTaskIdentifier()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        val item = DownloadableItem(parsingTask)
-        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
+        val item = if (parsed == null) null else DownloadableItem(parsed)
+        item?.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
         download(item)
     }
@@ -39,12 +37,10 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         val parsingTask = SICParsingTaskIdentifier()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        val item = DownloadableItem(parsingTask)
-        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
+        val item = if (parsed == null) null else DownloadableItem(parsed)
+        item?.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
         download(item)
     }
@@ -64,12 +60,10 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         val parsingTask = SICParsingTaskIdentifier()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        val item = DownloadableItem(parsingTask)
-        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
+        val item = if (parsed == null) null else DownloadableItem(parsed)
+        item?.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
 
         download(item)
     }
@@ -89,11 +83,9 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         val parsingTask = SICParsingTaskV3()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -112,11 +104,9 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         val parsingTask = SICParsingTaskV2()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -135,10 +125,8 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
         val parsingTask = SICParsingTaskV1()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 }

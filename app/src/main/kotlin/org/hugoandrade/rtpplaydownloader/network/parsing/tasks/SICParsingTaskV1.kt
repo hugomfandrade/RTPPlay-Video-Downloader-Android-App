@@ -11,7 +11,7 @@ open class SICParsingTaskV1 : SICParsingTask() {
         try {
 
             val videoElements = doc.getElementsByTag("video")
-            val url :String = this.url ?: ""
+            val url :String = doc.baseUri()
 
             if (videoElements != null) {
                 for (videoElement in videoElements.iterator()) {
@@ -41,7 +41,7 @@ open class SICParsingTaskV1 : SICParsingTask() {
         return null
     }
 
-    override fun parseMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
 
         try {
 
@@ -64,7 +64,7 @@ open class SICParsingTaskV1 : SICParsingTask() {
 
             val titleElements = doc.getElementsByTag("title")
 
-            if (mediaUrl != null && titleElements != null && titleElements.size > 0) {
+            if (titleElements != null && titleElements.size > 0) {
 
                 val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
                         .replace("SIC.Noticias.", "")
@@ -82,6 +82,6 @@ open class SICParsingTaskV1 : SICParsingTask() {
             e.printStackTrace()
         }
 
-        return mediaUrl?:url?:null.toString()
+        return mediaUrl
     }
 }

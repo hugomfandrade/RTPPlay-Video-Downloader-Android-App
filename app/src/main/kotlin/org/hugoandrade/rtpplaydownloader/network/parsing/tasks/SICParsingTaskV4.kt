@@ -51,8 +51,8 @@ open class SICParsingTaskV4 : SICParsingTask() {
         return null
     }
 
-    override fun parseMediaFileName(doc: Document): String {
-        val filename = ParsingUtils.getMediaFileName(doc, url ?: "", mediaUrl)
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
+        val filename = ParsingUtils.getMediaFileName(doc, doc.baseUri() ?: "", mediaUrl)
                 .replace("SIC.Noticias.", "")
                 .replace("SIC.Radical.", "")
                 .replace("SIC.", "")

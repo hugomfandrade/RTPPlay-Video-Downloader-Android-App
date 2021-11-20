@@ -67,19 +67,13 @@ open class RTPPlayParsingTaskV8 : RTPPlayTSParsingTask() {
         return null
     }
 
-    override fun parseM3U8Playlist(): TSPlaylist? {
-        //
-        val m3u8: String = mediaUrl ?: return null
+    override fun parseM3U8Playlist(m3u8: String): TSPlaylist? {
 
         val playlist : TSPlaylist? = TSUtils.getCompleteM3U8PlaylistWithoutBaseUrl(m3u8)
 
         playlist?.getTSUrls()?.forEach{ tsUrl ->
             tsUrl.url = m3u8.substringBeforeLast("/") + "/" + tsUrl.url
         }
-
-        // TODO
-        // update mediaUrl fields for now for compatibility reasons
-        mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
 
         return playlist
     }

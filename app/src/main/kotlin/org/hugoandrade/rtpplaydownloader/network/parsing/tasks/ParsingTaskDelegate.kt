@@ -1,9 +1,10 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.nodes.Document
 
-open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>) : ParsingTask() {
+open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>) : ParsingTask {
 
     override fun isUrlSupported(url: String) : Boolean {
 
@@ -14,13 +15,14 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>) : P
         return false
     }
 
-    override fun parseMediaFile(doc: Document): Boolean {
+    override fun parseMediaFile(doc: Document): ParsingData? {
 
         val url = doc.baseUri()
 
-        if (!NetworkUtils.isValidURL(url)) return false
+        if (!NetworkUtils.isValidURL(url)) return null
 
         var selectedTask : ParsingTask? = null
+        var selectedData : ParsingData? = null
 
         for (task in parsingTasks) {
 
@@ -28,20 +30,16 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>) : P
             if (!task.isUrlSupported(url)) continue
 
             // if is able to parse, break out of loop with selected task
-            if (task.parseMediaFile(doc)) {
+            selectedData = task.parseMediaFile(doc)
+            if (selectedData != null) {
                 selectedTask = task
                 break
             }
         }
 
-        if (selectedTask == null) return false
+        if (selectedTask == null || selectedData == null) return null
 
-        this.url = selectedTask.url
-        this.mediaUrl = selectedTask.mediaUrl
-        this.filename = selectedTask.filename
-        this.thumbnailUrl = selectedTask.thumbnailUrl
-
-        return true
+        return selectedData
     }
 
     override fun isValid(doc: Document) : Boolean {
@@ -67,7 +65,7 @@ open class ParsingTaskDelegate(private val parsingTasks : List<ParsingTask>) : P
     }
 
     // never called within class
-    override fun parseMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
         throw RuntimeException("delegate not defined")
     }
 }

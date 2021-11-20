@@ -4,8 +4,6 @@ import com.google.common.util.concurrent.AtomicDouble
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.download.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import kotlin.math.roundToInt
@@ -57,26 +55,14 @@ open class ParsingUnitTest {
         }
     }
 
-
-
-    internal fun debug(parsingTask: TSParsingTask) {
-
-        val playlist : TSPlaylist? = parsingTask.getTSPlaylist()
-        val playlistUrl : String? = playlist?.getTSUrls()?.firstOrNull()?.url
-
-        System.err.println(parsingTask.filename)
-        System.err.println(parsingTask.mediaUrl)
-        System.err.println(playlistUrl)
-        System.err.println(playlist?.getTSUrls())
+    internal fun debug(parsingData: ParsingData?) {
+        System.err.println("successfully parsed ? " + (parsingData != null))
+        System.err.println(parsingData)
+        System.err.println(parsingData?.m3u8Playlist?.getTSUrls()?.firstOrNull()?.url)
     }
 
-    internal fun debug(parsingTask: ParsingTask) {
-
-        System.err.println(parsingTask.filename)
-        System.err.println(parsingTask.mediaUrl)
-    }
-
-    internal fun download(item: DownloadableItem) {
+    internal fun download(item: DownloadableItem?) {
+        if (item == null) return
         if (!DO_DOWNLOAD) return
 
         // clone with unique filename
@@ -98,17 +84,11 @@ open class ParsingUnitTest {
         downloaderTask.downloadMediaFile()
     }
 
-    internal fun download(parsingTask: TSParsingTask) {
-        val item = DownloadableItem(parsingTask)
-        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
-        println(parsingTask.javaClass.simpleName)
-        download(item)
-    }
+    internal fun download(parsingData: ParsingData?) {
+        if (parsingData == null) return
 
-    internal fun download(parsingTask: ParsingTask) {
-        val item = DownloadableItem(parsingTask)
-        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
-        println(parsingTask.javaClass.simpleName)
+        val item = DownloadableItem(parsingData)
+        item.downloadTask = ParsingIdentifier.findType(ParsingIdentifier.findHost(parsingData.url))?.name
         download(item)
     }
 }

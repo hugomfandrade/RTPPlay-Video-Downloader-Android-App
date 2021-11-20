@@ -47,11 +47,10 @@ open class RTPPlayParsingTaskV3 : RTPPlayTSParsingTask() {
         return null
     }
 
-    override fun parseM3U8Playlist(): TSPlaylist? {
-        val tsPlaylist = mediaUrl ?: return null
+    override fun parseM3U8Playlist(m3u8: String): TSPlaylist? {
 
-        if (!TSUtils.getUrlWithoutParameters(tsPlaylist).endsWith(".m3u8")) return null
+        if (!TSUtils.getUrlWithoutParameters(m3u8).endsWith(".m3u8")) return null
 
-        return TSPlaylist().add("DEFAULT", tsPlaylist)
+        return TSPlaylist().add("DEFAULT", m3u8)
     }
 }

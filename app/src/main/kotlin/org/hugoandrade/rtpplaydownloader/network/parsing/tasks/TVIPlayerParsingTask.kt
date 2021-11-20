@@ -9,7 +9,7 @@ import java.io.*
 import java.net.URL
 import java.nio.charset.Charset
 
-class TVIPlayerParsingTask : TSParsingTask() {
+class TVIPlayerParsingTask : TSParsingTask {
 
     override fun isUrlSupported(url: String): Boolean {
 
@@ -30,24 +30,15 @@ class TVIPlayerParsingTask : TSParsingTask() {
         }
     }
 
-    override fun parseM3U8Playlist(): TSPlaylist? {
-        //
-        val m3u8: String = mediaUrl ?: return null
-
-        val playlist = TSUtils.getCompleteM3U8Playlist(m3u8)
-
-        // TODO
-        // update mediaUrl fields for now for compatibility reasons
-        mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
-
-        return playlist
+    override fun parseM3U8Playlist(m3u8: String): TSPlaylist? {
+        return TSUtils.getCompleteM3U8Playlist(m3u8)
     }
 
-    override fun parseMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
         try {
             val titleElements = doc.getElementsByTag("title")
 
-            if (mediaUrl != null && titleElements != null && titleElements.size > 0) {
+            if (titleElements != null && titleElements.size > 0) {
 
                 val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
 
@@ -59,7 +50,7 @@ class TVIPlayerParsingTask : TSParsingTask() {
             e.printStackTrace()
         }
 
-        return mediaUrl?:url?: null.toString()
+        return mediaUrl
     }
 
     override fun parseThumbnailPath(doc: Document): String? {

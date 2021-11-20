@@ -10,7 +10,7 @@ open class SICParsingTaskV2 : SICParsingTaskV1() {
         try {
 
             val videoElements = doc.getElementsByTag("video")
-            val url = this.url ?: ""
+            val url = doc.baseUri()
 
             if (videoElements != null) {
                 for (videoElement in videoElements.iterator()) {

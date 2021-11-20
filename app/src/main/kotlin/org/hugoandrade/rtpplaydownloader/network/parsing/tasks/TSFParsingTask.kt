@@ -4,7 +4,7 @@ import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-class TSFParsingTask : ParsingTask() {
+class TSFParsingTask : ParsingTask {
 
     override fun isUrlSupported(url: String): Boolean {
 

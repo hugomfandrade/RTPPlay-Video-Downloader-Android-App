@@ -3,7 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.jsoup.nodes.Document
 
-abstract class RTPPlayTSParsingTask : TSParsingTask() {
+abstract class RTPPlayTSParsingTask : TSParsingTask {
 
     override fun isUrlSupported(url: String): Boolean {
 
@@ -14,8 +14,8 @@ abstract class RTPPlayTSParsingTask : TSParsingTask() {
         return ParsingUtils.getThumbnailPath(doc)
     }
 
-    override fun parseMediaFileName(doc: Document): String {
-        return super.parseMediaFileName(doc)
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
+        return super.parseMediaFileName(doc, mediaUrl)
                 .replace(".RTP.Play.RTP", "") + ".ts"
     }
 }

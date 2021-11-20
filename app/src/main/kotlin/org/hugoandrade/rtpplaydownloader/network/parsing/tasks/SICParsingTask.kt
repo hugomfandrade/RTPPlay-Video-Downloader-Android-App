@@ -1,6 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-abstract class SICParsingTask : ParsingTask() {
+abstract class SICParsingTask : ParsingTask {
 
     override fun isUrlSupported(url: String): Boolean {
 

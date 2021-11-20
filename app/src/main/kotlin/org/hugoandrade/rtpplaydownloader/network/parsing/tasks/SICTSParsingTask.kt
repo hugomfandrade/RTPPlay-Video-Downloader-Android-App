@@ -3,7 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.jsoup.nodes.Document
 
-abstract class SICTSParsingTask : TSParsingTask() {
+abstract class SICTSParsingTask : TSParsingTask {
 
     override fun isUrlSupported(url: String): Boolean {
 
@@ -15,8 +15,8 @@ abstract class SICTSParsingTask : TSParsingTask() {
                 url.contains("sic.pt")
     }
 
-    override fun parseMediaFileName(doc: Document): String {
-        return ParsingUtils.getMediaFileName(doc, url ?: "", mediaUrl)
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
+        return ParsingUtils.getMediaFileName(doc, doc.baseUri() ?: "", mediaUrl)
                 .replace("SIC.Noticias.", "")
                 .replace("SIC.Radical.", "")
                 .replace("SIC.", "") + ".ts"
