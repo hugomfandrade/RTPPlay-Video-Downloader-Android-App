@@ -1,8 +1,13 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.util.EntityUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSUrl
+import java.io.BufferedReader
+import java.io.StringReader
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
@@ -88,34 +93,45 @@ private constructor() {
         }
 
         fun getCompleteM3U8PlaylistWithoutBaseUrl(playlistUrl: String): TSPlaylist? {
+            val tmp = getUrlWithoutParameters(playlistUrl)
             if (!getUrlWithoutParameters(playlistUrl).endsWith(".m3u8")) return null
 
             try {
                 val tsPlaylist = TSPlaylist()
 
-                val url = URL(playlistUrl)
-                val s = Scanner(url.openStream())
-                while (s.hasNext()) {
-                    val line: String = s.next()
+                // val url = URL(playlistUrl)
+                // val inStream = BufferedReader(InputStreamReader(url.openStream()))
+                val inStream = BufferedReader(StringReader(readBulk(playlistUrl)))
+
+                var str: String?
+                while (inStream.readLine().also { str = it } != null) {
+                    val line = str ?: ""
+                // }
+                // while (s.hasNextLine()) {
+                    // val line: String = s.nextLine()
 
                     if (!line.contains("#EXT-X-STREAM-INF")) continue
                     if (!line.contains("BANDWIDTH=")) continue
                     if (!line.contains("RESOLUTION=")) continue
 
-                    val bandwidthFrom = line.substring(ParsingUtils.indexOfEx(line, "BANDWIDTH="))
-                    val bandwidth = bandwidthFrom.substring(0, bandwidthFrom.indexOf(",")).toInt()
+                    try {
+                        val bandwidthFrom = line.substring(ParsingUtils.indexOfEx(line, "BANDWIDTH="))
+                        val bandwidth = bandwidthFrom.substring(0, bandwidthFrom.indexOf(",")).toInt()
 
-                    val resolutionFrom = line.substring(ParsingUtils.indexOfEx(line, "RESOLUTION="))
-                    val resolution = resolutionFrom.substring(0, resolutionFrom.indexOf(","))
+                        val resolutionFrom = line.substring(ParsingUtils.indexOfEx(line, "RESOLUTION="))
+                        val resolution = resolutionFrom.substring(0, resolutionFrom.indexOf(","))
 
-                    val resolutionArray = IntArray(2)
-                    resolutionArray[0] = resolution.split("x")[0].toInt()
-                    resolutionArray[1] = resolution.split("x")[1].toInt()
+                        val resolutionArray = IntArray(2)
+                        resolutionArray[0] = resolution.split("x")[0].toInt()
+                        resolutionArray[1] = resolution.split("x")[1].toInt()
 
-                    val nextLine = s.next()
-                    val url = nextLine
+                        val nextLine = inStream.readLine()
+                        val url = nextLine
 
-                    tsPlaylist.add(resolution, TSUrl(url, bandwidth, resolutionArray))
+                        tsPlaylist.add(resolution, TSUrl(url, bandwidth, resolutionArray))
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
                 }
                 return tsPlaylist
             } catch (e: java.lang.Exception) {
@@ -137,10 +153,17 @@ private constructor() {
         fun getTSUrls(playlistUrl: String, validator: Validator<String>): List<String> {
             try {
                 val tsUrls: MutableList<String> = ArrayList()
-                val url = URL(playlistUrl)
-                val s = Scanner(url.openStream())
-                while (s.hasNext()) {
-                    val line: String = s.next()
+
+                val inStream = BufferedReader(StringReader(readBulk(playlistUrl)))
+                var str: String?
+                while (inStream.readLine().also { str = it } != null) {
+                    val line = str ?: ""
+
+                // val url = URL(playlistUrl)
+                // val s = Scanner(url.openStream())
+                // while (s.hasNext()) {
+                //     val line: String = s.next()
+
                     if (!validator.isValid(line)) continue
                     tsUrls.add(line)
                 }
@@ -148,6 +171,18 @@ private constructor() {
             } catch (ignored: java.lang.Exception) { }
 
             return ArrayList()
+        }
+
+        fun readBulk(url: String): String? {
+            try {
+                val httpClient = DefaultHttpClient()
+                val httpGet = HttpGet(url)
+                val response = httpClient.execute(httpGet)
+                return EntityUtils.toString(response.entity, "UTF-8")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return null
         }
 
         @Throws(URISyntaxException::class)

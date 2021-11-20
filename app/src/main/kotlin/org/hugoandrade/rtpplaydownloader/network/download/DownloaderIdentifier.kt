@@ -22,7 +22,11 @@ class DownloaderIdentifier {
                     when (fileType) {
                         FileType.TVIPlayer -> return DownloadType.TVITSFiles
                         FileType.RTPPlay -> {
-                            return if (mediaUrl.contains(".m3u8")) DownloadType.RTPTSFiles else DownloadType.FullFile
+                            return when {
+                                mediaUrl.contains(".m3u8") -> DownloadType.RTPTSFiles
+                                mediaUrl.contains(".mp4") -> DownloadType.RTPTSFiles
+                                else -> DownloadType.FullFile
+                            }
                         }
                         FileType.SIC -> {
                             return if (mediaUrl.contains(".m3u8")) DownloadType.SICTSFiles else DownloadType.FullFile

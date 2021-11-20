@@ -10,6 +10,45 @@ import java.io.File
 class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
     @Test
+    fun rtpPlayV8_02() {
+        DO_DOWNLOAD = true
+
+        val url = "https://www.rtp.pt/play/p9446/e576556/unidade-42"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = ParsingIdentifier.findHost(url) ?: return
+        // val parsingTask = RTPPlayParsingTaskIdentifier()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
+
+    @Test
+    fun rtpPlayV8() {
+        DO_DOWNLOAD = true
+
+        val url = "https://www.rtp.pt/play/p8306/e540074/o-outro-lado"
+
+        System.err.println("trying to parse: ")
+        System.err.println(url)
+
+        val parsingTask = RTPPlayParsingTaskV8()
+        val parsed = parsingTask.parseMediaFile(url)
+
+        System.err.println("successfully parsed ? " + parsed)
+
+        debug(parsingTask)
+
+        download(parsingTask)
+    }
+
+    @Test
     fun rtpPlayAudio() {
 
         val url = "https://www.rtp.pt/play/p5661/vamos-todos-morrer"
@@ -81,6 +120,7 @@ class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
         download(parsingTask)
     }
+
     @Test
     @Deprecated(message = "no longer valid")
     fun rtpPlayV6() {

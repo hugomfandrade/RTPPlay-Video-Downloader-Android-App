@@ -1,7 +1,5 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import android.util.Log
-
 class ParsingIdentifier {
 
     init {
@@ -33,6 +31,7 @@ class ParsingIdentifier {
                 task is RTPPlayParsingTaskV2 ||
                 task is RTPPlayParsingTaskV3 ||
                 task is RTPPlayParsingTaskV4 ||
+                task is RTPPlayParsingTaskV5 ||
                 task is RTPPlayParsingTaskIdentifier) return FileType.RTPPlay
             if (task is SICParsingTask ||
                 task is SICParsingTaskV2 ||

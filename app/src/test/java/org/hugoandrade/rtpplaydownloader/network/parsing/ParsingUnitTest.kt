@@ -3,6 +3,7 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 import com.google.common.util.concurrent.AtomicDouble
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.download.*
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
@@ -11,7 +12,7 @@ import kotlin.math.roundToInt
 
 open class ParsingUnitTest {
 
-    val DO_DOWNLOAD = false
+    var DO_DOWNLOAD = true
     private val testDir = File("test-download-folder")
     private val defaultListener: DownloaderTask.Listener = object : DownloaderTask.Listener {
 
@@ -87,6 +88,9 @@ open class ParsingUnitTest {
                 downloadTask = item.downloadTask
         )
 
+        println(item.downloadTask)
+        println(downloadableItem.downloadTask)
+
         val downloaderTask = DownloaderIdentifier.findTask(testDir.absolutePath, downloadableItem, defaultListener)
 
         System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
@@ -95,10 +99,16 @@ open class ParsingUnitTest {
     }
 
     internal fun download(parsingTask: TSParsingTask) {
-        download(DownloadableItem(parsingTask))
+        val item = DownloadableItem(parsingTask)
+        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
+        println(parsingTask.javaClass.simpleName)
+        download(item)
     }
 
     internal fun download(parsingTask: ParsingTask) {
-        download(DownloadableItem(parsingTask))
+        val item = DownloadableItem(parsingTask)
+        item.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
+        println(parsingTask.javaClass.simpleName)
+        download(item)
     }
 }

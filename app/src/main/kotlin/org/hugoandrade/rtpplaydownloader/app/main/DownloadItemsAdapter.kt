@@ -248,11 +248,13 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
             refreshTimer = Timer("Refresh-Timer")
             refreshTimer?.scheduleAtFixedRate(object : TimerTask() {
                 override fun run() {
-                    downloadableItemList.forEach { item ->
-                        run {
-                            if (item.item.state == DownloadableItem.State.Start ||
-                                item.item.state == DownloadableItem.State.Downloading) {
-                                item.item.fireDownloadStateChange()
+                    synchronized(downloadableItemList) {
+                        downloadableItemList.forEach { item ->
+                            run {
+                                if (item.item.state == DownloadableItem.State.Start ||
+                                        item.item.state == DownloadableItem.State.Downloading) {
+                                    item.item.fireDownloadStateChange()
+                                }
                             }
                         }
                     }

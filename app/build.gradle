@@ -15,8 +15,8 @@ android {
         applicationId "org.hugoandrade.rtpplaydownloader"
         minSdkVersion 15
         targetSdkVersion 30
-        versionCode 14
-        versionName "1.2.0"
+        versionCode 15
+        versionName "1.2.1"
         multiDexEnabled true
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -71,6 +71,7 @@ dependencies {
     // html parsing lib
     implementation 'org.jsoup:jsoup:1.12.1'
     implementation 'commons-codec:commons-codec:1.15'
+    implementation 'org.apache.httpcomponents:httpclient:4.1.1'
 
     // azure
     implementation 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'

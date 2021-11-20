@@ -2,8 +2,7 @@ package org.hugoandrade.rtpplaydownloader.network.download
 
 import android.os.Build
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
 import java.net.URL
 import java.util.stream.Collectors
 
@@ -63,54 +62,94 @@ class TSDownloaderTask(private var playlistUrl : String,
             val fos = FileOutputStream(f)
             for ((i, tsUrl) in tsFullUrls.withIndex()) {
 
-                val u = URL(tsUrl)
-                val inputStream = u.openStream()
-                if (inputStream != null) {
-                    // update size
-                    val huc = u.openConnection()
-                    val tsSize = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        huc.contentLengthLong
-                    } else {
-                        huc.contentLength.toLong()
+                val file = TSUtils.readBulk(tsUrl)
+                val inputStream = file?.byteInputStream() ?: continue
+                val tsSize = file.encodeToByteArray().size
+
+                size += tsSize
+                val estimatedSize = size + tsSize * (tsUrls.size - i - 1)
+
+                val buffer = ByteArray(1024)
+                var len = inputStream.read(buffer)
+                progress += len.toLong()
+                while (len > 0) {
+
+                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                        // do cancelling
+                        return
                     }
 
-                    size += tsSize
-                    val estimatedSize = size + tsSize * (tsUrls.size - i - 1)
-
-                    val buffer = ByteArray(1024)
-                    var len = inputStream.read(buffer)
-                    progress += len.toLong()
-                    while (len > 0) {
-
-                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                            // do cancelling
-                            return
-                        }
-
-                        while (!isDownloading){
-                            // pause
-
-                            if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                                // do cancelling while paused
-                                return
-                            }
-                        }
-
-                        fos.write(buffer, 0, len)
-                        len = inputStream.read(buffer)
-                        progress += len
+                    while (!isDownloading){
+                        // pause
 
                         if (tryToCancelIfNeeded(fos, inputStream, f)) {
                             // do cancelling while paused
                             return
                         }
-
-                        dispatchProgress(progress, estimatedSize)
                     }
-                    inputStream.close()
+
+                    fos.write(buffer, 0, len)
+                    len = inputStream.read(buffer)
+                    progress += len
+
+                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                        // do cancelling while paused
+                        return
+                    }
+
+                    dispatchProgress(progress, estimatedSize)
+                }
+                inputStream.close()
+            }
+            /*
+            for ((i, tsUrl) in tsFullUrls.withIndex()) {
+
+                val u = URL(tsUrl)
+                val inputStream = u.openStream() ?: continue
+                // update size
+                val huc = u.openConnection()
+                val tsSize = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    huc.contentLengthLong
+                } else {
+                    huc.contentLength.toLong()
                 }
 
+                size += tsSize
+                val estimatedSize = size + tsSize * (tsUrls.size - i - 1)
+
+                val buffer = ByteArray(1024)
+                var len = inputStream.read(buffer)
+                progress += len.toLong()
+                while (len > 0) {
+
+                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                        // do cancelling
+                        return
+                    }
+
+                    while (!isDownloading){
+                        // pause
+
+                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                            // do cancelling while paused
+                            return
+                        }
+                    }
+
+                    fos.write(buffer, 0, len)
+                    len = inputStream.read(buffer)
+                    progress += len
+
+                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
+                        // do cancelling while paused
+                        return
+                    }
+
+                    dispatchProgress(progress, estimatedSize)
+                }
+                inputStream.close()
             }
+            */
             dispatchDownloadFinished(f)
 
             fos.close()

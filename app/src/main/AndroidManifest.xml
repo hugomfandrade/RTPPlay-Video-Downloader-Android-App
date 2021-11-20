@@ -21,6 +21,8 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
+        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+
         <service
             android:name=".network.DownloadService"
             android:enabled="true"
