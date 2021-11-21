@@ -1,7 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskIdentifier
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV1
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV2
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV3
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.junit.Test
 
@@ -20,10 +22,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         debug(parsed)
 
-        val item = if (parsed == null) null else DownloadableItem(parsed)
-        item?.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
-
-        download(item)
+        download(parsed)
     }
 
     @Test
@@ -39,10 +38,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         debug(parsed)
 
-        val item = if (parsed == null) null else DownloadableItem(parsed)
-        item?.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
-
-        download(item)
+        download(parsed)
     }
 
     @Test
@@ -62,10 +58,7 @@ class ParsingUnitTestSIC : ParsingUnitTest() {
 
         debug(parsed)
 
-        val item = if (parsed == null) null else DownloadableItem(parsed)
-        item?.downloadTask = ParsingIdentifier.findType(parsingTask)?.name
-
-        download(item)
+        download(parsed)
     }
 
     @Test

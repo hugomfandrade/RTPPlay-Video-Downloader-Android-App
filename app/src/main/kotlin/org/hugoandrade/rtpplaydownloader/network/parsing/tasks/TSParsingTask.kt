@@ -13,10 +13,6 @@ interface TSParsingTask : ParsingTask {
 
         parsingData.m3u8Playlist = playlist
 
-        // TODO
-        // update mediaUrl fields for now for compatibility reasons
-        parsingData.mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: parsingData.mediaUrl
-
         return if (playlist == null) null else parsingData
     }
 

@@ -87,8 +87,22 @@ open class ParsingUnitTest {
     internal fun download(parsingData: ParsingData?) {
         if (parsingData == null) return
 
-        val item = DownloadableItem(parsingData)
+        val tsUrl = parsingData.m3u8Playlist?.getTSUrls()?.firstOrNull()
+
+        val item : DownloadableItem = if (tsUrl == null) {
+            DownloadableItem(parsingData)
+        }
+        else {
+            DownloadableItem(
+                    url = parsingData.url ?: null.toString(),
+                    mediaUrl = tsUrl.url,
+                    thumbnailUrl = parsingData.thumbnailUrl ?: null.toString(),
+                    filename = parsingData.filename ?: null.toString()
+            )
+        }
+
         item.downloadTask = ParsingIdentifier.findType(ParsingIdentifier.findHost(parsingData.url))?.name
+
         download(item)
     }
 }

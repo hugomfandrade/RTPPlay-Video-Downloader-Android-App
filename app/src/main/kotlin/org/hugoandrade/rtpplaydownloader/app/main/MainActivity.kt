@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -16,7 +17,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.*
 import org.hugoandrade.rtpplaydownloader.DevConstants
@@ -50,7 +50,7 @@ class MainActivity : ActivityBase() {
     private var mDrawerToggle: ActionBarDrawerToggle? = null
     private var mDrawerAdapter: NavigationDrawerAdapter? = null
     private var mPendingRunnable: Runnable? = null
-    private val mHandler = Handler()
+    private val mHandler = Handler(Looper.getMainLooper())
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -65,7 +65,7 @@ class MainActivity : ActivityBase() {
 
         mDownloadManager = ViewModelProvider(this).get(DownloadManager::class.java)
         mDownloadManager.retrieveItemsFromDB()
-        mDownloadManager.getItems().observe(this, Observer { actions ->
+        mDownloadManager.getItems().observe(this, { actions ->
 
             actions.forEach{ action -> action.addActionListener(actionListener)}
             mDownloadItemsAdapter.set(actions)
@@ -420,8 +420,6 @@ class MainActivity : ActivityBase() {
             override fun onFailed(errorMessage: String) {
 
                 runOnUiThread {
-                    val message = "Unable to parse $errorMessage"
-
                     ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse))
 
                     parsingDialog?.dismiss()
@@ -472,7 +470,6 @@ class MainActivity : ActivityBase() {
                     override fun onFailed(errorMessage: String) {
 
                         runOnUiThread {
-                            val message = "Unable to parse pagination: $errorMessage"
 
                             ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
 
@@ -498,8 +495,6 @@ class MainActivity : ActivityBase() {
                     override fun onFailed(errorMessage: String) {
 
                         runOnUiThread {
-                            val message = "Unable to parse more pagination: $errorMessage"
-
                             ViewUtils.showSnackBar(binding.root, getString(R.string.unable_to_parse_pagination))
 
                             parsingDialog?.dismiss()

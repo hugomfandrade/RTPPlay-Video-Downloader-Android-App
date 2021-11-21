@@ -288,7 +288,6 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         val url = parsingData.url
         val mediaUrl = parsingData.mediaUrl
         val filename = parsingData.filename
-        val thumbnailUrl = parsingData.thumbnailUrl
         if (url == null || mediaUrl == null || filename == null) {
 
             if (url == null) future.failed("url not defined")
@@ -297,7 +296,19 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
             return future
         }
 
-        val item = DownloadableItem(parsingData)
+        val tsUrl = parsingData.m3u8Playlist?.getTSUrls()?.firstOrNull()
+
+        val item : DownloadableItem = if (tsUrl == null) {
+            DownloadableItem(parsingData)
+        }
+        else {
+            DownloadableItem(
+                    url = parsingData.url ?: null.toString(),
+                    mediaUrl = tsUrl.url,
+                    thumbnailUrl = parsingData.thumbnailUrl ?: null.toString(),
+                    filename = parsingData.filename ?: null.toString())
+        }
+
         item.downloadTask = ParsingIdentifier.findType(parsingData)?.name
 
         val databaseFuture = mDatabaseModel.insertDownloadableItem(item)
@@ -362,24 +373,23 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                             }
                         }
 
-                        if (!contains) {
+                        if (contains) continue
 
-                            try {
-                                val task = DownloaderIdentifier.findTask(dirPath, item)
+                        try {
+                            val task = DownloaderIdentifier.findTask(dirPath, item)
 
-                                val action = DownloadableItemAction(item, task)
-                                action.addActionListener(actionListener)
-                                actions.add(action)
-                                if (action.item.state == DownloadableItem.State.Downloading) {
-                                    action.item.state = DownloadableItem.State.Failed
-                                }
-                                listItems.add(action)
-                                listItems.sortedWith(compareBy { it.item.id })
+                            val action = DownloadableItemAction(item, task)
+                            action.addActionListener(actionListener)
+                            actions.add(action)
+                            if (action.item.state == DownloadableItem.State.Downloading) {
+                                action.item.state = DownloadableItem.State.Failed
                             }
-                            catch (e : IllegalArgumentException) {
-                                Log.e(TAG, "failed to get downloaderTask")
-                                e.printStackTrace()
-                            }
+                            listItems.add(action)
+                            listItems.sortedWith(compareBy { it.item.id })
+                        }
+                        catch (e : IllegalArgumentException) {
+                            Log.e(TAG, "failed to get downloaderTask")
+                            e.printStackTrace()
                         }
                     }
                 }
