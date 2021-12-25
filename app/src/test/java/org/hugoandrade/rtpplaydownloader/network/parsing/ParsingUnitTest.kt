@@ -81,7 +81,7 @@ open class ParsingUnitTest {
 
         System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
 
-        downloaderTask.downloadMediaFile()
+        downloaderTask.run()
     }
 
     internal fun download(parsingData: ParsingData?) {

@@ -1,9 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
-import android.os.Build
-import okio.internal.commonAsUtf8ToByteArray
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import java.io.*
+import java.io.File
+import java.io.FileOutputStream
 import java.net.URL
 import java.util.stream.Collectors
 import kotlin.math.max
@@ -16,14 +15,10 @@ class TSDownloaderTask(private var playlistUrl : String,
 
         DownloaderTask(listener) {
 
-    override val TAG : String = javaClass.simpleName
-
     override fun downloadMediaFile() {
 
-        if (isDownloading) return
-
-        isDownloading = true
-        doCanceling = false
+        // check if was cancelled before actually starting
+        if (tryToCancelIfNeeded()) return
 
         try {
             try {
@@ -53,10 +48,10 @@ class TSDownloaderTask(private var playlistUrl : String,
             val storagePath = dirPath
             val f = File(storagePath, filename)
             if (MediaUtils.doesMediaFileExist(f)) {
-                isDownloading = false
                 dispatchDownloadFailed("file with same name already exists")
                 return
             }
+
             dispatchDownloadStarted(f)
 
             var progress = 0L
@@ -86,37 +81,20 @@ class TSDownloaderTask(private var playlistUrl : String,
                 progress += len.toLong()
                 while (len > 0) {
 
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling
-                        return
-                    }
+                    // cancel before downloading
+                    if (tryToCancelIfNeeded()) return
 
-                    while (!isDownloading){
-                        // pause
-
-                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                            // do cancelling while paused
-                            return
-                        }
-                    }
+                    if (doPause()) return
 
                     fos.write(buffer, 0, len)
                     len = inputStream.read(buffer)
                     progress += len
 
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling while paused
-                        return
-                    }
+                    // cancel after downloading
+                    if (tryToCancelIfNeeded()) return
 
-                    size = progress
-                    val tsSize = size / (max(1, i))
-                    // size += tsSize
-                    val estimatedSize = size + tsSize * (tsUrls.size - i - 1)
-
-                    // System.err.println("progress")
-                    // System.err.println(progress)
-                    // System.err.println(estimatedSize)
+                    val tsSize = progress / (max(1, i))
+                    val estimatedSize = progress + tsSize * (tsUrls.size - i - 1)
 
                     dispatchProgress(progress, estimatedSize)
                 }
@@ -131,6 +109,5 @@ class TSDownloaderTask(private var playlistUrl : String,
             ioe.printStackTrace()
             dispatchDownloadFailed("Internal error while downloading")
         }
-        isDownloading = false
     }
 }

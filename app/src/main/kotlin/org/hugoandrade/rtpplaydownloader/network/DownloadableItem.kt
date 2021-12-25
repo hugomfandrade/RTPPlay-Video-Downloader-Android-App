@@ -136,9 +136,16 @@ class DownloadableItem(@PrimaryKey(autoGenerate = true) @ColumnInfo(name = "_id"
     enum class State {
         Start,
         Downloading,
+        Paused,
         End,
 
         Failed;
+
+        companion object {
+            fun isOver(state : State?) : Boolean {
+                return state == End || state == Failed
+            }
+        }
 
         interface ChangeListener {
             fun onDownloadStateChange(downloadableItem: DownloadableItem)

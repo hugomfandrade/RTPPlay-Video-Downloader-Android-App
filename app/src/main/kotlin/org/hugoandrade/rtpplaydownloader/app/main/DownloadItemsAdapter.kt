@@ -63,11 +63,14 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
         val dir : File? = holder.itemView.context?.getExternalFilesDir(null)
         val thumbnailUrl : String? = downloadableItem.thumbnailUrl
 
-        ImageHolder.Builder()
+        if (holder.binding.downloadItemMediaImageView.tag != thumbnailUrl) {
+            holder.binding.downloadItemMediaImageView.tag = thumbnailUrl
+            ImageHolder.Builder()
                 .withDefault(R.drawable.media_file_icon)
                 .download(thumbnailUrl)
                 .toDir(dir)
                 .displayIn(holder.binding.downloadItemMediaImageView)
+        }
 
         when (downloadableItem.state) {
             DownloadableItem.State.Start -> {
@@ -120,17 +123,22 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
                 }
             }
             else -> {
-                holder.binding.downloadProgressTextView.setText(null)
+                holder.binding.downloadProgressTextView.text = ""
             }
         }
 
-        val isInDownloadingState : Boolean = downloadableItem.state == DownloadableItem.State.Downloading || downloadableItem.state == DownloadableItem.State.Start
+        val isInDownloadingState : Boolean =
+            downloadableItem.state == DownloadableItem.State.Downloading ||
+            downloadableItem.state == DownloadableItem.State.Paused ||
+            downloadableItem.state == DownloadableItem.State.Start
         val isDownloading : Boolean = downloadableItemAction.isDownloading()
+        val isResumed : Boolean = downloadableItemAction.isResumed()
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
         holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
-        holder.binding.pauseDownloadImageView.visibility = if (Config.enablePauseResume && isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
-        holder.binding.resumeDownloadImageView.visibility = if (Config.enablePauseResume && isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
+
+        holder.binding.pauseDownloadImageView.visibility = if (Config.enablePauseResume && isInDownloadingState && isResumed) View.VISIBLE else View.GONE
+        holder.binding.resumeDownloadImageView.visibility = if (Config.enablePauseResume && isInDownloadingState && !isResumed) View.VISIBLE else View.GONE
     }
 
     fun get(index: Int): DownloadableItemAction {

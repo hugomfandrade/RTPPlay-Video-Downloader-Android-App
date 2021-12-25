@@ -383,7 +383,9 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                             val action = DownloadableItemAction(item, task)
                             action.addActionListener(actionListener)
                             actions.add(action)
-                            if (action.item.state == DownloadableItem.State.Downloading) {
+                            if (action.item.state == DownloadableItem.State.Start ||
+                                action.item.state == DownloadableItem.State.Downloading ||
+                                action.item.state == DownloadableItem.State.Paused) {
                                 action.item.state = DownloadableItem.State.Failed
                             }
                             listItems.add(action)

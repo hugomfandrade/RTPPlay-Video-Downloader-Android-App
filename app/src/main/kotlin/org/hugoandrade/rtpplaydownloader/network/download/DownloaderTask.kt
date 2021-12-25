@@ -1,61 +1,124 @@
 package org.hugoandrade.rtpplaydownloader.network.download
 
+import org.hugoandrade.rtpplaydownloader.dev.DevConstants
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
-abstract class DownloaderTask(private val listener : Listener) {
+abstract class DownloaderTask(private val listener : Listener) : Runnable {
 
     open val TAG : String = javaClass.simpleName
 
-    var isDownloading : Boolean = false
-    var doCanceling: Boolean = false
+    @Volatile private var isDownloadingState : Boolean = false
+    @Volatile private var isResumingState : Boolean = true
+    private var doCanceling: Boolean = false
+
+    fun isDownloading() : Boolean {
+        return isDownloadingState
+    }
+
+    fun isResuming() : Boolean {
+        return isResumingState
+    }
+
+    fun doCancelling() {
+        doCanceling = true
+    }
+
+    fun cancelCancelling() {
+        doCanceling = false
+    }
+
+    override fun run() {
+
+        if (isDownloadingState) {
+            println("already trying to download")
+            return
+        }
+
+        doCanceling = false
+        isDownloadingState = true
+
+        try {
+            downloadMediaFile()
+        }
+        finally {
+            isDownloadingState = false
+        }
+    }
 
     abstract fun downloadMediaFile()
 
-    protected fun tryToCancelIfNeeded(fileOutputStream: FileOutputStream,
-                                      inputStream: InputStream,
-                                      file: File): Boolean {
+    protected fun tryToCancelIfNeeded(fileOutputStream: FileOutputStream? = null,
+                                      inputStream: InputStream? = null,
+                                      file: File? = null): Boolean {
 
         if (doCanceling) {
             try {
-                fileOutputStream.close()
+                fileOutputStream?.close()
             } catch (ioe: IOException) {
-                // just going to ignore this one
+                ioe.printStackTrace()
             }
             try {
-                inputStream.close()
+                inputStream?.close()
             } catch (ioe: IOException) {
-                // just going to ignore this one
+                ioe.printStackTrace()
             }
 
-            file.delete()
+            file?.delete()
 
             dispatchDownloadFailed("cancelled")
-            isDownloading = false
+            isDownloadingState = false
             doCanceling = false
             return true
         }
         return false
     }
 
-    fun cancel() {
-        doCanceling = true
+    protected fun doPause() : Boolean {
+
+        while (!isResumingState){
+            if (DevConstants.showLog) println("paused")
+
+            // lock to pause
+            lock.withLock {}
+
+            // check if it was cancelled while pause
+            if (tryToCancelIfNeeded()) return true
+        }
+
+        return false
     }
 
-    val lock : ReentrantLock = ReentrantLock()
+    private val lock : ReentrantLock = ReentrantLock()
+
+    fun cancel() {
+        doCanceling = true
+
+        // unlock all
+        while (lock.holdCount != 0) {
+            lock.unlock()
+        }
+    }
 
     fun resume() {
-        isDownloading = true
+        // check if already on resume state
+        if (isResumingState) return
+
+        isResumingState = true
         if (lock.holdCount != 0) {
             lock.unlock()
         }
     }
 
     fun pause() {
-        isDownloading = false
+        // check if already on pause resume state
+        if (!isResumingState) return
+
+        isResumingState = false
         lock.lock()
     }
 

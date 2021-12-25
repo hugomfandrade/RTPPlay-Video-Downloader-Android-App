@@ -13,7 +13,7 @@ class DownloadableItemAction(val item : DownloadableItem,
 
     override fun startDownload() {
 
-        val downloading : Boolean = downloadTask.isDownloading
+        val downloading : Boolean = downloadTask.isDownloading()
 
         if (downloading) {
             item.state = DownloadableItem.State.Failed
@@ -39,16 +39,20 @@ class DownloadableItemAction(val item : DownloadableItem,
 
     override fun resume() {
         downloadTask.resume()
+        item.state = DownloadableItem.State.Downloading
         item.fireDownloadStateChange()
     }
 
     override fun pause() {
         downloadTask.pause()
+        item.state = DownloadableItem.State.Paused
         item.fireDownloadStateChange()
     }
 
     override fun refresh() {
         actionListener.forEach { l -> l.onRefresh(this)}
+        item.state = DownloadableItem.State.Start
+        item.fireDownloadStateChange()
     }
 
     private val actionListener: HashSet<Listener> = HashSet()
@@ -64,7 +68,11 @@ class DownloadableItemAction(val item : DownloadableItem,
     }
 
     fun isDownloading(): Boolean {
-        return downloadTask.isDownloading
+        return downloadTask.isDownloading()
+    }
+
+    fun isResumed(): Boolean {
+        return downloadTask.isResuming()
     }
 
     override fun onProgress(downloadedSize: Long, totalSize : Long) {

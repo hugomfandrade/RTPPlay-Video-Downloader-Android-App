@@ -193,8 +193,7 @@ class DownloadService : Service() {
 
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
 
-                if (downloadableItem.state == DownloadableItem.State.End ||
-                        downloadableItem.state == DownloadableItem.State.Failed) {
+                if (DownloadableItem.State.isOver(downloadableItem.state)) {
 
                     downloadMap.remove(downloadableItem.id)
 
@@ -224,8 +223,10 @@ class DownloadService : Service() {
             }
         })
 
+        downloadableItemAction.downloadTask.cancelCancelling()
+
         downloadExecutors.execute {
-            downloadableItemAction.downloadTask.downloadMediaFile()
+            downloadableItemAction.downloadTask.run()
         }
     }
 
