@@ -1,64 +1,68 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.io.IOException
+import java.util.*
+import kotlin.collections.ArrayList
 
 class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
 
-    override fun parseMediaFile(url: String): Boolean {
+    override fun isUrlSupported(url: String): Boolean {
+        return url.contains("www.rtp.pt/play")
+    }
+
+    override fun parseMediaFile(doc: Document): ParsingData? {
+
+        val url = doc.baseUri()
 
         tasks.clear()
+        datas.clear()
 
         val metadataList: ArrayList<Metadata> = getUrls(url)
 
         metadataList.forEach(action = { metadata ->
             val task = RTPPlayParsingTaskIdentifier()
 
-            if (task.isValid(metadata.urlString) && task.parseMediaFile(metadata.urlString)) {
+            val data :ParsingData? = task.parseMediaFile(metadata.urlString)
+            if (data != null) {
                 val part = metadata.suffix
-                val originalFilename = task.filename ?: "unknown"
+                val originalFilename = data.filename ?: "unknown"
 
                 if (part != null) {
                     val lastDot = originalFilename.lastIndexOf(".")
                     val preFilename = originalFilename.substring(0, lastDot)
                     val extFilename = originalFilename.substring(lastDot, originalFilename.length)
-                    task.filename = "$preFilename.$part$extFilename"
+                    data.filename = "$preFilename.$part$extFilename"
                 }
                 tasks.add(task)
+                datas.add(data)
             }
         })
 
-        return tasks.size != 0
+        return datas.stream().findFirst().orElse(null)
     }
 
-    override fun parseMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
         // do nothing
         return null.toString()
     }
 
-    override fun parseMediaUrl(doc: Document): String? {
+    override fun parseMediaUrl(doc: Document): String {
         // do nothing
         return null.toString()
     }
 
-    override fun isValid(url: String) : Boolean {
-        if (!RTPPlayParsingTaskIdentifier().isValid(url)) {
-            return false
-        }
+    override fun isValid(doc: Document) : Boolean {
+
+        if (!RTPPlayParsingTaskIdentifier().isValid(doc)) return false
 
         // is Multi Part
         try {
-            val doc: Document?
 
-            try {
-                doc = Jsoup.connect(url).timeout(10000).get()
-            } catch (ignored: IOException) {
-                return false
-            }
-
-            val sectionParts = doc?.getElementsByClass("section-parts") ?: return false
+            val sectionParts = doc.getElementsByClass("section-parts") ?: return false
 
             for (sectionPart: Element in sectionParts.iterator()) {
 
@@ -115,7 +119,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
 
                             for (span: Element in li.getElementsByTag("span")) {
 
-                                val part: String = span.html().capitalize()
+                                val part: String = span.html().capitalize(Locale.getDefault())
                                         .replace("PARTE", "P")
                                         .replace("\\s+","")
                                         .replace(" ","")
@@ -129,7 +133,7 @@ class RTPPlayParsingMultiPartTask : ParsingMultiPartTask() {
                         for (a: Element in li.getElementsByTag("a")) {
 
                             val href: String = a.attr("href")
-                            val part: String = a.html().capitalize()
+                            val part: String = a.html().capitalize(Locale.getDefault())
                                     .replace("PARTE", "P")
                                     .replace("\\s+","")
                                     .replace(" ","")

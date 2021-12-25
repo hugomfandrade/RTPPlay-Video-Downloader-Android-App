@@ -1,6 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-abstract class ParsingMultiPartTask : ParsingTask() {
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 
-    var tasks : ArrayList<ParsingTask> = ArrayList()
+abstract class ParsingMultiPartTask : ParsingTask {
+
+    val tasks : ArrayList<ParsingTask> = ArrayList()
+    val datas : ArrayList<ParsingData> = ArrayList()
 }

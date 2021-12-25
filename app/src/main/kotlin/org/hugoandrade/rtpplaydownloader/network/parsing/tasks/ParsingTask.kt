@@ -1,95 +1,85 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.io.File
 import java.net.URL
 
-abstract class ParsingTask {
+interface ParsingTask {
 
-    val TAG : String = javaClass.simpleName
+    // check if url is supported
+    fun isUrlSupported(url: String) : Boolean
 
-    var url: String? = null
-    var mediaUrl: String? = null
-    var thumbnailUrl: String? = null
-    var filename: String? = null
-    var isDownloading : Boolean = false
+    // check if url is valid - try to get 'Document' and call isValid(doc) method
+    fun isValid(url: String) : Boolean {
 
-    lateinit var mDownloaderTaskListener: DownloaderTask
+        if (!NetworkUtils.isValidURL(url)) return false
 
-    var doCanceling: Boolean = false
-
-    open fun isValid(url: String) : Boolean {
-
-        if (!NetworkUtils.isValidURL(url)) {
-            return false
-        }
+        if (!isUrlSupported(url)) return false
 
         try {
-            val doc = Jsoup.connect(url).timeout(10000).get()
+            val doc = NetworkUtils.getDoc(url) ?: return false
+            return isValid(doc)
+        }
+        catch (e : java.lang.Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    fun isValid(doc: Document) : Boolean {
+
+        return try {
             val mediaUrl: String? = parseMediaUrl(doc)
 
-            return mediaUrl != null
+            mediaUrl != null
         }
         catch (e : java.lang.Exception) {
             e.printStackTrace()
-            return false
+            false
         }
     }
 
-    open fun parseMediaFile(url: String): Boolean {
+    fun parseMediaFile(url: String): ParsingData? {
 
-        this.url = url
-
-        try {
+        return try {
             val doc = Jsoup.connect(url).timeout(10000).get()
-            return parseMediaFile(doc)
+            parseMediaFile(doc)
         }
         catch (e : java.lang.Exception) {
             e.printStackTrace()
-            return false
+            null
         }
     }
 
-    open fun parseMediaFile(file: File): Boolean {
+    fun parseMediaFile(doc: Document): ParsingData? {
 
-        try {
-            val doc = Jsoup.parse(file, null)
-            return parseMediaFile(doc)
-        }
-        catch (e : java.lang.Exception) {
-            e.printStackTrace()
-            return false
-        }
-    }
-
-    open fun parseMediaFile(doc: Document): Boolean {
-
-        this.mediaUrl = parseMediaUrl(doc) ?: return false
-        this.filename = parseMediaFileName(doc)
-        this.thumbnailUrl = parseThumbnailPath(doc)
+        val url = doc.baseUri()
+        val mediaUrl = parseMediaUrl(doc) ?: return null
+        val filename = parseMediaFileName(doc, mediaUrl)
+        val thumbnailUrl = parseThumbnailPath(doc)
 
         try {
             URL(mediaUrl)
         }
         catch (e: Exception) {
             e.printStackTrace()
-            return false
+            return null
         }
 
-        return true
+        return ParsingData(url, mediaUrl, filename, thumbnailUrl)
     }
 
-    abstract fun parseMediaUrl(doc: Document): String?
+    fun parseMediaUrl(doc: Document): String?
 
-    protected open fun parseMediaFileName(doc: Document): String {
-        return ParsingUtils.getMediaFileName(doc, url?: null.toString(), mediaUrl)
+    fun parseMediaFileName(doc: Document, mediaUrl: String): String {
+        return ParsingUtils.getMediaFileName(doc, doc.baseUri()?: null.toString(), mediaUrl)
     }
 
-    protected open fun parseThumbnailPath(doc: Document): String? {
+    fun parseThumbnailPath(doc: Document): String? {
         return ParsingUtils.getThumbnailFromTwitterMetadata(doc)
     }
+
 }

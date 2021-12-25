@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.Predicate
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
@@ -26,11 +25,80 @@ private constructor() {
             return 0
         }
 
-        fun <T> findFirst(tasks : List<T>, predicate: Predicate<T>) : T? {
-            for (task in tasks) {
-                if (predicate.test(task)) return task
+        fun lastIndexOfEx(string: String, subString: String): Int {
+            if (string.contains(subString)) {
+                return string.lastIndexOf(subString) + subString.length
             }
-            return null
+            return 0
+        }
+
+        fun decode(link: String) : String {
+
+            val decodedLink = StringBuilder()
+
+            var i = 0
+            while (i < link.length)  {
+                val char = link[i]
+
+                if (char == '%') {
+                    decodedLink.append(decodeSymbol(link.substring(i, i + 3)))
+                    i += 3
+                }
+                else {
+                    decodedLink.append(char)
+                    i++
+                }
+            }
+
+            return decodedLink.toString()
+        }
+
+        private fun decodeSymbol(symbol: String): Char {
+
+            return when(symbol) {
+                "%21" -> '!'
+                "%23" -> '#'
+                "%24" -> '$'
+                "%26" -> '&'
+                "%27" -> '\''
+                "%28" -> '('
+                "%29" -> ')'
+                "%2A" -> '*'
+                "%2B" -> '+'
+                "%2C" -> ','
+
+                "%2F" -> '/'
+                "%3A" -> ':'
+                "%3B" -> ';'
+                "%3D" -> '='
+                "%3F" -> '?'
+                "%40" -> '@'
+                "%5B" -> '['
+                "%5D" -> ']'
+
+                "%0A" -> '\n'
+                "%0D" -> '\n'
+
+                "%20" -> ' '
+                "%22" -> '"'
+                "%25" -> '%'
+                "%2D" -> '-'
+                "%2E" -> '.'
+
+                "%3C" -> '<'
+                "%3E" -> '>'
+
+                "%5C" -> '\\'
+                "%5E" -> '^'
+                "%5F" -> '_'
+                "%60" -> '`'
+                "%7B" -> '{'
+                "%7C" -> '|'
+                "%7D" -> '}'
+                "%7E" -> '~'
+
+                else -> ' '
+            }
         }
 
         fun getMediaFileName(doc: Document, srcUrl: String, mediaFileUrl: String?): String {

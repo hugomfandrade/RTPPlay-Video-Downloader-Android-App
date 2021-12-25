@@ -21,11 +21,9 @@ class ParsingUnitTestTVIPlayer : ParsingUnitTest() {
         val parsingTask = TVIPlayerParsingTask()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 
     @Test
@@ -44,10 +42,8 @@ class ParsingUnitTestTVIPlayer : ParsingUnitTest() {
         val parsingTask = TVIPlayerParsingTask()
         val parsed = parsingTask.parseMediaFile(url)
 
-        System.err.println("successfully parsed ? " + parsed)
+        debug(parsed)
 
-        debug(parsingTask)
-
-        download(parsingTask)
+        download(parsed)
     }
 }

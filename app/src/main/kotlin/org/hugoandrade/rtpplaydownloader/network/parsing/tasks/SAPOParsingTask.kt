@@ -6,20 +6,18 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.SocketTimeoutException
 
-class SAPOParsingTask : ParsingTask() {
+class SAPOParsingTask : ParsingTask {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String): Boolean {
 
-        val isFileType: Boolean = url.contains("videos.sapo.pt")
-
-        return isFileType || super.isValid(url)
+        return url.contains("videos.sapo.pt")
     }
 
     override fun parseMediaUrl(doc: Document): String? {
         try {
 
             val playerVideoElements = doc.getElementsByAttributeValue("id", "player-video")
-            val url = this.url ?: ""
+            val url = doc.baseUri()
 
             if (playerVideoElements != null) {
 
@@ -59,7 +57,7 @@ class SAPOParsingTask : ParsingTask() {
         return null
     }
 
-    override fun parseMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document, mediaUrl : String): String {
 
         try {
 
@@ -77,6 +75,6 @@ class SAPOParsingTask : ParsingTask() {
             e.printStackTrace()
         }
 
-        return mediaUrl?: url?: null.toString()
+        return mediaUrl?: doc.baseUri()?: null.toString()
     }
 }

@@ -3,14 +3,14 @@ package org.hugoandrade.rtpplaydownloader.network.parsing
 import com.google.common.util.concurrent.AtomicDouble
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.download.*
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import java.io.File
 import kotlin.math.roundToInt
 
 open class ParsingUnitTest {
 
-    val DO_DOWNLOAD = false
+    var DO_DOWNLOAD = true
     private val testDir = File("test-download-folder")
     private val defaultListener: DownloaderTask.Listener = object : DownloaderTask.Listener {
 
@@ -55,26 +55,14 @@ open class ParsingUnitTest {
         }
     }
 
-
-
-    internal fun debug(parsingTask: TSParsingTask) {
-
-        val playlist : TSPlaylist? = parsingTask.getTSPlaylist()
-        val playlistUrl : String? = playlist?.getTSUrls()?.firstOrNull()?.url
-
-        System.err.println(parsingTask.filename)
-        System.err.println(parsingTask.mediaUrl)
-        System.err.println(playlistUrl)
-        System.err.println(playlist?.getTSUrls())
+    internal fun debug(parsingData: ParsingData?) {
+        System.err.println("successfully parsed ? " + (parsingData != null))
+        System.err.println(parsingData)
+        System.err.println(parsingData?.m3u8Playlist?.getTSUrls()?.firstOrNull()?.url)
     }
 
-    internal fun debug(parsingTask: ParsingTask) {
-
-        System.err.println(parsingTask.filename)
-        System.err.println(parsingTask.mediaUrl)
-    }
-
-    internal fun download(item: DownloadableItem) {
+    internal fun download(item: DownloadableItem?) {
+        if (item == null) return
         if (!DO_DOWNLOAD) return
 
         // clone with unique filename
@@ -86,6 +74,9 @@ open class ParsingUnitTest {
                 downloadTask = item.downloadTask
         )
 
+        println(item.downloadTask)
+        println(downloadableItem.downloadTask)
+
         val downloaderTask = DownloaderIdentifier.findTask(testDir.absolutePath, downloadableItem, defaultListener)
 
         System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
@@ -93,11 +84,25 @@ open class ParsingUnitTest {
         downloaderTask.downloadMediaFile()
     }
 
-    internal fun download(parsingTask: TSParsingTask) {
-        download(DownloadableItem(parsingTask))
-    }
+    internal fun download(parsingData: ParsingData?) {
+        if (parsingData == null) return
 
-    internal fun download(parsingTask: ParsingTask) {
-        download(DownloadableItem(parsingTask))
+        val tsUrl = parsingData.m3u8Playlist?.getTSUrls()?.firstOrNull()
+
+        val item : DownloadableItem = if (tsUrl == null) {
+            DownloadableItem(parsingData)
+        }
+        else {
+            DownloadableItem(
+                    url = parsingData.url ?: null.toString(),
+                    mediaUrl = tsUrl.url,
+                    thumbnailUrl = parsingData.thumbnailUrl ?: null.toString(),
+                    filename = parsingData.filename ?: null.toString()
+            )
+        }
+
+        item.downloadTask = ParsingIdentifier.findType(ParsingIdentifier.findHost(parsingData.url))?.name
+
+        download(item)
     }
 }

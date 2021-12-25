@@ -2,7 +2,6 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.jsoup.nodes.Document
@@ -10,13 +9,11 @@ import java.io.*
 import java.net.URL
 import java.nio.charset.Charset
 
-class TVIPlayerParsingTask : TSParsingTask() {
+class TVIPlayerParsingTask : TSParsingTask {
 
-    override fun isValid(url: String) : Boolean {
+    override fun isUrlSupported(url: String): Boolean {
 
-        val isFileType: Boolean = url.contains("tviplayer.iol.pt")
-
-        return isFileType || super.isValid(url)
+        return url.contains("tviplayer.iol.pt")
     }
 
     override fun parseMediaUrl(doc: Document): String? {
@@ -33,24 +30,15 @@ class TVIPlayerParsingTask : TSParsingTask() {
         }
     }
 
-    override fun parseM3U8Playlist(): TSPlaylist? {
-        //
-        val m3u8: String = mediaUrl ?: return null
-
-        val playlist = TSUtils.getCompleteM3U8Playlist(m3u8)
-
-        // TODO
-        // update mediaUrl fields for now for compatibility reasons
-        mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
-
-        return playlist
+    override fun parseM3U8Playlist(m3u8: String): TSPlaylist? {
+        return TSUtils.getCompleteM3U8Playlist(m3u8)
     }
 
-    override fun parseMediaFileName(doc: Document): String {
+    override fun parseMediaFileName(doc: Document, mediaUrl: String): String {
         try {
             val titleElements = doc.getElementsByTag("title")
 
-            if (mediaUrl != null && titleElements != null && titleElements.size > 0) {
+            if (titleElements != null && titleElements.size > 0) {
 
                 val title: String = MediaUtils.getTitleAsFilename(titleElements.elementAt(0).text())
 
@@ -62,21 +50,20 @@ class TVIPlayerParsingTask : TSParsingTask() {
             e.printStackTrace()
         }
 
-        return mediaUrl?:url?: null.toString()
+        return mediaUrl
     }
 
     override fun parseThumbnailPath(doc: Document): String? {
         try {
-            val scriptElements = doc.getElementsByTag("script")
-            if (scriptElements != null) {
-                for (element in scriptElements) {
-                    for (dataNode in element.dataNodes()) {
-                        val scriptText = dataNode.wholeData
-                        if (scriptText.contains("$('#player').iolplayer({")) {
-                            val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"cover\":\""))
-                            return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
-                        }
-                    }
+            val scriptElements = doc.getElementsByTag("script") ?: return null
+
+            for (element in scriptElements) {
+                for (dataNode in element.dataNodes()) {
+                    val scriptText = dataNode.wholeData
+                    if (scriptText.contains("$('#player').iolplayer({")) continue
+
+                    val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"cover\":\""))
+                    return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
                 }
             }
         } catch (ignored: java.lang.Exception) {
@@ -106,16 +93,15 @@ class TVIPlayerParsingTask : TSParsingTask() {
 
     private fun getM3U8ChunkUrl(doc: Document): String? {
         try {
-            val scriptElements = doc.getElementsByTag("script")
-            if (scriptElements != null) {
-                for (element in scriptElements) {
-                    for (dataNode in element.dataNodes()) {
-                        val scriptText = dataNode.wholeData
-                        if (scriptText.contains("$('#player').iolplayer({")) {
-                            val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"videoUrl\":\""))
-                            return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
-                        }
-                    }
+            val scriptElements = doc.getElementsByTag("script") ?: return null
+
+            for (element in scriptElements) {
+                for (dataNode in element.dataNodes()) {
+                    val scriptText = dataNode.wholeData
+                    if (!scriptText.contains("$('#player').iolplayer({")) continue
+
+                    val scriptTextStart = scriptText.substring(ParsingUtils.indexOfEx(scriptText, "\"videoUrl\":\""))
+                    return scriptTextStart.substring(0, scriptTextStart.indexOf("\""))
                 }
             }
         } catch (ignored: java.lang.Exception) {

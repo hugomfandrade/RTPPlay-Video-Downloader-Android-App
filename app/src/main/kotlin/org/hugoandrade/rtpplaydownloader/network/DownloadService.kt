@@ -105,19 +105,20 @@ class DownloadService : Service() {
 
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0)
+                0, notificationIntent, PendingIntent.FLAG_MUTABLE)
 
         val deleteIntent = Intent(this, DownloadService::class.java)
         deleteIntent.putExtra(DELETE_KEY, DELETE_VALUE)
         val deletePendingIntent = PendingIntent.getService(this,
                 DELETE_VALUE,
                 deleteIntent,
-                PendingIntent.FLAG_CANCEL_CURRENT)
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE)
 
         val stopSelf = Intent(this, DownloadService::class.java)
         stopSelf.action = DELETE_KEY
         stopSelf.putExtra(DELETE_KEY, DELETE_VALUE)
-        val pStopSelf = PendingIntent.getService(this, 0, stopSelf, PendingIntent.FLAG_CANCEL_CURRENT)
+        val pStopSelf = PendingIntent.getService(this, 0, stopSelf,
+            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(title)

@@ -14,6 +14,7 @@ import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.net.MalformedURLException
+import java.util.concurrent.Executors
 
 class VersionUtils
 /**
@@ -26,6 +27,7 @@ private constructor() {
     }
 
     companion object {
+
         /**
          * String used in logging output.
          */
@@ -107,7 +109,7 @@ private constructor() {
                     override fun onFailure(t: Throwable) {
                         currentUpdateFuture.failed("failed to read from cloud (failed): " + t.message)
                     }
-                })
+                }, Executors.newSingleThreadExecutor())
             } catch (e: MalformedURLException) {
                 e.printStackTrace()
                 currentUpdateFuture.failed("Url is malformed")
@@ -169,7 +171,7 @@ private constructor() {
                     override fun onFailure(t: Throwable) {
                         uploadHistoryFuture.failed("failed to uploaded history: " + t.message)
                     }
-                })
+                }, Executors.newSingleThreadExecutor())
             } catch (e: MalformedURLException) {
                 e.printStackTrace()
                 uploadHistoryFuture.failed("Url is malformed")
