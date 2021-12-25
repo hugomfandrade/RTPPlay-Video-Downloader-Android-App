@@ -4,6 +4,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.util.concurrent.locks.ReentrantLock
 
 abstract class DownloaderTask(private val listener : Listener) {
 
@@ -44,12 +45,18 @@ abstract class DownloaderTask(private val listener : Listener) {
         doCanceling = true
     }
 
+    val lock : ReentrantLock = ReentrantLock()
+
     fun resume() {
         isDownloading = true
+        if (lock.holdCount != 0) {
+            lock.unlock()
+        }
     }
 
     fun pause() {
         isDownloading = false
+        lock.lock()
     }
 
     fun dispatchProgress(downloadedSize: Long, totalSize: Long) {

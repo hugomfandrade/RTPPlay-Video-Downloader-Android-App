@@ -19,12 +19,12 @@ import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.*
-import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
+import org.hugoandrade.rtpplaydownloader.dev.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.DownloadManager
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction

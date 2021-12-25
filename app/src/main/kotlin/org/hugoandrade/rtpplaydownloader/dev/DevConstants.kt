@@ -1,17 +1,10 @@
-package org.hugoandrade.rtpplaydownloader
+package org.hugoandrade.rtpplaydownloader.dev
 
 interface DevConstants {
 
     companion object {
 
-        const val showLog: Boolean = false
-
-        const val nParsingThreads: Int = 10
-        const val nDownloadThreads: Int = 5
-        const val nPersistenceThreads: Int = 5
-        const val nImageLoadingThreads: Int = 10
-
-        const val enablePauseResume = false
+        const val showLog: Boolean = true
 
         private const val url_1 = "https://www.rtp.pt/play/p2383/e236098/aqui-tao-longe"
         private const val url_2 = "https://www.rtp.pt/play/p5407/barao-negro"

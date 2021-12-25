@@ -4,7 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import android.widget.ImageView
-import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.Config
+import org.hugoandrade.rtpplaydownloader.dev.DevConstants
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -188,7 +189,7 @@ class ImageHolder(private val mDir: File) {
 
         private val bitmapCacheMap: ConcurrentHashMap<String, WeakReference<Bitmap>> = ConcurrentHashMap()
         private val imageViewCacheMap: ConcurrentHashMap<Int, String> = ConcurrentHashMap()
-        private val imageLoaderExecutors = Executors.newFixedThreadPool(DevConstants.nImageLoadingThreads)
+        private val imageLoaderExecutors = Executors.newFixedThreadPool(Config.nImageLoadingThreads)
 
         fun displayImage(dir: File?, url: String?, imageView: ImageView, defaultResID : Int?) {
 

@@ -9,7 +9,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.Config
 import org.hugoandrade.rtpplaydownloader.network.download.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingTaskResult
@@ -37,7 +37,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
     private val downloadableItems: ArrayList<DownloadableItemAction> = ArrayList()
     private val downloadableItemsLiveData: MutableLiveData<ArrayList<DownloadableItemAction>> = MutableLiveData()
 
-    private val parsingExecutors = Executors.newFixedThreadPool(DevConstants.nParsingThreads)
+    private val parsingExecutors = Executors.newFixedThreadPool(Config.nParsingThreads)
 
     private var mDatabaseModel: DownloadableItemRepository
 
@@ -91,12 +91,14 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                     return
                 }
 
+                /*
                 val isUrl : Boolean = NetworkUtils.isValidURL(url)
 
                 if (!isUrl) {
                     future.failed("is not a valid website")
                     return
                 }
+                */
 
                 val parsingTask: ParsingTask? = ParsingIdentifier.findHost(url)
                 val paginationTask : PaginationParserTask? = PaginationIdentifier.findHost(url)

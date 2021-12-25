@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.Config
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
@@ -129,8 +129,8 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
 
         holder.binding.cancelDownloadImageView.visibility = if (isInDownloadingState) View.VISIBLE else View.GONE
         holder.binding.refreshDownloadImageView.visibility = if (!isInDownloadingState) View.VISIBLE else View.GONE
-        holder.binding.pauseDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
-        holder.binding.resumeDownloadImageView.visibility = if (DevConstants.enablePauseResume && isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
+        holder.binding.pauseDownloadImageView.visibility = if (Config.enablePauseResume && isInDownloadingState && isDownloading) View.VISIBLE else View.GONE
+        holder.binding.resumeDownloadImageView.visibility = if (Config.enablePauseResume && isInDownloadingState && !isDownloading) View.VISIBLE else View.GONE
     }
 
     fun get(index: Int): DownloadableItemAction {
@@ -292,8 +292,8 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
             }
             when (v) {
                 binding.cancelDownloadImageView -> item.cancel()
-                binding.pauseDownloadImageView -> item.pause()
                 binding.refreshDownloadImageView -> item.refresh()
+                binding.pauseDownloadImageView -> item.pause()
                 binding.resumeDownloadImageView -> item.resume()
                 binding.root -> item.play()
             }

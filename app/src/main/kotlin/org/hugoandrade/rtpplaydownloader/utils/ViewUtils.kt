@@ -21,8 +21,8 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.R
+import org.hugoandrade.rtpplaydownloader.dev.DevConstants
 import org.hugoandrade.rtpplaydownloader.widget.ExpandCollapseAnimation
 import java.util.*
 

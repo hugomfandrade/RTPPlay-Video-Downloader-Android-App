@@ -142,6 +142,8 @@ private constructor() {
 
         fun uploadHistory(context : Context, downloadableItem: DownloadableItemAction): ListenableFuture<String> {
 
+            // TODO
+            if (true) return ListenableFuture();
             val uploadHistoryFuture : ListenableFuture<String> = ListenableFuture()
 
             try {

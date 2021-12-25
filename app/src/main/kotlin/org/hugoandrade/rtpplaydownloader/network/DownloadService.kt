@@ -8,7 +8,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.Config
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
@@ -31,7 +31,7 @@ class DownloadService : Service() {
         const val NOTIFICATION_ID = 1
     }
 
-    private val downloadExecutors = Executors.newFixedThreadPool(DevConstants.nDownloadThreads)
+    private val downloadExecutors = Executors.newFixedThreadPool(Config.nDownloadThreads)
 
     private val mBinder = DownloadServiceBinder()
 

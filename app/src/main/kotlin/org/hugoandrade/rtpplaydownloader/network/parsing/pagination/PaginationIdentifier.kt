@@ -1,6 +1,8 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.pagination
 
-class PaginationIdentifier() {
+import java.util.function.Supplier
+
+class PaginationIdentifier {
 
     init {
         throw AssertionError()
@@ -10,19 +12,16 @@ class PaginationIdentifier() {
 
         fun findHost(urlString: String): PaginationParserTask? {
             for (fileType: PaginationType in PaginationType.values()) {
-                if (fileType.paginationTask.isValid(urlString)) {
-                    return when (fileType) {
-                        PaginationType.RTPPlay -> RTPPlayPaginationParserTask()
-                        PaginationType.SIC -> SICPaginationParserTask()
-                    }
+                if (fileType.paginationTask.get().isValid(urlString)) {
+                    return fileType.paginationTask.get()
                 }
             }
             return null
         }
     }
 
-    enum class PaginationType(val paginationTask : PaginationParserTask) {
-        RTPPlay(RTPPlayPaginationParserTask()),
-        SIC(SICPaginationParserTask())
+    enum class PaginationType(val paginationTask : Supplier<PaginationParserTask>) {
+        RTPPlay(Supplier { RTPPlayPaginationParserTask() }),
+        SIC(Supplier { SICPaginationParserTask() })
     }
 }
