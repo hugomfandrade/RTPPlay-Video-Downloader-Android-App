@@ -1,48 +1,11 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.utils.Predicate
-import org.jsoup.nodes.Document
-import java.lang.RuntimeException
-
-class RTPPlayParsingTaskIdentifier : ParsingTask() {
-
-
-    private val parsingTasks = listOf(
-            RTPPlayParsingTaskV4(),
-            RTPPlayParsingTaskV3(),
-            RTPPlayParsingTaskV2(),
-            RTPPlayParsingTask()
-    )
-
-    override fun parseMediaFile(url: String): Boolean {
-
-        this.url = url
-
-        val task : ParsingTask = findFirst(Predicate{ task -> task.parseMediaFile(url) })?: return false
-
-        this.mediaUrl = task.mediaUrl
-        this.filename = task.filename
-        this.thumbnailUrl = task.thumbnailUrl
-
-        return true
-    }
-
-    override fun isValid(url: String) : Boolean {
-        findFirst(Predicate{ task -> task.isValid(url) }) ?: return false
-        return true
-    }
-
-    private fun findFirst(predicate: Predicate<ParsingTask>) : ParsingTask? {
-        return ParsingUtils.findFirst(parsingTasks, predicate)
-    }
-
-    override fun parseMediaUrl(doc: Document): String? {
-        throw RuntimeException("delegated not defined")
-    }
-
-    // never called within class
-    override fun parseMediaFileName(doc: Document): String {
-        throw RuntimeException("delegated not defined")
-    }
-}
+class RTPPlayParsingTaskIdentifier : ParsingTaskDelegate(listOf(
+        RTPPlayParsingTaskV8(),
+        RTPPlayParsingTaskV7(),
+        RTPPlayParsingTaskV6(),
+        RTPPlayParsingTaskV5(),
+        RTPPlayParsingTaskV4(),
+        RTPPlayParsingTaskV3(),
+        RTPPlayParsingTaskV2(),
+        RTPPlayParsingTaskV1()))

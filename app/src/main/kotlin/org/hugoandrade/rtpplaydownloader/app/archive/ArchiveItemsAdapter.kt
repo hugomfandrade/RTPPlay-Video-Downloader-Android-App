@@ -99,6 +99,9 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
                     holder.binding.downloadProgressTextView.setText(R.string.did_not_download)
                 }
             }
+            else -> {
+                holder.binding.downloadProgressTextView.setText(null)
+            }
         }
 
         holder.binding.cancelDownloadImageView.visibility = View.GONE

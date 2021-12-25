@@ -12,11 +12,12 @@ import androidx.lifecycle.MutableLiveData
 import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.download.*
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingTaskResult
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingMultiPartTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
 import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
@@ -77,9 +78,9 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         context.unbindService(mConnection)
     }
 
-    override fun parseUrl(url: String) : ListenableFuture<ParsingData> {
+    override fun parseUrl(url: String) : ListenableFuture<ParsingTaskResult> {
 
-        val future = ListenableFuture<ParsingData>()
+        val future = ListenableFuture<ParsingTaskResult>()
 
         parsingExecutors.execute(object : Runnable {
 
@@ -100,12 +101,13 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 val parsingTask: ParsingTask? = ParsingIdentifier.findHost(url)
                 val paginationTask : PaginationParserTask? = PaginationIdentifier.findHost(url)
 
+                // if it has pagination, but not parsing task
                 if (parsingTask == null && paginationTask != null) {
 
                     try {
-                        val f : ArrayList<ParsingTask>? = parsePagination(url, paginationTask).get()
+                        val f : ArrayList<ParsingData>? = parsePagination(url, paginationTask).get()
                         if (f != null) {
-                            future.success(ParsingData(f, paginationTask))
+                            future.success(ParsingTaskResult(f, paginationTask))
                         }
                         else {
                             future.failed("is not a valid website")
@@ -118,42 +120,44 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                     return
                 }
 
+                // if no parsing task, return failed
                 if (parsingTask == null) {
                     future.failed("is not a valid website")
                     return
                 }
 
-                val parsing : Boolean = parsingTask.parseMediaFile(url)
+                // try to parse
+                val parsingData : ParsingData? = parsingTask.parseMediaFile(url)
 
-                if (!parsing) {
-                    future.failed("could not find filetype")
+                if (parsingData == null) {
+                    future.failed("could not parse")
                     return
                 }
 
-                parsingTask.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), parsingTask.filename?: "")
+                parsingData.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), parsingData.filename?: "")
 
+                val parsingDatas = if (parsingTask is ParsingMultiPartTask) parsingTask.datas else arrayListOf(parsingData)
+
+                // check pagination
                 val isPaginationUrlTheSameOfTheOriginalUrl : Boolean =
-                        isPaginationUrlTheSameOfTheOriginalUrl(url, parsingTask, paginationTask)
+                        isPaginationUrlTheSameOfTheOriginalUrl(url,parsingDatas, paginationTask)
 
                 paginationTask?.setPaginationComplete(isPaginationUrlTheSameOfTheOriginalUrl)
 
-                future.success(if (parsingTask is ParsingMultiPartTask)
-                    ParsingData(parsingTask.tasks, paginationTask) else
-                    ParsingData(parsingTask, paginationTask))
+                future.success(ParsingTaskResult(parsingDatas, paginationTask))
             }
         })
 
         return future
     }
 
-    override fun parsePagination(url: String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingTask>> {
+    override fun parsePagination(url: String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingData>> {
 
-        val future = ListenableFuture<ArrayList<ParsingTask>>()
+        val future = ListenableFuture<ArrayList<ParsingData>>()
 
-        val task : Callable<ArrayList<ParsingTask>> = object: Callable<ArrayList<ParsingTask>> {
+        val task : Callable<ArrayList<ParsingData>> = object: Callable<ArrayList<ParsingData>> {
 
-
-            override fun call(): ArrayList<ParsingTask> {
+            override fun call(): ArrayList<ParsingData> {
 
                 if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                     future.failed("no network")
@@ -168,14 +172,16 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 }
 
 
-                val futures: List<Future<ParsingData>> = parsingExecutors.invokeAll(paginationUrls.map { paginationUrl -> parseUrlWithoutPagination(paginationUrl)})
+                val futures: List<Future<ParsingTaskResult>> = parsingExecutors.invokeAll(
+                        paginationUrls.map { paginationUrl -> parseUrlWithoutPagination(paginationUrl)}
+                )
 
-                val paginationDownloadTasks = ArrayList<ParsingTask>()
+                val paginationDownloadTasks = ArrayList<ParsingData>()
 
                 futures.forEach(action = { future ->
 
                     try{
-                        paginationDownloadTasks.addAll(future.get().tasks)
+                        paginationDownloadTasks.addAll(future.get().parsingDatas)
                     }
                     catch (e : java.lang.Exception) {
                         Log.e(TAG, "error parsing pagination task ")
@@ -197,14 +203,14 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         return future
     }
 
-    override fun parseMore(url : String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingTask>> {
+    override fun parseMore(url : String, paginationTask: PaginationParserTask): ListenableFuture<ArrayList<ParsingData>> {
 
-        val future = ListenableFuture<ArrayList<ParsingTask>>()
+        val future = ListenableFuture<ArrayList<ParsingData>>()
 
-        val task : Callable<ArrayList<ParsingTask>> = object: Callable<ArrayList<ParsingTask>> {
+        val task : Callable<ArrayList<ParsingData>> = object: Callable<ArrayList<ParsingData>> {
 
 
-            override fun call(): ArrayList<ParsingTask> {
+            override fun call(): ArrayList<ParsingData> {
 
                 if (!NetworkUtils.isNetworkAvailable(getApplication())) {
                     future.failed("no network")
@@ -219,14 +225,16 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 }
 
 
-                val futures: List<Future<ParsingData>> = parsingExecutors.invokeAll(paginationUrls.map { paginationUrl -> parseUrlWithoutPagination(paginationUrl)})
+                val futures: List<Future<ParsingTaskResult>> = parsingExecutors.invokeAll(
+                        paginationUrls.map { paginationUrl -> parseUrlWithoutPagination(paginationUrl)}
+                )
 
-                val paginationDownloadTasks = ArrayList<ParsingTask>()
+                val paginationDownloadTasks = ArrayList<ParsingData>()
 
                 futures.forEach(action = { future ->
 
                     try{
-                        paginationDownloadTasks.addAll(future.get().tasks)
+                        paginationDownloadTasks.addAll(future.get().parsingDatas)
                     }
                     catch (e : java.lang.Exception) {
                         Log.e(TAG, "error parsing pagination task ")
@@ -249,7 +257,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         return future
     }
 
-    private fun parseUrlWithoutPagination(url: String) : Callable<ParsingData> {
+    private fun parseUrlWithoutPagination(url: String) : Callable<ParsingTaskResult> {
 
         return Callable {
             if (!NetworkUtils.isNetworkAvailable(getApplication())) {
@@ -262,27 +270,24 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                 throw RuntimeException("is not a valid website")
             }
 
-            val parsingTask: ParsingTask = ParsingIdentifier.findHost(url) ?: throw RuntimeException("could not find host")
+            val parsingTask: ParsingTask = ParsingIdentifier.findHost(url)
+                    ?: throw RuntimeException("could not find host")
 
-            val parsing : Boolean = parsingTask.parseMediaFile(url)
+            val parsingData : ParsingData = parsingTask.parseMediaFile(url)
+                    ?: throw RuntimeException("could not parse")
 
-            if (!parsing) {
-                throw RuntimeException("could not find filetype")
-            }
+            parsingData.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), parsingData.filename?: "")
 
-            parsingTask.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), parsingTask.filename?: "")
-
-            ParsingData(parsingTask, null)
+            ParsingTaskResult(parsingData, null)
         }
     }
 
-    override fun download(task: ParsingTask): ListenableFuture<DownloadableItemAction>  {
+    override fun download(parsingData: ParsingData): ListenableFuture<DownloadableItemAction>  {
         val future = ListenableFuture<DownloadableItemAction>()
 
-        val url = task.url
-        val mediaUrl = task.mediaUrl
-        val filename = task.filename
-        val thumbnailUrl = task.thumbnailUrl
+        val url = parsingData.url
+        val mediaUrl = parsingData.mediaUrl
+        val filename = parsingData.filename
         if (url == null || mediaUrl == null || filename == null) {
 
             if (url == null) future.failed("url not defined")
@@ -291,8 +296,20 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
             return future
         }
 
-        val item = DownloadableItem(url = url, mediaUrl = mediaUrl, thumbnailUrl = thumbnailUrl, filename = filename)
-        item.downloadTask = ParsingIdentifier.findType(task)?.name
+        val tsUrl = parsingData.m3u8Playlist?.getTSUrls()?.firstOrNull()
+
+        val item : DownloadableItem = if (tsUrl == null) {
+            DownloadableItem(parsingData)
+        }
+        else {
+            DownloadableItem(
+                    url = parsingData.url ?: null.toString(),
+                    mediaUrl = tsUrl.url,
+                    thumbnailUrl = parsingData.thumbnailUrl ?: null.toString(),
+                    filename = parsingData.filename ?: null.toString())
+        }
+
+        item.downloadTask = ParsingIdentifier.findType(parsingData)?.name
 
         val databaseFuture = mDatabaseModel.insertDownloadableItem(item)
         databaseFuture.addCallback(object : ListenableFuture.Callback<DownloadableItem> {
@@ -356,24 +373,23 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
                             }
                         }
 
-                        if (!contains) {
+                        if (contains) continue
 
-                            try {
-                                val task = DownloaderIdentifier.findTask(dirPath, item)
+                        try {
+                            val task = DownloaderIdentifier.findTask(dirPath, item)
 
-                                val action = DownloadableItemAction(item, task)
-                                action.addActionListener(actionListener)
-                                actions.add(action)
-                                if (action.item.state == DownloadableItem.State.Downloading) {
-                                    action.item.state = DownloadableItem.State.Failed
-                                }
-                                listItems.add(action)
-                                listItems.sortedWith(compareBy { it.item.id })
+                            val action = DownloadableItemAction(item, task)
+                            action.addActionListener(actionListener)
+                            actions.add(action)
+                            if (action.item.state == DownloadableItem.State.Downloading) {
+                                action.item.state = DownloadableItem.State.Failed
                             }
-                            catch (e : IllegalArgumentException) {
-                                Log.e(TAG, "failed to get downloaderTask")
-                                e.printStackTrace()
-                            }
+                            listItems.add(action)
+                            listItems.sortedWith(compareBy { it.item.id })
+                        }
+                        catch (e : IllegalArgumentException) {
+                            Log.e(TAG, "failed to get downloaderTask")
+                            e.printStackTrace()
                         }
                     }
                 }
@@ -404,7 +420,7 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
     }
 
     private fun isPaginationUrlTheSameOfTheOriginalUrl(url: String,
-                                                       parsingTask: ParsingTask,
+                                                       parsingDatas: ArrayList<ParsingData>,
                                                        paginationTask: PaginationParserTask?): Boolean {
 
         if (paginationTask == null) {
@@ -412,26 +428,13 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
         }
 
         val paginationUrls : ArrayList<String> = paginationTask.parsePagination(url)
-
-        if (paginationUrls.size == 0) {
-            return false
-        }
-
-        val tasks : ArrayList<ParsingTask> = if (parsingTask is ParsingMultiPartTask) {
-            parsingTask.tasks
-        }
-        else {
-            arrayListOf(parsingTask)
-        }
-
-        if (paginationUrls.size != 1) {
-            return false
-        }
+        if (paginationUrls.size == 0) return false
+        if (paginationUrls.size != 1) return false
 
         val paginationVideoFileNames : ArrayList<String> = ArrayList()
         val videoFileNames : ArrayList<String> = ArrayList()
-        tasks.forEach(action = { task ->
-            val videoFile = task.mediaUrl ?: return false
+        parsingDatas.forEach(action = { parsingData ->
+            val videoFile = parsingData.mediaUrl ?: return false
             videoFileNames.add(videoFile)
         })
 
@@ -448,23 +451,19 @@ class DownloadManager(application: Application) : AndroidViewModel(application),
             }
 
             val paginationParsingTask: ParsingTask = ParsingIdentifier.findHost(p) ?: return false
+            val parsingData : ParsingData = paginationParsingTask.parseMediaFile(p) ?: return false
 
-            val parsing : Boolean = paginationParsingTask.parseMediaFile(p)
-
-            if (!parsing) {
-                return false
-            }
-
-            paginationParsingTask.filename = MediaUtils.getUniqueFilenameAndLock(MediaUtils.getDownloadsDirectory(getApplication()).toString(), paginationParsingTask.filename?: "")
+            parsingData.filename = MediaUtils.getUniqueFilenameAndLock(
+                    MediaUtils.getDownloadsDirectory(getApplication()).toString(), parsingData.filename?: "")
 
             if (paginationParsingTask is ParsingMultiPartTask) {
-                paginationParsingTask.tasks.forEach { t ->
+                paginationParsingTask.datas.forEach { t ->
                     val paginationVideoFileName = t.mediaUrl ?: return false
                     paginationVideoFileNames.add(paginationVideoFileName)
                 }
             }
             else {
-                val paginationVideoFileName = paginationParsingTask.mediaUrl ?: return false
+                val paginationVideoFileName = parsingData.mediaUrl ?: return false
                 paginationVideoFileNames.add(paginationVideoFileName)
             }
         })

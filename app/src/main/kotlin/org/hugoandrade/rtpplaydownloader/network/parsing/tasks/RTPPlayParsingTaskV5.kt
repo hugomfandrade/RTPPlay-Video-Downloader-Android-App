@@ -1,5 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import com.google.gson.JsonParser
 import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
@@ -7,7 +8,7 @@ import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
 @Deprecated(message = "use a more recent RTPPlay parser")
-open class RTPPlayParsingTaskV3 : RTPPlayTSParsingTask() {
+open class RTPPlayParsingTaskV5 : RTPPlayTSParsingTask() {
 
     // get playlist url
     override fun parseMediaUrl(doc: Document): String? {
@@ -15,6 +16,7 @@ open class RTPPlayParsingTaskV3 : RTPPlayTSParsingTask() {
         try {
 
             val scriptElements = doc.getElementsByTag("script") ?: return null
+
 
             for (scriptElement in scriptElements.iterator()) {
 
@@ -27,14 +29,19 @@ open class RTPPlayParsingTaskV3 : RTPPlayTSParsingTask() {
                     try {
 
                         val rtpPlayerSubString: String = scriptText
-                        val from = "file:\""
-                        val to = "\","
+                        val from = "file:{"
+                        val to = "},"
 
                         if (rtpPlayerSubString.indexOf(from) >= 0) {
-                            val indexFrom = ParsingUtils.indexOfEx(rtpPlayerSubString, from)
+                            val indexFrom = ParsingUtils.indexOfEx(rtpPlayerSubString, from) - 1
 
-                            return rtpPlayerSubString.substring(indexFrom, indexFrom + rtpPlayerSubString.substring(indexFrom).indexOf(to))
+                            val fileKeyAsString = rtpPlayerSubString.substring(indexFrom, indexFrom + rtpPlayerSubString.substring(indexFrom).indexOf(to) + 1)
 
+                            val jsonElement = JsonParser().parse(fileKeyAsString).asJsonObject
+
+                            val link = jsonElement.get("hls").asString
+
+                            return link
                         }
                     } catch (parsingException: java.lang.Exception) { }
                 }
@@ -48,9 +55,6 @@ open class RTPPlayParsingTaskV3 : RTPPlayTSParsingTask() {
     }
 
     override fun parseM3U8Playlist(m3u8: String): TSPlaylist? {
-
-        if (!TSUtils.getUrlWithoutParameters(m3u8).endsWith(".m3u8")) return null
-
-        return TSPlaylist().add("DEFAULT", m3u8)
+        return TSUtils.getCompleteM3U8PlaylistWithoutBaseUrl(m3u8)
     }
 }

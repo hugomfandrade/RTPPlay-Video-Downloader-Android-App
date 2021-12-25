@@ -14,7 +14,7 @@ class DownloaderIdentifier {
 
         val TAG = "DownloaderIdentifier"
 
-        fun findHost(downloadTask: String?, mediaUrl: String): DownloadType? {
+        fun findHost(downloadTask: String?, mediaUrl: String): DownloadType {
 
             for (fileType: FileType in FileType.values()) {
                 if (fileType.name == downloadTask) {
@@ -22,7 +22,11 @@ class DownloaderIdentifier {
                     when (fileType) {
                         FileType.TVIPlayer -> return DownloadType.TVITSFiles
                         FileType.RTPPlay -> {
-                            return if (mediaUrl.contains(".m3u8")) DownloadType.RTPTSFiles else DownloadType.FullFile
+                            return when {
+                                mediaUrl.contains(".m3u8") -> DownloadType.RTPTSFiles
+                                mediaUrl.contains(".mp4") -> DownloadType.RTPTSFiles
+                                else -> DownloadType.FullFile
+                            }
                         }
                         FileType.SIC -> {
                             return if (mediaUrl.contains(".m3u8")) DownloadType.SICTSFiles else DownloadType.FullFile
@@ -42,9 +46,16 @@ class DownloaderIdentifier {
         @Throws(IllegalAccessException::class)
         fun findTask(dir: String, downloadableItem: DownloadableItem, listener : DownloaderTask.Listener): DownloaderTask {
 
-            val url = downloadableItem.url
             val mediaUrl = downloadableItem.mediaUrl ?: throw IllegalAccessException("mediaUrl not found")
             val filename = downloadableItem.filename ?: throw IllegalAccessException("filename not found")
+
+            if (mediaUrl.contains(".m3u8")) {
+                return TSDownloaderTask(mediaUrl, dir, filename, listener)
+            }
+            else {
+                return RawDownloaderTask(mediaUrl, dir, filename, listener)
+            }
+            /*
             val downloadTask = downloadableItem.downloadTask
 
             return when(findHost(downloadTask, mediaUrl)) {
@@ -58,8 +69,8 @@ class DownloaderIdentifier {
                     if (filename.endsWith("net_wide")) RawDownloaderTask(mediaUrl, dir, filename, listener)
                     else  TSDownloaderTask(mediaUrl, dir, filename, listener)
                 }
-                null -> throw IllegalAccessException("downloaderTask not found")
             }
+            */
         }
     }
 

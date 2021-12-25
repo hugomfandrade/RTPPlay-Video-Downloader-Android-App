@@ -8,16 +8,16 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDialog
+import androidx.recyclerview.widget.RecyclerView
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingTaskResult
 import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
-
 
 class ParsingDialog(context: Context): AppCompatDialog(context) {
 
     companion object {
-        private val TAG = ParsingDialog::class.java.simpleName
+        @Suppress("unused") private val TAG = ParsingDialog::class.java.simpleName
     }
 
     private val mParsingItemsAdapter = ParsingItemsAdapter()
@@ -38,10 +38,11 @@ class ParsingDialog(context: Context): AppCompatDialog(context) {
 
         findViewById<View>(R.id.tv_download)?.visibility = View.GONE
         findViewById<View>(R.id.tv_parse_entire_series)?.visibility = View.GONE
-        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.visibility = View.GONE
-        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.isNestedScrollingEnabled = false
-        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
-        findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.parsing_items)?.adapter = mParsingItemsAdapter
+        val recyclerView = findViewById<RecyclerView>(R.id.parsing_items)
+        recyclerView?.visibility = View.GONE
+        recyclerView?.isNestedScrollingEnabled = false
+        recyclerView?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
+        recyclerView?.adapter = mParsingItemsAdapter
 
         setOnKeyListener(DialogInterface.OnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
@@ -87,21 +88,21 @@ class ParsingDialog(context: Context): AppCompatDialog(context) {
         findViewById<View>(R.id.tv_cancel)?.visibility = View.VISIBLE
     }
 
-    fun showParsingResult(parsingData: ParsingData) {
+    fun showParsingResult(parsingTaskResult: ParsingTaskResult) {
         findViewById<View>(R.id.parsing_progress_bar)?.visibility = View.GONE
         findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
         findViewById<View>(R.id.parsing_items)?.visibility = View.VISIBLE
 
-        val tasks : ArrayList<ParsingTask> = parsingData.tasks
-        val paginationTask: PaginationParserTask? = parsingData.paginationTask
+        val parsingDatas : ArrayList<ParsingData> = parsingTaskResult.parsingDatas
+        val paginationTask: PaginationParserTask? = parsingTaskResult.paginationTask
 
-        if (tasks.isEmpty()) {
+        if (parsingDatas.isEmpty()) {
             dismiss()
             return
         }
 
         mParsingItemsAdapter.clear()
-        mParsingItemsAdapter.addAll(tasks)
+        mParsingItemsAdapter.addAll(parsingDatas)
         mParsingItemsAdapter.notifyDataSetChanged()
 
         findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
@@ -121,9 +122,9 @@ class ParsingDialog(context: Context): AppCompatDialog(context) {
         }
     }
 
-    fun showPaginationResult(paginationTask: PaginationParserTask, tasks: ArrayList<ParsingTask>) {
+    fun showPaginationResult(paginationTask: PaginationParserTask, parsingDatas: ArrayList<ParsingData>) {
 
-        if (tasks.isEmpty()) {
+        if (parsingDatas.isEmpty()) {
             dismiss()
             return
         }
@@ -135,13 +136,13 @@ class ParsingDialog(context: Context): AppCompatDialog(context) {
         mParsingItemsAdapter.hideProgressBarView()
         mParsingItemsAdapter.clear()
 
-        showPaginationMoreResult(paginationTask, tasks)
+        showPaginationMoreResult(paginationTask, parsingDatas)
     }
 
-    fun showPaginationMoreResult(paginationTask: PaginationParserTask, tasks: ArrayList<ParsingTask>) {
+    fun showPaginationMoreResult(paginationTask: PaginationParserTask, parsingDatas: ArrayList<ParsingData>) {
 
         mParsingItemsAdapter.hideProgressBarView()
-        mParsingItemsAdapter.addAllAndNotify(tasks)
+        mParsingItemsAdapter.addAllAndNotify(parsingDatas)
 
         findViewById<View>(R.id.tv_cancel)?.visibility = View.GONE
         findViewById<View>(R.id.tv_download)?.visibility = View.VISIBLE
@@ -171,7 +172,7 @@ class ParsingDialog(context: Context): AppCompatDialog(context) {
 
     interface OnParsingListener {
         fun onCancelled()
-        fun onDownload(tasks : ArrayList<ParsingTask>)
+        fun onDownload(parsingDatas : ArrayList<ParsingData>)
         fun onParseEntireSeries(paginationTask : PaginationParserTask)
         fun onParseMore(paginationTask: PaginationParserTask)
     }
@@ -201,11 +202,11 @@ class ParsingDialog(context: Context): AppCompatDialog(context) {
         }
     }
 
-    private class ParsingDialogParams internal constructor(internal var mContext: Context) {
+    private class ParsingDialogParams(var mContext: Context) {
 
-        internal var mOnParsingListener: OnParsingListener? = null
+        var mOnParsingListener: OnParsingListener? = null
 
-        internal fun apply(parsingDialog: ParsingDialog) {
+        fun apply(parsingDialog: ParsingDialog) {
             parsingDialog.setOnParsingDialogListener(mOnParsingListener)
         }
     }

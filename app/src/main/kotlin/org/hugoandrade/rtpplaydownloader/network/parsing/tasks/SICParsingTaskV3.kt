@@ -2,25 +2,11 @@ package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
 import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingUtils
-import org.hugoandrade.rtpplaydownloader.network.parsing.TSParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.TSPlaylist
 import org.jsoup.nodes.DataNode
 import org.jsoup.nodes.Document
 
-open class SICParsingTaskV3 : TSParsingTask() {
-
-    override fun isValid(url: String) : Boolean {
-
-        val isFileType: Boolean =
-                url.contains("sicradical.sapo.pt") ||
-                url.contains("sicradical.pt") ||
-                url.contains("sicnoticias.sapo.pt") ||
-                url.contains("sicnoticias.pt") ||
-                url.contains("sic.sapo.pt") ||
-                url.contains("sic.pt")
-
-        return isFileType || super.isValid(url)
-    }
+open class SICParsingTaskV3 : SICTSParsingTask() {
 
     // get ts playlist
     override fun parseMediaUrl(doc: Document): String? {
@@ -68,33 +54,7 @@ open class SICParsingTaskV3 : TSParsingTask() {
         return null
     }
 
-    override fun parseM3U8Playlist(): TSPlaylist? {
-        //
-        val m3u8: String = mediaUrl ?: return null
-
-        val playlist = TSUtils.getCompleteM3U8Playlist(m3u8)
-
-        // TODO
-        // update mediaUrl fields for now for compatibility reasons
-        mediaUrl = playlist?.getTSUrls()?.firstOrNull()?.url ?: mediaUrl
-
-        return playlist
-    }
-
-    override fun parseMediaFileName(doc: Document): String {
-        return ParsingUtils.getMediaFileName(doc, url ?: "", mediaUrl)
-                .replace("SIC.Noticias.", "")
-                .replace("SIC.Radical.", "")
-                .replace("SIC.", "") + ".ts"
-    }
-
-    override fun parseThumbnailPath(doc: Document): String? {
-        val filename = super.parseThumbnailPath(doc)
-
-        return if (filename.isNullOrEmpty()) {
-            ParsingUtils.getThumbnailFromTwitterMetadata(doc) ?: filename
-        } else {
-            filename
-        }
+    override fun parseM3U8Playlist(m3u8: String): TSPlaylist? {
+        return TSUtils.getCompleteM3U8Playlist(m3u8)
     }
 }

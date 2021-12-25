@@ -9,8 +9,7 @@ import android.widget.CompoundButton
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemBinding
 import org.hugoandrade.rtpplaydownloader.databinding.ParsingItemLoadingBinding
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingItem
-import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.ParsingTask
+import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import kotlin.collections.ArrayList
@@ -21,9 +20,10 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
     private var showProgressBar: Boolean = false
     private val recyclerViewLock: Any = Object()
     private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
+
     private var listener: Listener? = null
 
-    private val parsingItemList: ArrayList<ParsingItem> = ArrayList()
+    private val parsingItems: ArrayList<ParsingItem> = ArrayList()
 
     override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -54,20 +54,20 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == parsingItemList.size) 1 else 0
+        return if (position == parsingItems.size) 1 else 0
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         if (holder.binding != null) {
-            val parsingItem: ParsingItem = parsingItemList[position]
-            val parsingItemCount: Int = parsingItemList.size
+            val parsingItem: ParsingItem = parsingItems[position]
+            val parsingItemCount: Int = parsingItems.size
             holder.binding.item = parsingItem
 
             // THUMBNAIL
 
             val dir : File? = recyclerView?.context?.getExternalFilesDir(null)
-            val thumbnailUrl : String? = parsingItem.task.thumbnailUrl
+            val thumbnailUrl : String? = parsingItem.parsingData.thumbnailUrl
 
             ImageHolder.Builder()
                     .withDefault(R.drawable.media_file_icon)
@@ -87,40 +87,40 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
     }
 
     override fun getItemCount(): Int {
-        return parsingItemList.size + if (showLoadMore || showProgressBar) 1 else 0
+        return parsingItems.size + if (showLoadMore || showProgressBar) 1 else 0
     }
 
-    fun add(task: ParsingTask) {
-        synchronized(parsingItemList) {
-            for (parsingItem in parsingItemList) {
-                if (parsingItem.task == task) {
+    fun add(parsingData: ParsingData) {
+        synchronized(parsingItems) {
+            for (parsingItem in parsingItems) {
+                if (parsingItem.parsingData == parsingData) {
                     return
                 }
             }
-            parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
+            parsingItems.add(ParsingItem(parsingData, ObservableBoolean(true)))
         }
     }
 
-    fun addAndNotify(task: ParsingTask) {
-        synchronized(parsingItemList) {
-            for (parsingItem in parsingItemList) {
-                if (parsingItem.task == task) {
+    fun addAndNotify(parsingData: ParsingData) {
+        synchronized(parsingItems) {
+            for (parsingItem in parsingItems) {
+                if (parsingItem.parsingData == parsingData) {
                     return
                 }
             }
-            parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
-            notifyItemInserted(parsingItemList.size - 1)
-            notifyItemRangeChanged(parsingItemList.size - 1, parsingItemList.size)
+            parsingItems.add(ParsingItem(parsingData, ObservableBoolean(true)))
+            notifyItemInserted(parsingItems.size - 1)
+            notifyItemRangeChanged(parsingItems.size - 1, parsingItems.size)
         }
     }
 
-    fun remove(task: ParsingTask) {
-        synchronized(parsingItemList) {
-            for ((index, parsingItem) in parsingItemList.withIndex()) {
-                if (parsingItem.task == task) {
-                    parsingItemList.removeAt(index)
+    fun remove(parsingData: ParsingData) {
+        synchronized(parsingItems) {
+            for ((index, parsingItem) in parsingItems.withIndex()) {
+                if (parsingItem.parsingData == parsingData) {
+                    parsingItems.removeAt(index)
                     notifyItemRemoved(index)
-                    notifyItemRangeChanged(index, parsingItemList.size)
+                    notifyItemRangeChanged(index, parsingItems.size)
                     return
                 }
             }
@@ -128,55 +128,55 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
     }
 
     fun clear() {
-        synchronized(parsingItemList) {
-            parsingItemList.clear()
+        synchronized(parsingItems) {
+            parsingItems.clear()
         }
     }
 
-    fun addAllAndNotify(tasks: ArrayList<ParsingTask>) {
-        synchronized(parsingItemList) {
+    fun addAllAndNotify(tasks: ArrayList<ParsingData>) {
+        synchronized(parsingItems) {
             val prevItemCount: Int = itemCount
-            tasks.forEach(action = { task ->
+            tasks.forEach(action = { parsingData ->
                 var alreadyInList = false
-                for (parsingItem in parsingItemList) {
-                    if (parsingItem.task == task) {
+                for (parsingItem in parsingItems) {
+                    if (parsingItem.parsingData == parsingData) {
                         alreadyInList = true
                         break
                     }
                 }
                 if (!alreadyInList) {
-                    parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
+                    parsingItems.add(ParsingItem(parsingData, ObservableBoolean(true)))
                 }
             })
             if (prevItemCount != itemCount) {
-                notifyItemRangeChanged(prevItemCount, parsingItemList.size)
+                notifyItemRangeChanged(prevItemCount, parsingItems.size)
             }
         }
     }
 
-    fun addAll(tasks: ArrayList<ParsingTask>) {
-        synchronized(parsingItemList) {
-            tasks.forEach(action = { task ->
+    fun addAll(tasks: ArrayList<ParsingData>) {
+        synchronized(parsingItems) {
+            tasks.forEach(action = { parsingData ->
                 var alreadyInList = false
-                for (parsingItem in parsingItemList) {
-                    if (parsingItem.task == task) {
+                for (parsingItem in parsingItems) {
+                    if (parsingItem.parsingData == parsingData) {
                         alreadyInList = true
                         break
                     }
                 }
                 if (!alreadyInList) {
-                    parsingItemList.add(ParsingItem(task, ObservableBoolean(true)))
+                    parsingItems.add(ParsingItem(parsingData, ObservableBoolean(true)))
                 }
             })
         }
     }
 
-    fun getSelectedTasks(): ArrayList<ParsingTask> {
-        synchronized(parsingItemList) {
-            val tasks : ArrayList<ParsingTask> = ArrayList()
-            for (parsingItem in parsingItemList) {
+    fun getSelectedTasks(): ArrayList<ParsingData> {
+        synchronized(parsingItems) {
+            val tasks : ArrayList<ParsingData> = ArrayList()
+            for (parsingItem in parsingItems) {
                 if (parsingItem.isSelected.get()) {
-                    tasks.add(parsingItem.task)
+                    tasks.add(parsingItem.parsingData)
                 }
             }
             return tasks
@@ -268,8 +268,8 @@ class ParsingItemsAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<Pa
 
         override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
             val item : ParsingItem
-            synchronized(parsingItemList) {
-                item = parsingItemList[adapterPosition]
+            synchronized(parsingItems) {
+                item = parsingItems[adapterPosition]
                 item.isSelected.set(isChecked)
             }
         }
