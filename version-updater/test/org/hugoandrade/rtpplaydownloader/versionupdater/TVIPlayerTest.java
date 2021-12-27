@@ -5,6 +5,7 @@ import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.junit.Test;
 
 import java.io.*;
 import java.net.URL;
@@ -137,7 +138,8 @@ public class TVIPlayerTest {
         }
     }
 
-    public static void main(String... args) {
+    @Test
+    public void test() {
 
         String url = "https://tviplayer.iol.pt/" +
                 "programa/governo-sombra/53c6b3a33004dc006243d5fb/" +

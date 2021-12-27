@@ -1,4 +1,4 @@
 include ':app'
 
 include ':version-updater'
-project(':version-updater').projectDir = new File('azure-cloud\\azure-version-updater-app')
+project(':version-updater').projectDir = new File('version-updater')
