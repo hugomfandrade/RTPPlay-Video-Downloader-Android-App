@@ -108,27 +108,29 @@ class DownloadService : Service() {
                 0, notificationIntent, PendingIntent.FLAG_MUTABLE)
 
         val deleteIntent = Intent(this, DownloadService::class.java)
-        deleteIntent.putExtra(DELETE_KEY, DELETE_VALUE)
+            .putExtra(DELETE_KEY, DELETE_VALUE)
         val deletePendingIntent = PendingIntent.getService(this,
                 DELETE_VALUE,
                 deleteIntent,
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE)
 
         val stopSelf = Intent(this, DownloadService::class.java)
-        stopSelf.action = DELETE_KEY
-        stopSelf.putExtra(DELETE_KEY, DELETE_VALUE)
+            .setAction(DELETE_KEY)
+            .putExtra(DELETE_KEY, DELETE_VALUE)
         val pStopSelf = PendingIntent.getService(this, 0, stopSelf,
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(pendingIntent)
-                .setDeleteIntent(deletePendingIntent)
-                .addAction(R.mipmap.ic_launcher, getString(R.string.cancel), pStopSelf)
-                .setProgress(max, progress, false)
-                .build()
+            .setContentTitle(title)
+            .setContentText(text)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentIntent(pendingIntent)
+            .setDeleteIntent(deletePendingIntent)
+            .addAction(R.mipmap.ic_launcher, getString(R.string.cancel), pStopSelf)
+            .setProgress(max, progress, false)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .build()
     }
 
     private fun updateNotification() {
