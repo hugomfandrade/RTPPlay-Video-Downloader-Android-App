@@ -1,7 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.persistence
 
 import android.app.Application
-import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.Config
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import java.util.*
@@ -21,7 +21,7 @@ class DownloadableItemRepository(application: Application) {
         mItemDao = db.downloadableItemDao();
     }
 
-    private val persistenceExecutors = Executors.newFixedThreadPool(DevConstants.nPersistenceThreads)
+    private val persistenceExecutors = Executors.newFixedThreadPool(Config.nPersistenceThreads)
 
 
     fun retrieveAllDownloadableItems() : ListenableFuture<List<DownloadableItem>> {

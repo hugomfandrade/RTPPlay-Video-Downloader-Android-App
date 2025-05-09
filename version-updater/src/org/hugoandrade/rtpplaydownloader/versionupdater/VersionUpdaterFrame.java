@@ -1,7 +1,6 @@
 package org.hugoandrade.rtpplaydownloader.versionupdater;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,14 +9,14 @@ import java.sql.Statement;
 
 public class VersionUpdaterFrame extends JFrame {
 
-	private JPanel container = new JPanel();
-	private JLabel userLabel = new JLabel("Username");
-	private JTextField userTextField = new JTextField(15);
-	private JLabel passLabel = new JLabel("Password");
-	private JPasswordField passTextField = new JPasswordField(15);
-	private JLabel currentVersionLabel = new JLabel();
-	private JTextField newVersionField = new JTextField(15);
-	private JButton button = new JButton("");
+	private final JPanel container = new JPanel();
+	private final JLabel userLabel = new JLabel("Username");
+	private final JTextField userTextField = new JTextField(15);
+	private final JLabel passLabel = new JLabel("Password");
+	private final JPasswordField passTextField = new JPasswordField(15);
+	private final JLabel currentVersionLabel = new JLabel();
+	private final JTextField newVersionField = new JTextField(15);
+	private final JButton button = new JButton("");
 
 	public VersionUpdaterFrame() {
 		super("Azure Version Updater");
@@ -63,13 +62,11 @@ public class VersionUpdaterFrame extends JFrame {
 
 		for(ActionListener l : button.getActionListeners()) button.removeActionListener(l);
 		button.setText("Login");
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				String user = userTextField.getText();
-				String pass = passTextField.getText();
+		button.addActionListener(ae -> {
+			String user = userTextField.getText();
+			String pass = passTextField.getText();
 
-				tryLogin(user, pass);
-			}
+			tryLogin(user, pass);
 		});
 	}
 
@@ -86,12 +83,10 @@ public class VersionUpdaterFrame extends JFrame {
 
 		for(ActionListener l : button.getActionListeners()) button.removeActionListener(l);
 		button.setText("Update");
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				String newVersion = newVersionField.getText();
+		button.addActionListener(ae -> {
+			String newVersion = newVersionField.getText();
 
-				tryUpdateVersion(connection, id, newVersion);
-			}
+			tryUpdateVersion(connection, id, newVersion);
 		});
 	}
 

@@ -11,8 +11,8 @@ import kotlin.math.roundToInt
 open class ParsingUnitTest {
 
     var DO_DOWNLOAD = true
-    private val testDir = File("test-download-folder")
-    private val defaultListener: DownloaderTask.Listener = object : DownloaderTask.Listener {
+    val testDir = File("test-download-folder")
+    val defaultListener: DownloaderTask.Listener = object : DownloaderTask.Listener {
 
         private val progressLogPercentageDelta = 1.0
         private val progressLogLastPercentage = AtomicDouble(Double.NaN)
@@ -81,7 +81,7 @@ open class ParsingUnitTest {
 
         System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
 
-        downloaderTask.downloadMediaFile()
+        downloaderTask.run()
     }
 
     internal fun download(parsingData: ParsingData?) {

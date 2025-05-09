@@ -35,7 +35,7 @@ open class RTPPlayParsingTaskV8 : RTPPlayTSParsingTask() {
                     scriptText = scriptText.substring(scriptText.lastIndexOf("varf={hls"))
 
                     val rtpPlayerSubString: String = scriptText
-                    val from = "hls:atob(decodeURIComponent("
+                    val from = "fps:atob(decodeURIComponent("
                     val to = ".join(\"\"))"
 
                     if (rtpPlayerSubString.indexOf(from) < 0) continue

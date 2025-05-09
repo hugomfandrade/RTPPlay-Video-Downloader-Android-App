@@ -1,8 +1,10 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing.tasks
 
+import org.hugoandrade.rtpplaydownloader.dev.parsing.DevParsingTask
 import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.nodes.Document
+import java.util.function.Supplier
 
 class ParsingIdentifier {
 
@@ -16,32 +18,26 @@ class ParsingIdentifier {
 
             if (url == null) return null
 
+            val doc : Document = NetworkUtils.getDoc(url) ?:
+                /* return null */Document(url)
+
             for (fileType: FileType in FileType.values()) {
 
-                val doc : Document = NetworkUtils.getDoc(url) ?: return null
-
-                if (fileType.parsingTask.isValid(doc)) {
-                    return when (fileType) {
-                        // search for multi-part before rtp play
-                        FileType.RTPPlayMultiPart -> RTPPlayParsingMultiPartTask()
-                        FileType.RTPPlay -> RTPPlayParsingTaskIdentifier()
-                        FileType.SIC -> SICParsingTaskIdentifier()
-                        FileType.SAPO -> SAPOParsingTask()
-                        FileType.TVIPlayer -> TVIPlayerParsingTask()
-                        FileType.TSF -> TSFParsingTask()
-                    }
+                if (fileType.parsingTask.get().isValid(doc)) {
+                    return fileType.parsingTask.get()
                 }
             }
             return null
         }
 
         fun findType(task: ParsingTask?): FileType? {
-            if (task is RTPPlayParsingMultiPartTask) return FileType.RTPPlayMultiPart
-            if (task is RTPPlayParsingTaskIdentifier) return FileType.RTPPlay
-            if (task is SICParsingTaskIdentifier) return FileType.SIC
-            if (task is SAPOParsingTask) return FileType.SAPO
-            if (task is TVIPlayerParsingTask) return FileType.TVIPlayer
-            if (task is TSFParsingTask) return FileType.TSF
+
+            for (fileType: FileType in FileType.values()) {
+                val taskClass =fileType.parsingTask.get().javaClass
+                if (task?.javaClass ==  taskClass) {
+                    return fileType
+                }
+            }
             return null
         }
 
@@ -52,12 +48,16 @@ class ParsingIdentifier {
         }
     }
 
-    enum class FileType(var parsingTask: ParsingTask) {
-        RTPPlayMultiPart(RTPPlayParsingMultiPartTask()),
-        RTPPlay(RTPPlayParsingTaskIdentifier()),
-        SIC(SICParsingTaskIdentifier()),
-        SAPO(SAPOParsingTask()),
-        TVIPlayer(TVIPlayerParsingTask()),
-        TSF(TSFParsingTask())
+    enum class FileType(var parsingTask: Supplier<ParsingTask>) {
+        // search for multi-part before rtp play
+        RTPPlayMultiPart(Supplier { RTPPlayParsingMultiPartTask() }),
+        RTPPlay(Supplier { RTPPlayParsingTaskIdentifier() }),
+
+        SIC(Supplier { SICParsingTaskIdentifier() }),
+        SAPO(Supplier { SAPOParsingTask() }),
+        TVIPlayer(Supplier { TVIPlayerParsingTask() }),
+        TSF(Supplier { TSFParsingTask() }),
+
+        DEV(Supplier { DevParsingTask() })
     }
 }

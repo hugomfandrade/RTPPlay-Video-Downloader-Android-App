@@ -42,6 +42,7 @@ private constructor() {
                 val url = URL(urlText)
                 "http" == url.protocol || "https" == url.protocol
             } catch (e: Exception) {
+                e.printStackTrace()
                 false
             }
         }

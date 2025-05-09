@@ -1,13 +1,31 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
+import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.TSDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskIdentifier
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV1
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV2
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.SICParsingTaskV3
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.junit.Test
+import java.io.File
 
 class ParsingUnitTestSIC : ParsingUnitTest() {
+
+    @Test
+    fun sicIdentifier_TS() {
+
+        val tsUrl = "https://videos.impresa.pt/videos/hls/sicnot/2022/11/08/dacb13b8-e30c-4de1-8152-b73e7ae7cd26/futuro-hoje.1.m3u8"
+
+        val parsingData = ParsingData(tsUrl, null, "nuada-futuro-hoje", null)
+
+        val playlistURLs = TSUtils.getCompleteM3U8Playlist(tsUrl)
+        val playlistURL = "https://videos.impresa.pt/videos/hls/sicnot/2022/11/08/dacb13b8-e30c-4de1-8152-b73e7ae7cd26/futuro-hoje.1-540p.m3u8"
+
+        val task = TSDownloaderTask(playlistURL, File("test-download-folder").absolutePath, "nuada-futuro-hoje", defaultListener).downloadMediaFile()
+        download(parsingData)
+    }
 
     @Test
     fun sicIdentifier_20201226() {

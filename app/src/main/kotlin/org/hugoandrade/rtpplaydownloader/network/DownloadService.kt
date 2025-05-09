@@ -8,7 +8,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import org.hugoandrade.rtpplaydownloader.DevConstants
+import org.hugoandrade.rtpplaydownloader.Config
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
@@ -31,7 +31,7 @@ class DownloadService : Service() {
         const val NOTIFICATION_ID = 1
     }
 
-    private val downloadExecutors = Executors.newFixedThreadPool(DevConstants.nDownloadThreads)
+    private val downloadExecutors = Executors.newFixedThreadPool(Config.nDownloadThreads)
 
     private val mBinder = DownloadServiceBinder()
 
@@ -108,27 +108,29 @@ class DownloadService : Service() {
                 0, notificationIntent, PendingIntent.FLAG_MUTABLE)
 
         val deleteIntent = Intent(this, DownloadService::class.java)
-        deleteIntent.putExtra(DELETE_KEY, DELETE_VALUE)
+            .putExtra(DELETE_KEY, DELETE_VALUE)
         val deletePendingIntent = PendingIntent.getService(this,
                 DELETE_VALUE,
                 deleteIntent,
                 PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE)
 
         val stopSelf = Intent(this, DownloadService::class.java)
-        stopSelf.action = DELETE_KEY
-        stopSelf.putExtra(DELETE_KEY, DELETE_VALUE)
+            .setAction(DELETE_KEY)
+            .putExtra(DELETE_KEY, DELETE_VALUE)
         val pStopSelf = PendingIntent.getService(this, 0, stopSelf,
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(pendingIntent)
-                .setDeleteIntent(deletePendingIntent)
-                .addAction(R.mipmap.ic_launcher, getString(R.string.cancel), pStopSelf)
-                .setProgress(max, progress, false)
-                .build()
+            .setContentTitle(title)
+            .setContentText(text)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentIntent(pendingIntent)
+            .setDeleteIntent(deletePendingIntent)
+            .addAction(R.mipmap.ic_launcher, getString(R.string.cancel), pStopSelf)
+            .setProgress(max, progress, false)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .build()
     }
 
     private fun updateNotification() {
@@ -193,8 +195,7 @@ class DownloadService : Service() {
 
             override fun onDownloadStateChange(downloadableItem: DownloadableItem) {
 
-                if (downloadableItem.state == DownloadableItem.State.End ||
-                        downloadableItem.state == DownloadableItem.State.Failed) {
+                if (DownloadableItem.State.isOver(downloadableItem.state)) {
 
                     downloadMap.remove(downloadableItem.id)
 
@@ -224,8 +225,10 @@ class DownloadService : Service() {
             }
         })
 
+        downloadableItemAction.downloadTask.cancelCancelling()
+
         downloadExecutors.execute {
-            downloadableItemAction.downloadTask.downloadMediaFile()
+            downloadableItemAction.downloadTask.run()
         }
     }
 

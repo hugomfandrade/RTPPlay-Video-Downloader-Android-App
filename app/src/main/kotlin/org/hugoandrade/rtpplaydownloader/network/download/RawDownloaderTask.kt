@@ -18,10 +18,8 @@ class RawDownloaderTask(private val mediaUrl : String,
 
     override fun downloadMediaFile() {
 
-        if (isDownloading) return
-
-        isDownloading = true
-        doCanceling = false
+        // check if was cancelled before actually starting
+        if (tryToCancelIfNeeded()) return
 
         var mInputStream: InputStream? = null
 
@@ -31,7 +29,6 @@ class RawDownloaderTask(private val mediaUrl : String,
                 url = URL(mediaUrl)
             }
             catch (e: Exception) {
-                isDownloading = false
                 dispatchDownloadFailed("URL no longer exists")
                 return
             }
@@ -48,7 +45,6 @@ class RawDownloaderTask(private val mediaUrl : String,
             val storagePath = dirPath
             val f = File(storagePath, filename)
             if (MediaUtils.doesMediaFileExist(f)) {
-                isDownloading = false
                 dispatchDownloadFailed("file with same name already exists")
                 return
             }
@@ -61,32 +57,22 @@ class RawDownloaderTask(private val mediaUrl : String,
                 var progress = len.toLong()
                 while (len > 0) {
 
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling
-                        return
-                    }
+                    // cancel before downloading
+                    if (tryToCancelIfNeeded()) return
 
-                    while (!isDownloading){
-                        // pause
-
-                        if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                            // do cancelling while paused
-                            return
-                        }
-                    }
+                    if (doPause()) return
 
                     fos.write(buffer, 0, len)
                     len = inputStream.read(buffer)
                     progress += len
 
-                    if (tryToCancelIfNeeded(fos, inputStream, f)) {
-                        // do cancelling while paused
-                        return
-                    }
+                    // cancel after downloading
+                    if (tryToCancelIfNeeded()) return
 
                     dispatchProgress(progress, size)
                 }
             }
+
             dispatchDownloadFinished(f)
 
             fos.close()
@@ -95,7 +81,6 @@ class RawDownloaderTask(private val mediaUrl : String,
             ioe.printStackTrace()
             dispatchDownloadFailed("Internal error while downloading")
         } finally {
-            isDownloading = false
             try {
                 mInputStream?.close()
             } catch (ioe: IOException) {

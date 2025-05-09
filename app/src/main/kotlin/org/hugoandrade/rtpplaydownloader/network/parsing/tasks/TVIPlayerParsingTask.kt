@@ -19,8 +19,8 @@ class TVIPlayerParsingTask : TSParsingTask {
     override fun parseMediaUrl(doc: Document): String? {
 
         try {
-            val jwiol = getJWIOL() ?: return null
             val m3u8Url = getM3U8ChunkUrl(doc) ?: return null
+            val jwiol = getJWIOL() ?: return null
             val m3u8 = "$m3u8Url?wmsAuthSign=$jwiol"
 
             return m3u8

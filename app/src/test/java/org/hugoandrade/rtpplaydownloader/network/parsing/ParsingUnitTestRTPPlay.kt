@@ -1,5 +1,7 @@
 package org.hugoandrade.rtpplaydownloader.network.parsing
 
+import org.hugoandrade.rtpplaydownloader.network.download.TSDownloaderTask
+import org.hugoandrade.rtpplaydownloader.network.download.TSUtils
 import org.hugoandrade.rtpplaydownloader.network.parsing.tasks.*
 import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
 import org.jsoup.Jsoup
@@ -10,17 +12,33 @@ import java.io.File
 class ParsingUnitTestRTPPlay : ParsingUnitTest() {
 
     @Test
+    fun m3u8() {
+        val url = "https://videos-fms.jwpsrv.com/0_623f986d_0x92a1c47902525b50bef8f5357e1dd566753de399/content/conversions/i0kOV6po/videos/K0BIshL4-34192113.m4a.m3u8"
+
+        val downloaderTask = TSDownloaderTask(url, testDir.absolutePath, "name.m3u8", defaultListener, object :
+            TSUtils.Validator<String> {
+            override fun isValid(o: String): Boolean {
+                return o.contains(".aac")
+            }
+        })
+
+        System.err.println("about to download: ${downloaderTask.javaClass.simpleName}")
+
+        downloaderTask.run()
+    }
+
+    @Test
     fun rtpPlayV8_02() {
         DO_DOWNLOAD = true
 
-        // val url = "https://www.rtp.pt/play/p9446/e576556/unidade-42"
-        val url = "https://www.rtp.pt/play/p9461/n00b"
+        val url =
+            "https://www.rtp.pt/play/p11356/e670466/freddie-the-final-act"
+            // "https://www.rtp.pt/play/p10209/3-mulheres-pos-revolucao"
 
         System.err.println("trying to parse: ")
         System.err.println(url)
 
         val parsingTask = ParsingIdentifier.findHost(url) ?: return
-        // val parsingTask = RTPPlayParsingTaskIdentifier()
         val parsed = parsingTask.parseMediaFile(url)
 
         debug(parsed)
