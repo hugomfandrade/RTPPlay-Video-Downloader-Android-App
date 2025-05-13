@@ -1,0 +1,22 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.jetbrains.compose'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    implementation project(':downloader-core')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation compose.desktop.currentOs
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0'
+    implementation 'org.jetbrains.compose.desktop:desktop:1.4.0'
+}
+
+compose.desktop {
+    application {
+        mainClass = 'MainKt'
+    }
+}
