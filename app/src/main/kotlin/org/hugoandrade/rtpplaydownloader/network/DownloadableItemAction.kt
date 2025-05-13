@@ -1,10 +1,12 @@
 package org.hugoandrade.rtpplaydownloader.network
 
-import org.hugoandrade.rtpplaydownloader.network.download.DownloaderTask
+import org.hugoandrade.downloader.download.DownloaderTask
+import org.hugoandrade.downloader.DownloadableItem
 import java.io.File
 
-class DownloadableItemAction(val item : DownloadableItem,
-                             internal val downloadTask: DownloaderTask) :
+class DownloadableItemAction(val item : AndroidDownloadableItem,
+                             internal val downloadTask: DownloaderTask
+) :
 
         DownloadableItemActionAPI,
         DownloaderTask.Listener {

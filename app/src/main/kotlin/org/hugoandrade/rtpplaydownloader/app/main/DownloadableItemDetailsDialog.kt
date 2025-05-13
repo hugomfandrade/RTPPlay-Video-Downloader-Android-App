@@ -11,11 +11,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatDialog
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.AndroidDownloadableItem
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 
-class DownloadableItemDetailsDialog(context: Context, var mItem: DownloadableItem) : AppCompatDialog(context) {
+class DownloadableItemDetailsDialog(context: Context, var mItem: AndroidDownloadableItem) : AppCompatDialog(context) {
 
     private var mListener: OnItemDetailsListener? = null
 
@@ -89,7 +89,7 @@ class DownloadableItemDetailsDialog(context: Context, var mItem: DownloadableIte
         mListener = listener
     }
 
-    fun show(item: DownloadableItem) {
+    fun show(item: AndroidDownloadableItem) {
         mItem = item
 
         findViewById<TextView>(R.id.filename_text_view)?.text = mItem.filename
@@ -112,10 +112,10 @@ class DownloadableItemDetailsDialog(context: Context, var mItem: DownloadableIte
 
     interface OnItemDetailsListener {
         fun onCancelled()
-        fun onArchive(item: DownloadableItem)
-        fun onRedirect(item: DownloadableItem)
-        fun onShowInFolder(item: DownloadableItem)
-        fun onPlay(item: DownloadableItem)
+        fun onArchive(item: AndroidDownloadableItem)
+        fun onRedirect(item: AndroidDownloadableItem)
+        fun onShowInFolder(item: AndroidDownloadableItem)
+        fun onPlay(item: AndroidDownloadableItem)
     }
 
     class Builder private constructor(context: Context) {
@@ -127,7 +127,7 @@ class DownloadableItemDetailsDialog(context: Context, var mItem: DownloadableIte
             return this
         }
 
-        fun create(item : DownloadableItem): DownloadableItemDetailsDialog {
+        fun create(item : AndroidDownloadableItem): DownloadableItemDetailsDialog {
             val itemDetailsDialog = DownloadableItemDetailsDialog(params.mContext, item)
 
             params.apply(itemDetailsDialog)

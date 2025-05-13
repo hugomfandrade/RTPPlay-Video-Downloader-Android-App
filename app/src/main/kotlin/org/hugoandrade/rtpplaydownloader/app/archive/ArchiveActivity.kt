@@ -15,9 +15,9 @@ import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.app.main.DownloadableItemDetailsDialog
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityArchiveBinding
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.AndroidDownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.AndroidMediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 import java.util.concurrent.ConcurrentHashMap
@@ -37,7 +37,7 @@ class ArchiveActivity : ActivityBase() {
     private lateinit var mArchivedItemsRecyclerView: RecyclerView
     private lateinit var mArchivedItemsAdapter: ArchiveItemsAdapter
 
-    private val downloadableItems: ConcurrentHashMap<Int, DownloadableItem> = ConcurrentHashMap()
+    private val downloadableItems: ConcurrentHashMap<Int, AndroidDownloadableItem> = ConcurrentHashMap()
 
     private var detailsDialog : DownloadableItemDetailsDialog? = null
 
@@ -49,13 +49,13 @@ class ArchiveActivity : ActivityBase() {
         initializeUI()
 
         val future = mDatabaseModel.retrieveArchivedDownloadableItems()
-        future.addCallback(object : ListenableFuture.Callback<List<DownloadableItem>> {
+        future.addCallback(object : ListenableFuture.Callback<List<AndroidDownloadableItem>> {
             override fun onFailed(errorMessage: String) {
                 Log.e(TAG, errorMessage)
                 Toast.makeText(this@ArchiveActivity, "Failed to get Archived Items", Toast.LENGTH_SHORT).show()
             }
 
-            override fun onSuccess(result: List<DownloadableItem>) {
+            override fun onSuccess(result: List<AndroidDownloadableItem>) {
 
                 synchronized(this@ArchiveActivity.downloadableItems) {
 
@@ -106,7 +106,7 @@ class ArchiveActivity : ActivityBase() {
         mArchivedItemsAdapter = ArchiveItemsAdapter()
         mArchivedItemsAdapter.setListener(object : ArchiveItemsAdapter.Listener {
 
-            override fun onItemClicked(item: DownloadableItem) {
+            override fun onItemClicked(item: AndroidDownloadableItem) {
                 val dialog = detailsDialog
 
                 if (dialog != null) {
@@ -119,7 +119,7 @@ class ArchiveActivity : ActivityBase() {
                                     detailsDialog = null
                                 }
 
-                                override fun onArchive(item: DownloadableItem) {
+                                override fun onArchive(item: AndroidDownloadableItem) {
 
                                     detailsDialog?.dismiss()
 
@@ -130,25 +130,25 @@ class ArchiveActivity : ActivityBase() {
                                     binding.emptyListViewGroup.visibility = if (mArchivedItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
                                 }
 
-                                override fun onRedirect(item: DownloadableItem) {
+                                override fun onRedirect(item: AndroidDownloadableItem) {
 
                                     detailsDialog?.dismiss()
 
-                                    MediaUtils.openUrl(this@ArchiveActivity, item)
+                                    AndroidMediaUtils.openUrl(this@ArchiveActivity, item)
                                 }
 
-                                override fun onShowInFolder(item: DownloadableItem) {
+                                override fun onShowInFolder(item: AndroidDownloadableItem) {
 
                                     detailsDialog?.dismiss()
 
-                                    MediaUtils.showInFolderIntent(this@ArchiveActivity, item)
+                                    AndroidMediaUtils.showInFolderIntent(this@ArchiveActivity, item)
                                 }
 
-                                override fun onPlay(item: DownloadableItem) {
+                                override fun onPlay(item: AndroidDownloadableItem) {
 
                                     detailsDialog?.dismiss()
 
-                                    MediaUtils.play(this@ArchiveActivity, item)
+                                    AndroidMediaUtils.play(this@ArchiveActivity, item)
                                 }
 
                             })
@@ -162,7 +162,7 @@ class ArchiveActivity : ActivityBase() {
         binding.emptyListViewGroup.visibility = if (mArchivedItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
     }
 
-    private fun displayDownloadableItems(items: List<DownloadableItem>) {
+    private fun displayDownloadableItems(items: List<AndroidDownloadableItem>) {
 
         runOnUiThread {
             mArchivedItemsAdapter.setItems(items)

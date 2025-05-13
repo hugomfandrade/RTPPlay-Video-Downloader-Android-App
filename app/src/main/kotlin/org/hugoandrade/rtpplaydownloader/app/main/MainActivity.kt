@@ -19,20 +19,20 @@ import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.*
+import org.hugoandrade.downloader.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.ActivityBase
 import org.hugoandrade.rtpplaydownloader.app.archive.ArchiveActivity
 import org.hugoandrade.rtpplaydownloader.app.settings.SettingsActivity
 import org.hugoandrade.rtpplaydownloader.databinding.ActivityMainBinding
-import org.hugoandrade.rtpplaydownloader.dev.DevConstants
+import org.hugoandrade.rtpplaydownloader.DevConstants
 import org.hugoandrade.rtpplaydownloader.network.DownloadManager
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.AndroidDownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingData
-import org.hugoandrade.rtpplaydownloader.network.parsing.ParsingTaskResult
-import org.hugoandrade.rtpplaydownloader.network.parsing.pagination.PaginationParserTask
-import org.hugoandrade.rtpplaydownloader.network.utils.FilenameLockerAdapter
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.downloader.parsing.*
+import org.hugoandrade.downloader.parsing.pagination.*
+import org.hugoandrade.downloader.utils.FilenameLockerAdapter
+import org.hugoandrade.rtpplaydownloader.network.utils.AndroidMediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import org.hugoandrade.rtpplaydownloader.utils.VersionUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
@@ -331,7 +331,7 @@ class MainActivity : ActivityBase() {
                                 detailsDialog = null
                             }
 
-                            override fun onArchive(item: DownloadableItem) {
+                            override fun onArchive(item: AndroidDownloadableItem) {
 
                                 detailsDialog?.dismiss()
 
@@ -340,25 +340,25 @@ class MainActivity : ActivityBase() {
                                 binding.emptyListViewGroup.visibility = if (mDownloadItemsAdapter.itemCount == 0) View.VISIBLE else View.INVISIBLE
                             }
 
-                            override fun onRedirect(item: DownloadableItem) {
+                            override fun onRedirect(item: AndroidDownloadableItem) {
 
                                 detailsDialog?.dismiss()
 
-                                MediaUtils.openUrl(this@MainActivity, item)
+                                AndroidMediaUtils.openUrl(this@MainActivity, item)
                             }
 
-                            override fun onShowInFolder(item: DownloadableItem) {
+                            override fun onShowInFolder(item: AndroidDownloadableItem) {
 
                                 detailsDialog?.dismiss()
 
-                                MediaUtils.showInFolderIntent(this@MainActivity, item)
+                                AndroidMediaUtils.showInFolderIntent(this@MainActivity, item)
                             }
 
-                            override fun onPlay(item: DownloadableItem) {
+                            override fun onPlay(item: AndroidDownloadableItem) {
 
                                 detailsDialog?.dismiss()
 
-                                MediaUtils.play(this@MainActivity, item)
+                                AndroidMediaUtils.play(this@MainActivity, item)
                             }
 
                         })

@@ -12,7 +12,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import android.view.MenuItem
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.AndroidMediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 class SettingsActivity : AppCompatActivity() {
@@ -68,8 +68,8 @@ class SettingsActivity : AppCompatActivity() {
             val context = activity as Context
 
             val filePicker : Preference = findPreference(getString(R.string.key_directory_name)) ?: return
-            filePicker.setDefaultValue(MediaUtils.getDownloadsDirectory(context))
-            filePicker.summary = MediaUtils.getDownloadsDirectory(context).toString().replace("/storage/emulated/0", "")
+            filePicker.setDefaultValue(AndroidMediaUtils.getDownloadsDirectory(context))
+            filePicker.summary = AndroidMediaUtils.getDownloadsDirectory(context).toString().replace("/storage/emulated/0", "")
             filePicker.onPreferenceClickListener = Preference.OnPreferenceClickListener {
                 val activity = activity as Activity
 
@@ -83,7 +83,7 @@ class SettingsActivity : AppCompatActivity() {
                     i.addCategory(Intent.CATEGORY_DEFAULT)
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        i.putExtra(DocumentsContract.EXTRA_INITIAL_URI, MediaUtils.getDownloadsDirectory(context))
+                        i.putExtra(DocumentsContract.EXTRA_INITIAL_URI, AndroidMediaUtils.getDownloadsDirectory(context))
                     }
 
                     i.putExtra("android.content.extra.SHOW_ADVANCED", true)
@@ -105,9 +105,9 @@ class SettingsActivity : AppCompatActivity() {
                 val path: String? = SettingsUtils.getPath(activity, docUri)
 
                 if (path != null) {
-                    MediaUtils.putDownloadsDirectory(activity, path)
+                    AndroidMediaUtils.putDownloadsDirectory(activity, path)
 
-                    filePicker?.summary = MediaUtils.getDownloadsDirectory(activity).toString().replace("/storage/emulated/0", "")
+                    filePicker?.summary = AndroidMediaUtils.getDownloadsDirectory(activity).toString().replace("/storage/emulated/0", "")
                 }
             }
         }

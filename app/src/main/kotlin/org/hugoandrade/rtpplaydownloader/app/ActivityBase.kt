@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.view.ViewGroup
 import org.hugoandrade.rtpplaydownloader.R
-import org.hugoandrade.rtpplaydownloader.network.utils.NetworkUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.AndroidNetworkUtils
 import org.hugoandrade.rtpplaydownloader.utils.ViewUtils
 
 
@@ -24,7 +24,7 @@ abstract class ActivityBase : AppCompatActivity() {
 
     private var tvNoNetworkConnection: View? = null
 
-    private val iNetworkListener = object : NetworkUtils.INetworkBroadcastReceiver {
+    private val iNetworkListener = object : AndroidNetworkUtils.INetworkBroadcastReceiver {
 
         override fun setNetworkAvailable(isNetworkAvailable: Boolean) {
 
@@ -61,12 +61,12 @@ abstract class ActivityBase : AppCompatActivity() {
     private fun initializeNetworkFooter() {
 
         if (mNetworkBroadcastReceiver == null) {
-            mNetworkBroadcastReceiver = NetworkUtils.register(this, iNetworkListener)
+            mNetworkBroadcastReceiver = AndroidNetworkUtils.register(this, iNetworkListener)
         }
 
         tvNoNetworkConnection = findViewById(R.id.tv_no_network_connection)
 
-        ViewUtils.setHeightDp(this, tvNoNetworkConnection, if (NetworkUtils.isNetworkAvailable(this)) 0 else 20)
+        ViewUtils.setHeightDp(this, tvNoNetworkConnection, if (AndroidNetworkUtils.isNetworkAvailable(this)) 0 else 20)
     }
 
     /**
@@ -77,7 +77,7 @@ abstract class ActivityBase : AppCompatActivity() {
         super.onDestroy()
 
         if (mNetworkBroadcastReceiver != null) {
-            NetworkUtils.unregister(this, checkNotNull(mNetworkBroadcastReceiver))
+            AndroidNetworkUtils.unregister(this, checkNotNull(mNetworkBroadcastReceiver))
             mNetworkBroadcastReceiver = null
         }
     }

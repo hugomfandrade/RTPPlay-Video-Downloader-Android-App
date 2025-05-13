@@ -7,12 +7,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import org.hugoandrade.downloader.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.Config
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.AndroidDownloadableItem
 import org.hugoandrade.rtpplaydownloader.network.DownloadableItemAction
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.AndroidMediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import java.util.*
@@ -48,7 +49,7 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         val downloadableItemAction: DownloadableItemAction = downloadableItemList[position]
-        val downloadableItem: DownloadableItem = downloadableItemAction.item
+        val downloadableItem: AndroidDownloadableItem = downloadableItemAction.item
 
         val downloadItemTitleTextView = holder.binding.downloadItemTitleTextView as TextView
         if (downloadItemTitleTextView.text.toString() != downloadableItem.filename) {
@@ -86,17 +87,17 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
                 holder.binding.downloadProgressTextView.text =
                         Math.round(downloadableItem.progress * 100f).toString() + "%"
                 holder.binding.downloadProgressTextView.text =
-                        MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
-                                MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
+                        AndroidMediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
+                                AndroidMediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
                 holder.binding.downloadProgressTextView.text =
-                        MediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
-                                MediaUtils.humanReadableTime(downloadableItem.remainingTime)
+                        AndroidMediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
+                                AndroidMediaUtils.humanReadableTime(downloadableItem.remainingTime)
             }
             DownloadableItem.State.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text = "100%"
-                holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
+                holder.binding.downloadProgressTextView.text = AndroidMediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
             }
             DownloadableItem.State.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
@@ -187,7 +188,7 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
         }
     }
 
-    fun remove(downloadableItem: DownloadableItem) {
+    fun remove(downloadableItem: AndroidDownloadableItem) {
         findAction(downloadableItem)?.let { remove(it) }
     }
 
@@ -224,7 +225,7 @@ class DownloadItemsAdapter : RecyclerView.Adapter<DownloadItemsAdapter.ViewHolde
         return index
     }
 
-    private fun findAction(downloadableItem: DownloadableItem): DownloadableItemAction? {
+    private fun findAction(downloadableItem: AndroidDownloadableItem): DownloadableItemAction? {
         for (itemAction in downloadableItemList) {
             if (itemAction.item == downloadableItem) {
                 return itemAction

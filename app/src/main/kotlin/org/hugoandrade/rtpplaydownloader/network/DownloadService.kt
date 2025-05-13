@@ -8,11 +8,12 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import org.hugoandrade.downloader.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.Config
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.app.main.MainActivity
 import org.hugoandrade.rtpplaydownloader.network.persistence.DownloadableItemRepository
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.network.utils.AndroidMediaUtils
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.collections.LinkedHashMap
@@ -163,7 +164,7 @@ class DownloadService : Service() {
                                 (if (actions.size == 2)
                                     getString(R.string.other_video) else
                                     getString(R.string.other_videos))
-            val text = MediaUtils.humanReadableTime(longestRemainingTime) + " " + getString(R.string.remaining_time)
+            val text = AndroidMediaUtils.humanReadableTime(longestRemainingTime) + " " + getString(R.string.remaining_time)
 
             val notification : Notification = createNotification(
                     title,
@@ -221,7 +222,7 @@ class DownloadService : Service() {
                     updateNotification()
                 }
 
-                mDatabaseModel.updateDownloadableEntry(downloadableItem)
+                mDatabaseModel.updateDownloadableEntry(downloadableItem.toAndroid())
             }
         })
 
@@ -264,7 +265,7 @@ class DownloadService : Service() {
                 updateNotification()
             }
 
-            mDatabaseModel.updateDownloadableEntry(downloadableItem)
+            mDatabaseModel.updateDownloadableEntry(downloadableItem.toAndroid())
         }
     }
 

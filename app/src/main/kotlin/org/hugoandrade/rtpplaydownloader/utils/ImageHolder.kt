@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import android.widget.ImageView
 import org.hugoandrade.rtpplaydownloader.Config
-import org.hugoandrade.rtpplaydownloader.dev.DevConstants
+import org.hugoandrade.rtpplaydownloader.DevConstants
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream

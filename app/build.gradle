@@ -43,6 +43,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation project(':downloader-core')
+
     // sugar for stream
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 

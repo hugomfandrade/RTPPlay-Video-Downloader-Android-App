@@ -7,9 +7,9 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.AndroidDownloadableItem
 
-@Database(entities = [DownloadableItem::class], version = 4)
+@Database(entities = [AndroidDownloadableItem::class], version = 4)
 @TypeConverters(DownloadableItemStateConverter::class)
 abstract class DownloadableItemDatabase : RoomDatabase() {
 
@@ -20,7 +20,7 @@ abstract class DownloadableItemDatabase : RoomDatabase() {
         private val MIGRATION_3_4: Migration = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("CREATE TABLE IF NOT EXISTS DownloadableItem_new (_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Url TEXT NOT NULL, MediaUrl TEXT, Thumbnail TEXT, FileName TEXT, FilePath TEXT, FileSize INTEGER, Stage INTEGER, IsArchived INTEGER, DownloadTask TEXT, DownloadMessage TEXT)");
-                database.execSQL("INSERT INTO DownloadableItem_new (_id,Url,MediaUrl,Thumbnail,FileName,FilePath,FileSize,Stage,IsArchived,DownloadTask,DownloadMessage) SELECT _id,Url,MediaUrl,Thumbnail,FileName,FilePath,FileSize,Stage,IsArchived,DownloadTask,DownloadMessage FROM DownloadableItem")
+                database.execSQL("INSERT INTO DownloadableItem_new (_id,Url,MediaUrl,Thumbnail,FileName,FilePath,FileSize,Stage,IsArchived,DownloadTask,DownloadMessage) SELECT _id,Url,MediaUrl,Thumbnail,FileName,FilePath,FileSize,Stage,IsArchived,DownloadTask,DownloadMessage FROM AndroidDownloadableItem")
                 database.execSQL("DROP TABLE DownloadableItem")
                 database.execSQL("ALTER TABLE DownloadableItem_new RENAME TO DownloadableItem");
             }

@@ -7,17 +7,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import org.hugoandrade.downloader.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.R
 import org.hugoandrade.rtpplaydownloader.databinding.DownloadItemBinding
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
-import org.hugoandrade.rtpplaydownloader.network.utils.MediaUtils
+import org.hugoandrade.rtpplaydownloader.network.AndroidDownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.utils.AndroidMediaUtils
 import org.hugoandrade.rtpplaydownloader.utils.ImageHolder
 import java.io.File
 import java.util.*
 
 class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>() {
 
-    private val downloadableItemList: ArrayList<DownloadableItem> = ArrayList()
+    private val downloadableItemList: ArrayList<AndroidDownloadableItem> = ArrayList()
 
     private var listener: Listener? = null
 
@@ -29,7 +30,7 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-        val downloadableItem: DownloadableItem = downloadableItemList[position]
+        val downloadableItem: AndroidDownloadableItem = downloadableItemList[position]
 
         if ((holder.binding.downloadItemTitleTextView as TextView).text.toString() != downloadableItem.filename) {
             (holder.binding.downloadItemTitleTextView as TextView).text = downloadableItem.filename
@@ -63,17 +64,17 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
                 holder.binding.downloadProgressTextView.text =
                         Math.round(downloadableItem.progress * 100f).toString() + "%"
                 holder.binding.downloadProgressTextView.text =
-                        MediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
-                                MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
+                        AndroidMediaUtils.humanReadableByteCount(downloadableItem.progressSize, true) + "\\" +
+                                AndroidMediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
                 holder.binding.downloadProgressTextView.text =
-                        MediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
-                                MediaUtils.humanReadableTime(downloadableItem.remainingTime)
+                        AndroidMediaUtils.humanReadableByteCount(downloadableItem.downloadingSpeed.toLong(), true) + "ps, " +
+                                AndroidMediaUtils.humanReadableTime(downloadableItem.remainingTime)
             }
             DownloadableItem.State.End -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(1.0)
                 holder.binding.downloadProgressTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP,12f)
                 holder.binding.downloadProgressTextView.text = "100%"
-                holder.binding.downloadProgressTextView.text = MediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
+                holder.binding.downloadProgressTextView.text = AndroidMediaUtils.humanReadableByteCount(downloadableItem.filesize, true)
             }
             DownloadableItem.State.Failed -> {
                 holder.binding.downloadItemTitleProgressView.setProgress(0.0)
@@ -114,22 +115,22 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
         return downloadableItemList.size
     }
 
-    fun get(index: Int): DownloadableItem {
+    fun get(index: Int): AndroidDownloadableItem {
         return downloadableItemList[index]
     }
 
-    fun setItems(items: List<DownloadableItem>) {
+    fun setItems(items: List<AndroidDownloadableItem>) {
         clear()
         addAll(items)
     }
 
-    fun addAll(downloadableItems: List<DownloadableItem>) {
+    fun addAll(downloadableItems: List<AndroidDownloadableItem>) {
         for (downloadableItem in downloadableItems) {
             add(downloadableItem)
         }
     }
 
-    fun add(downloadableItem: DownloadableItem) {
+    fun add(downloadableItem: AndroidDownloadableItem) {
         val id = downloadableItem.id
         synchronized(downloadableItemList) {
 
@@ -157,7 +158,7 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
         }
     }
 
-    fun remove(downloadableItem: DownloadableItem) {
+    fun remove(downloadableItem: AndroidDownloadableItem) {
         synchronized(downloadableItemList) {
             if (downloadableItemList.contains(downloadableItem)) {
                 val index: Int = downloadableItemList.indexOf(downloadableItem)
@@ -169,7 +170,7 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
     }
 
     interface Listener {
-        fun onItemClicked(item : DownloadableItem)
+        fun onItemClicked(item : AndroidDownloadableItem)
     }
 
     fun setListener(listener: Listener?) {
@@ -185,7 +186,7 @@ class ArchiveItemsAdapter : RecyclerView.Adapter<ArchiveItemsAdapter.ViewHolder>
         }
 
         override fun onClick(v: View?) {
-            val item : DownloadableItem
+            val item : AndroidDownloadableItem
             synchronized(downloadableItemList) {
                 item = downloadableItemList[adapterPosition]
                 listener?.onItemClicked(item)

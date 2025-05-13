@@ -1,8 +1,9 @@
 package org.hugoandrade.rtpplaydownloader.network.persistence
 
 import android.app.Application
+import org.hugoandrade.downloader.DownloadableItem
 import org.hugoandrade.rtpplaydownloader.Config
-import org.hugoandrade.rtpplaydownloader.network.DownloadableItem
+import org.hugoandrade.rtpplaydownloader.network.AndroidDownloadableItem
 import org.hugoandrade.rtpplaydownloader.utils.ListenableFuture
 import java.util.*
 import java.util.concurrent.Executors
@@ -24,8 +25,8 @@ class DownloadableItemRepository(application: Application) {
     private val persistenceExecutors = Executors.newFixedThreadPool(Config.nPersistenceThreads)
 
 
-    fun retrieveAllDownloadableItems() : ListenableFuture<List<DownloadableItem>> {
-        val future = ListenableFuture<List<DownloadableItem>>()
+    fun retrieveAllDownloadableItems() : ListenableFuture<List<AndroidDownloadableItem>> {
+        val future = ListenableFuture<List<AndroidDownloadableItem>>()
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) {
             future.failed("ExecutorService is cancelled")
@@ -39,8 +40,8 @@ class DownloadableItemRepository(application: Application) {
         return future
     }
 
-    fun retrieveArchivedDownloadableItems() : ListenableFuture<List<DownloadableItem>> {
-        val future = ListenableFuture<List<DownloadableItem>>()
+    fun retrieveArchivedDownloadableItems() : ListenableFuture<List<AndroidDownloadableItem>> {
+        val future = ListenableFuture<List<AndroidDownloadableItem>>()
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) {
             future.failed("ExecutorService is cancelled")
@@ -54,8 +55,8 @@ class DownloadableItemRepository(application: Application) {
         return future
     }
 
-    fun insertDownloadableItem(downloadableItem: DownloadableItem) : ListenableFuture<DownloadableItem> {
-        val future = ListenableFuture<DownloadableItem>()
+    fun insertDownloadableItem(downloadableItem: AndroidDownloadableItem) : ListenableFuture<AndroidDownloadableItem> {
+        val future = ListenableFuture<AndroidDownloadableItem>()
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) {
             future.failed("ExecutorService is cancelled")
@@ -78,8 +79,8 @@ class DownloadableItemRepository(application: Application) {
         return future
     }
 
-    fun updateDownloadableEntry(downloadableItem: DownloadableItem) : ListenableFuture<DownloadableItem> {
-        val future = ListenableFuture<DownloadableItem>()
+    fun updateDownloadableEntry(downloadableItem: AndroidDownloadableItem) : ListenableFuture<AndroidDownloadableItem> {
+        val future = ListenableFuture<AndroidDownloadableItem>()
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) {
             future.failed("ExecutorService is cancelled")
@@ -119,8 +120,8 @@ class DownloadableItemRepository(application: Application) {
         return future
     }
 
-    fun deleteDownloadableItems(downloadableItems: List<DownloadableItem>) : ListenableFuture<List<DownloadableItem>> {
-        val future = ListenableFuture<List<DownloadableItem>>()
+    fun deleteDownloadableItems(downloadableItems: List<AndroidDownloadableItem>) : ListenableFuture<List<AndroidDownloadableItem>> {
+        val future = ListenableFuture<List<AndroidDownloadableItem>>()
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) {
             future.failed("ExecutorService is cancelled")
@@ -129,7 +130,7 @@ class DownloadableItemRepository(application: Application) {
 
         persistenceExecutors.execute {
 
-            val deletedItems = ArrayList<DownloadableItem>()
+            val deletedItems = ArrayList<AndroidDownloadableItem>()
 
             for (downloadableItem in downloadableItems) {
                 val rowsAffected = mItemDao.deleteItem(downloadableItem)
@@ -145,8 +146,8 @@ class DownloadableItemRepository(application: Application) {
         return future
     }
 
-    fun deleteDownloadableItem(downloadableItem: DownloadableItem) : ListenableFuture<DownloadableItem> {
-        val future = ListenableFuture<DownloadableItem>()
+    fun deleteDownloadableItem(downloadableItem: AndroidDownloadableItem) : ListenableFuture<AndroidDownloadableItem> {
+        val future = ListenableFuture<AndroidDownloadableItem>()
 
         if (persistenceExecutors.isShutdown || persistenceExecutors.isTerminated) {
             future.failed("ExecutorService is cancelled");
