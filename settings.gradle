@@ -1,5 +1,3 @@
 include ':app'
-
-include ':version-updater'
-project(':version-updater').projectDir = new File('version-updater')
 include ':downloader-core'
+include ':version-updater'

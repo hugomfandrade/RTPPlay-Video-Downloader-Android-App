@@ -1,8 +1,8 @@
 apply plugin: "java"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -28,9 +28,6 @@ sourceSets {
 
 dependencies {
     implementation 'com.microsoft.sqlserver:mssql-jdbc:7.0.0.jre8'
-
-    // TVI Player
-    testImplementation 'org.jsoup:jsoup:1.13.1'
 
     // test
     testImplementation 'junit:junit:4.13.2'

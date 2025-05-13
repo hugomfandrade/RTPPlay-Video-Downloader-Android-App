@@ -1,4 +1,4 @@
-package org.hugoandrade.rtpplaydownloader.versionupdater;
+package org.hugoandrade.downloader.test;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.DataNode;
@@ -25,7 +25,7 @@ public class TVIPlayerTest {
 
             StringBuilder textBuilder = new StringBuilder();
             try (Reader reader = new BufferedReader(new InputStreamReader
-                    (inputStream, Charset.forName(StandardCharsets.UTF_8.name())))) {
+                    (inputStream, StandardCharsets.UTF_8))) {
                 int c;
                 while ((c = reader.read()) != -1) {
                     textBuilder.append((char) c);

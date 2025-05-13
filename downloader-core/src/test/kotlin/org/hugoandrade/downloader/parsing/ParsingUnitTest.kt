@@ -1,12 +1,12 @@
 package org.hugoandrade.downloader.parsing
 
-import com.google.common.util.concurrent.AtomicDouble
 import org.hugoandrade.downloader.DownloadableItem
 import org.hugoandrade.downloader.download.DownloaderIdentifier
 import org.hugoandrade.downloader.download.DownloaderTask
 import org.hugoandrade.downloader.parsing.tasks.ParsingIdentifier
 import org.hugoandrade.downloader.utils.MediaUtils
 import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
 open class ParsingUnitTest {
@@ -16,7 +16,7 @@ open class ParsingUnitTest {
     val defaultListener: DownloaderTask.Listener = object : DownloaderTask.Listener {
 
         private val progressLogPercentageDelta = 1.0
-        private val progressLogLastPercentage = AtomicDouble(Double.NaN)
+        private val progressLogLastPercentage = AtomicReference<Double>(Double.NaN)
 
         override fun downloadStarted(f: File) {
             System.err.println("downloadStarted " + f)

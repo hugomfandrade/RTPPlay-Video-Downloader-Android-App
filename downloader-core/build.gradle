@@ -2,23 +2,18 @@ plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
 }
+
 java {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
+    sourceCompatibility JavaVersion.VERSION_21
+    targetCompatibility JavaVersion.VERSION_21
 }
-/*kotlin {
-    compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
-    }
-}*/
+
 dependencies {
 
-    // html parsing lib
-    implementation 'org.jsoup:jsoup:1.12.1'
-    implementation 'commons-codec:commons-codec:1.15'
+    implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.squareup.okhttp3:okhttp:4.9.0'
-    implementation 'com.google.guava:guava:27.0.1-android'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'commons-codec:commons-codec:1.15'
+    implementation 'org.jsoup:jsoup:1.13.1'
 
     // test
     testImplementation 'junit:junit:4.13.2'
